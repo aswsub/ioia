@@ -4,8 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "smoke:tone": "tsx --env-file=.env.local cold_email_workflow/tests/smoke.ts",
-    "extract:tone": "tsx --env-file=.env.local cold_email_workflow/extract_tone_runner.ts"
+    "smoke:tone": "tsx --env-file=.env cold_email_workflow/tests/smoke.ts",
+    "extract:tone": "tsx --env-file=.env cold_email_workflow/extract_tone_runner.ts"
   },
   "repository": {
     "type": "git",
