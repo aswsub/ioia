@@ -9,7 +9,9 @@
     "smoke:tone": "tsx --env-file=.env cold_email_workflow/tests/smoke.ts",
     "extract:tone": "tsx --env-file=.env cold_email_workflow/extract_tone_runner.ts",
     "test:e2e": "tsx --env-file=.env cold_email_workflow/tests/end_to_end.ts",
-    "test:pipeline": "tsx --env-file=.env cold_email_workflow/tests/pipeline.ts"
+    "test:pipeline": "tsx --env-file=.env cold_email_workflow/tests/pipeline.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
@@ -78,7 +80,8 @@
     "tailwindcss": "4.1.12",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "vite": "6.3.5"
+    "vite": "6.3.5",
+    "vitest": "^4.1.5"
   },
   "peerDependencies": {
     "react": "18.3.1",
