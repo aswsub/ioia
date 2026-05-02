@@ -1,5 +1,6 @@
 import readline from "node:readline/promises"
 import Anthropic from "@anthropic-ai/sdk"
+import { z } from "zod"
 
 import {
   EXTRACT_TONE_SYSTEM,
@@ -11,7 +12,6 @@ import {
   buildDraftEmailSystem,
   buildDraftEmailUserMessage,
   type DraftEmailInput,
-  type EmailDraft,
 } from "../prompts/draft_email"
 import {
   TONE_VOICES,
@@ -28,11 +28,13 @@ import type {
   UserProfile,
   OpportunityType,
 } from "../prompts/context"
+import {
+  ExtractedTonePhrasesSchema,
+  EmailDraftSchema,
+} from "../schemas"
 
-type ExtractedTonePhrases = Pick<
-  ToneProfile,
-  "signaturePhrases" | "avoidPhrases" | "confidence"
->
+type ExtractedTonePhrases = z.infer<typeof ExtractedTonePhrasesSchema>
+type EmailDraft = z.infer<typeof EmailDraftSchema>
 
 const client = new Anthropic()
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -183,9 +185,19 @@ async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases>
     tool_choice: { type: "tool", name: TONE_PROFILE_TOOL.name },
     messages: [{ role: "user", content: buildToneExtractorUserMessage(sample) }],
   })
+
+  if (response.stop_reason === "max_tokens") {
+    throw new Error(
+      `tone extractor truncated by max_tokens cap; result is unusable.`,
+    )
+  }
+  if (response.stop_reason === "refusal") {
+    throw new Error(`tone extractor refused; cannot extract from this sample.`)
+  }
+
   for (const block of response.content) {
     if (block.type === "tool_use" && block.name === TONE_PROFILE_TOOL.name) {
-      return block.input as ExtractedTonePhrases
+      return ExtractedTonePhrasesSchema.parse(block.input)
     }
   }
   throw new Error(
@@ -196,7 +208,7 @@ async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases>
 async function streamDraftEmail(input: DraftEmailInput): Promise<EmailDraft> {
   const stream = client.messages.stream({
     model: "claude-sonnet-4-5",
-    max_tokens: 800,
+    max_tokens: 1500,
     system: buildDraftEmailSystem(input),
     tools: [EMAIL_DRAFT_TOOL as unknown as Anthropic.Messages.Tool],
     tool_choice: { type: "tool", name: EMAIL_DRAFT_TOOL.name },
@@ -214,9 +226,19 @@ async function streamDraftEmail(input: DraftEmailInput): Promise<EmailDraft> {
   console.log()
 
   const finalMessage = await stream.finalMessage()
+
+  if (finalMessage.stop_reason === "max_tokens") {
+    throw new Error(
+      `email writer truncated by max_tokens cap; tool_use JSON is incomplete. Bump max_tokens or shorten the email.`,
+    )
+  }
+  if (finalMessage.stop_reason === "refusal") {
+    throw new Error(`email writer refused; cannot draft for this input.`)
+  }
+
   for (const block of finalMessage.content) {
     if (block.type === "tool_use" && block.name === EMAIL_DRAFT_TOOL.name) {
-      return block.input as EmailDraft
+      return EmailDraftSchema.parse(block.input)
     }
   }
   throw new Error(

@@ -140,11 +140,16 @@ export function renderContextBlock(input: ContextInput): string {
       ? "- Reference exactly ONE paper from the list above, by title, with one concrete sentence about what caught your attention."
       : "- No recent papers are available. Do NOT reference a specific paper or invent one. Build the email around the professor's top research concepts above, set EmailDraft.confidence to \"low\", and add a 'no recent papers in user's interest area' warning."
 
+  const experienceReminder =
+    experience.length > 0
+      ? "- Tie to exactly ONE user experience item, naming the project or role concretely."
+      : "- No experience items are available. Build the connection paragraph from researchInterests and shortBio instead. Set EmailDraft.confidence to at most \"medium\", add an \"experience match is loose\" warning, and do NOT invent a project, internship, or role."
+
   sections.push(
     "",
     "Hard reminders for this context:",
     paperReminder,
-    "- Tie to exactly ONE user experience item, naming the project or role concretely.",
+    experienceReminder,
     "- Do not invent papers, methods, lab details, prior contact, year, age, or any biographical detail not present in CONTEXT, or shared interests beyond what is above.",
   )
 

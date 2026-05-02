@@ -43,8 +43,18 @@ HARD RULES:
 - Return the result by calling the report_tone_phrases tool exactly once. Do not write a prose response.
 `.trim()
 
+// Cap on the writing-sample length passed to Haiku.
+// Tone extraction quality saturates well below this; samples larger than ~1000
+// words actively hurt by diluting the model's attention.
+const WRITING_SAMPLE_MAX_CHARS = 5000
+
 export function buildToneExtractorUserMessage(sample: string): string {
-  return `Writing sample:\n"""\n${sample.trim()}\n"""`
+  const trimmed = sample.trim()
+  const capped =
+    trimmed.length <= WRITING_SAMPLE_MAX_CHARS
+      ? trimmed
+      : trimmed.slice(0, WRITING_SAMPLE_MAX_CHARS).trimEnd() + "\n[…sample truncated]"
+  return `<writing_sample>\n${capped}\n</writing_sample>`
 }
 
 // Returns the extracted slice of ToneProfile.

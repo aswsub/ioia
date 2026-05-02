@@ -1,18 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk"
+import { z } from "zod"
 import {
   EXTRACT_TONE_SYSTEM,
   buildToneExtractorUserMessage,
   TONE_PROFILE_TOOL,
 } from "./prompts/extract_tone"
-import type { ToneProfile } from "./prompts/tone"
+import { ExtractedTonePhrasesSchema } from "./schemas"
 
-// The extractor only fills the slice of ToneProfile that comes from the
-// writing sample. Voice / length / traits are user-selected on the frontend
-// and get merged in downstream.
-type ExtractedTonePhrases = Pick<
-  ToneProfile,
-  "signaturePhrases" | "avoidPhrases" | "confidence"
->
+// Inferred from the Zod schema — single source of truth for the extracted slice.
+type ExtractedTonePhrases = z.infer<typeof ExtractedTonePhrasesSchema>
 
 const client = new Anthropic()
 
@@ -26,9 +22,18 @@ async function extractTone(sample: string): Promise<ExtractedTonePhrases> {
     messages: [{ role: "user", content: buildToneExtractorUserMessage(sample) }],
   })
 
+  if (response.stop_reason === "max_tokens") {
+    throw new Error(
+      `tone extractor truncated by max_tokens cap; result is unusable. Bump max_tokens or shorten input.`,
+    )
+  }
+  if (response.stop_reason === "refusal") {
+    throw new Error(`tone extractor refused; cannot extract from this sample.`)
+  }
+
   for (const block of response.content) {
     if (block.type === "tool_use" && block.name === TONE_PROFILE_TOOL.name) {
-      return block.input as ExtractedTonePhrases
+      return ExtractedTonePhrasesSchema.parse(block.input)
     }
   }
   throw new Error(
