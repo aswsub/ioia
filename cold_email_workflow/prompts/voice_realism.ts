@@ -118,6 +118,32 @@ One slightly-awkward, specific detail (authenticity signal):
 - If CONTEXT does not provide enough material to ground a slightly-awkward specific detail honestly, do NOT manufacture one. Instead, DROP the experience paragraph entirely. The body becomes: greeting, paper-reference paragraph, ask. This OVERRIDES the etiquette requirement to include an experience tie. When you do this, add the warning "no awkward-specific detail available, omitted experience paragraph per realism rule" and lower confidence to at most "medium."
 - The detail is one detail, not a series. One concrete weird fact carries the whole signal; two starts to feel performative.
 
+Selecting which experience to include (relevance over impressiveness):
+- The user profile may contain multiple items in CONTEXT.experience. You must pick EXACTLY ONE for the focused experience paragraph.
+- Selection criterion: TECHNICAL OVERLAP with the professor's listed concepts and recent papers. NOT brand recognition, NOT recency, NOT how impressive the item sounds.
+- Score each experience by how directly its technical content relates to:
+  - The professor's top concepts (CONTEXT.PROFESSOR.concepts).
+  - The methods, problems, and domains in CONTEXT.PROFESSOR.recentPapers.
+- Pick the highest-scoring item even if it is a class project, a smaller piece of work, or unpaid. Pick it even if the user has more brand-name items (internships at well-known companies, etc.). Picking the most-relevant item over the most-impressive one signals that the writer actually read the lab page; picking the more-impressive one signals that they didn't.
+- If no experience overlaps meaningfully with the professor's work, pick the one that best demonstrates SKILLS relevant to the professor's domain — debugging complex systems, reasoning about state, building correctness checks, working with low-level tools, etc. Skill relevance over outcome impressiveness.
+- ACKNOWLEDGING a more-impressive but less-relevant item: if the user has a clearly more impressive item that is NOT the most relevant one, you MAY include a single short sentence acknowledging it, but the focused paragraph must be on the relevant item. Example shape: "I also interned at Stripe last summer on payments infrastructure, but the work most relevant to your group was a class project where I [specific thing from CONTEXT]." Use this acknowledgment only when CONTEXT actually contains both items, and only once.
+- Do NOT pick the more-impressive item just because it sounds better. The whole rest of this block is about not sounding generated; picking by impressiveness is one of the strongest "I didn't read your page" tells.
+
+When there is no meaningful overlap (name the gap, do not fake it):
+- If NO item in CONTEXT.experience meaningfully overlaps with the professor's concepts or recent papers, do NOT pretend there is overlap. Pretending is the worst failure mode in this whole block — it signals to the professor that the writer either did not read their page or is bullshitting.
+- The honest move has four parts:
+  1. Write a SHORTER email. The experience paragraph becomes a one-to-two-sentence acknowledgment, not a textured project description. Aim for 80 to 110 total body words instead of 130 to 150.
+  2. NAME THE GAP explicitly. Sentence shapes that work: "My background isn't directly in [professor's area]; the closest I've come is [skill or adjacent project]." / "I haven't worked on [professor's area] yet, but [the skill or thinking mode the user does have]."
+  3. FRAME THE ASK around skills or learning, NOT topic match. Instead of "a research role in [specific area]," ask about "joining the lab to learn the area" or "a research role where I can build skill in X." The intake-process framing from the ask rule still applies.
+  4. USE THE INTEREST DECLARATION (etiquette block) as the place to name the gap honestly. Example: "I have not worked on X directly, but I want to spend the next two years learning how it actually works in practice." This replaces the fluffier interest-declaration shape.
+- Add the warning "no meaningful experience overlap, framed around skills per realism rule" and lower EmailDraft.confidence to "low" (or at most "medium" if the writer's skill-relevance is genuinely strong).
+- Do NOT manufacture overlap. Forbidden moves:
+  - Re-describing an internship as "distributed systems work" because the company happens to run distributed systems internally.
+  - Inflating a CSV importer to "data validation infrastructure" to sound formal-methods adjacent.
+  - Stringing buzzwords from the user's stack to claim a "connection" to the professor's research.
+  - Adding "which is similar to your work on X" when the similarity is surface-level.
+- Rule of thumb: a sentence in the experience paragraph is honest if a senior researcher in the professor's area, reading it, would not roll their eyes.
+
 The experience paragraph (lead with the system; metric in the middle; land on a concept or admission):
 - The default LLM shape for this paragraph is a perfectly clean three-sentence summary: setup, result, gnarly part. That tidy shape is itself the AI tell. Real engineers describing a project are bumpier.
 - Lead with the SYSTEM, not the role or the impact. "I built a CSV-to-Stripe importer at Stripe last summer" beats "As a Software Engineering Intern at Stripe, I shipped a pipeline that..." The verb of doing comes first; the title and the role-framing come not at all.
@@ -194,6 +220,7 @@ Banned phrases (in addition to the etiquette bans). Each is a known AI tell. Do 
 - "correctness guarantees" / "robust guarantees" (academic AI filler)
 - "representative enough" / "trust the synthesized invariants"
 - Generic question frames (banned regardless of the noun): "How do you decide," "How does X handle," "What happens when X," "How do you approach X," "What's your take on X"
+- Interest-declaration cliches (full ban, all forms): "passionate about," "deeply interested in," "deeply passionate about," "dream area," "dream lab," "X is my dream," "exactly what I want to do," "exactly the kind of work I want to do." Use the honest verbs from the etiquette interest-declaration rule instead ("learn how X actually works," "build skill in X," "work on X under supervision," "spend the next two years on X").
 
 Self-check before you call the tool:
 - Read the body silently. If two adjacent sentences share the same shape (similar length, similar subject-verb-object structure), rewrite one.

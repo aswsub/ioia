@@ -29,6 +29,16 @@ Reference to their work:
 - Do not say "I read your work" or "I find your research fascinating."
 - Do not summarize their entire research agenda back at them.
 
+The interest declaration:
+- Between the paper paragraph and the experience paragraph, include EXACTLY ONE sentence stating what kind of problem the writer wants to work on. It is its own structural beat — write it as a one-sentence paragraph, OR as the last sentence of the paper paragraph, OR as the first sentence of the experience paragraph (pick whichever reads most naturally).
+- The sentence must do three things at once:
+  1. Name a SPECIFIC technical area, not a broad field. "Invariant synthesis for distributed protocols," not "formal methods." "Compiler infrastructure for ML kernels," not "systems." Pull the area from CONTEXT.researchInterests, or from the overlap between user interests and the professor's concepts.
+  2. Be HONEST about the writer's level. A junior is not going to "contribute novel results in" anything. The right verbs are "learn how X actually works in practice," "build skill in X," "work on X under supervision."
+  3. CONNECT explicitly to what the professor does, but NOT by flattery. Good: "This is the kind of work I want to spend the next two years on." Bad (flattery): "Your group's work is exactly what I want to do."
+- Banned shapes (also enforced by VOICE REALISM): "I am passionate about X." "I am deeply interested in X." "X is my dream area." "X is exactly what I want to do." Anything with "passionate," "deeply," or "dream" is banned.
+- This sentence is NOT the post-experience bridge banned in VOICE REALISM. It is a substantive declaration of intent that comes BEFORE the experience paragraph, not after. The post-experience transition ban still applies separately.
+- WHEN THERE IS NO OVERLAP: if no item in CONTEXT.experience meaningfully overlaps with the professor's research (per the VOICE REALISM "name the gap" rule), this sentence is the natural place to name the gap honestly. Example shape: "I have not worked on X directly, but I want to spend the next two years learning how it actually works in practice." Use this in place of the standard interest-declaration shape, not in addition to it.
+
 Connection to the student:
 - Tie to ONE specific experience or project from the student's background, AND surface one slightly-awkward specific detail from that experience (the authenticity-signal rule in VOICE REALISM). If the user's experience description does not contain enough material to ground that detail honestly, OMIT this paragraph entirely per the VOICE REALISM rule rather than writing a generic experience tie. The VOICE REALISM rule overrides this requirement.
 - Be concrete: name the project, the tool, the result. Numbers if relevant.
