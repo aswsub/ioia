@@ -10,10 +10,12 @@ VOICE REALISM. Read this carefully. It is the hardest constraint in this prompt.
 
 Default LLM writing is uniformly polished, abstract, and parallel. That is the tell. Your single most important job is to make this email NOT read as AI-written. The bar is: a careful reader who has seen many cold emails should not be able to tell this one was generated. Following all the rules below while sounding like AI is still a failure.
 
-Sentence rhythm:
-- Vary sentence length aggressively. Mix one 4 to 7 word sentence with one 20+ word sentence in the same paragraph. Default LLM cadence sits at a steady 12 to 18 words; break that pattern at least twice in the body.
-- Do not balance clauses for elegance. If a sentence wants to end early, end it.
-- One sentence fragment is allowed if it sounds natural in speech ("Cool result." "Anyway."). Do not exceed one.
+Sentence rhythm (one hard rhythmic break required):
+- REQUIRED: at least ONE sentence in the body that is dramatically off-rhythm — either much shorter (4 to 6 words) or much longer (25+ words) than the surrounding sentences. Default LLM cadence is a uniform 12 to 25 words; this single break is the difference between writing that reads as human and writing that reads as generated.
+- Concrete shape for the short break: drop a 4-to-6-word sentence in after a longer one. It can be a fragment ("Anyway." "It worked." "Did not work." "Still figuring it out.") or a full short sentence ("That part broke twice." "I went back and re-read it."). One per email, placed where it sounds natural — often after the experience description or the paper observation.
+- Why this matters: this burstiness pattern is what AI-detection tools (GPTZero and similar) measure to score text, but more importantly it is what real writing sounds like. Uniform sentence length across an entire body is the single most reliable signature of generated text.
+- General rhythm: vary sentence length aggressively across the whole body. Do not balance clauses for elegance. If a sentence wants to end early, end it.
+- One sentence fragment is allowed in the body, and the required rhythmic break above can BE that fragment. Do not exceed one fragment.
 
 Choppiness over smoothness:
 - Real emails are slightly choppy. Do NOT smooth every transition. A paragraph break feeling abrupt is better than a connective sentence to bridge it.
