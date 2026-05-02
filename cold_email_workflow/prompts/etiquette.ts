@@ -9,8 +9,8 @@ Subject line:
 - Bad: "Research Inquiry from Cal Poly Student"
 
 Opening:
-- One sentence. Identify yourself: name and school. You may add ONE additional concrete signal from CONTEXT (a stated interest, current focus, or recent project) when it sets up the email.
-- Do NOT invent year, major, GPA, age, or any biographical detail not present in CONTEXT. If CONTEXT has neither a year nor a major, the opening must omit them.
+- One sentence. Identify yourself: full name, university, and major (all present in CONTEXT). You may add ONE additional concrete signal from CONTEXT (a research interest, recent project, or focus area) when it sets up the email.
+- Do NOT invent year, age, or any biographical detail not present in CONTEXT. GPA is in CONTEXT but should be referenced only if it directly supports the ask — do not include it as a generic credential.
 - Do NOT open with "I hope this email finds you well," "My name is," or "I am reaching out because."
 - Just say what you are and why you are writing.
 
@@ -60,7 +60,7 @@ Hard avoids regardless of tone:
 - Exclamation points beyond at most one.
 - Adjectives like "groundbreaking," "fascinating," "incredible," "impressive."
 - Flattery in any form.
-- Inventing year, major, GPA, age, or any biographical detail not present in CONTEXT.
+- Inventing year, age, or any biographical detail not present in CONTEXT.
 - Any sentence that could be sent to any other professor unchanged.
 `.trim()
 
@@ -74,9 +74,9 @@ Subject line:
 - Bad: "Interested in opportunities at your company"
 
 Opening:
-- One sentence: name, school, and one concrete signal of what you build, drawn from CONTEXT.experience or CONTEXT.interests.
+- One sentence: full name, university, major, and one concrete signal of what you build, drawn from CONTEXT.experience or CONTEXT.researchInterests.
 - Lead with capability — a project, a shipped thing, a number — pulled from CONTEXT.
-- Do NOT invent year, major, GPA, age, or any biographical detail not present in CONTEXT.
+- Do NOT invent year, age, or any biographical detail not present in CONTEXT.
 
 Reference to their work:
 - Reference a specific product decision, blog post, talk, or technical choice the recipient or their team made.

@@ -9,12 +9,13 @@ export type ExperienceItem = {
 }
 
 export type UserProfile = {
-  name: string
-  email: string
-  school: string
-  interests: string[]
+  fullName: string
+  university: string
+  major: string
+  gpa: number | null
+  researchInterests: string[]
+  shortBio: string
   experience: ExperienceItem[]
-  goals: string
   tone: ToneProfile
 }
 
@@ -105,15 +106,19 @@ export function renderContextBlock(input: ContextInput): string {
       : "  (no recent papers available — return EmailDraft with confidence: \"low\" and a warning)",
     "",
     "USER:",
-    `- Name: ${user.name}`,
-    `- School: ${user.school}`,
+    `- Name: ${user.fullName}`,
+    `- University: ${user.university}`,
+    `- Major: ${user.major}`,
   )
 
-  if (user.interests.length > 0) {
-    sections.push(`- Interests: ${user.interests.join(", ")}`)
+  if (user.gpa !== null) {
+    sections.push(`- GPA: ${user.gpa}`)
   }
-  if (user.goals.trim()) {
-    sections.push(`- Goals: ${user.goals.trim()}`)
+  if (user.researchInterests.length > 0) {
+    sections.push(`- Research interests: ${user.researchInterests.join(", ")}`)
+  }
+  if (user.shortBio.trim()) {
+    sections.push(`- Short bio: ${user.shortBio.trim()}`)
   }
 
   sections.push(
@@ -140,7 +145,7 @@ export function renderContextBlock(input: ContextInput): string {
     "Hard reminders for this context:",
     paperReminder,
     "- Tie to exactly ONE user experience item, naming the project or role concretely.",
-    "- Do not invent papers, methods, lab details, prior contact, biographical details (year, major, GPA), or shared interests beyond what is above.",
+    "- Do not invent papers, methods, lab details, prior contact, year, age, or any biographical detail not present in CONTEXT, or shared interests beyond what is above.",
   )
 
   return sections.join("\n")

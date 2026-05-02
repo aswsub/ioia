@@ -6,12 +6,20 @@ import {
 } from "./prompts/extract_tone"
 import type { ToneProfile } from "./prompts/tone"
 
+// The extractor only fills the slice of ToneProfile that comes from the
+// writing sample. Voice / length / traits are user-selected on the frontend
+// and get merged in downstream.
+type ExtractedTonePhrases = Pick<
+  ToneProfile,
+  "signaturePhrases" | "avoidPhrases" | "confidence"
+>
+
 const client = new Anthropic()
 
-async function extractTone(sample: string): Promise<ToneProfile> {
+async function extractTone(sample: string): Promise<ExtractedTonePhrases> {
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
-    max_tokens: 1500,
+    max_tokens: 800,
     system: EXTRACT_TONE_SYSTEM,
     tools: [TONE_PROFILE_TOOL as unknown as Anthropic.Messages.Tool],
     tool_choice: { type: "tool", name: TONE_PROFILE_TOOL.name },
@@ -20,7 +28,7 @@ async function extractTone(sample: string): Promise<ToneProfile> {
 
   for (const block of response.content) {
     if (block.type === "tool_use" && block.name === TONE_PROFILE_TOOL.name) {
-      return block.input as ToneProfile
+      return block.input as ExtractedTonePhrases
     }
   }
   throw new Error(
@@ -51,9 +59,9 @@ async function main() {
     console.log("sample:")
     console.log(sample)
     console.log()
-    const tone = await extractTone(sample)
-    console.log("extracted ToneProfile:")
-    console.log(JSON.stringify(tone, null, 2))
+    const phrases = await extractTone(sample)
+    console.log("extracted phrases + confidence:")
+    console.log(JSON.stringify(phrases, null, 2))
     console.log()
   }
 }

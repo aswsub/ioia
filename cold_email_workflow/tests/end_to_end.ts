@@ -13,13 +13,26 @@ import {
   type DraftEmailInput,
   type EmailDraft,
 } from "../prompts/draft_email"
-import type { ToneProfile } from "../prompts/tone"
+import {
+  TONE_VOICES,
+  TONE_LENGTHS,
+  TONE_TRAITS,
+  type ToneProfile,
+  type ToneVoice,
+  type ToneLength,
+  type ToneTrait,
+} from "../prompts/tone"
 import type {
   ExperienceItem,
   Professor,
   UserProfile,
   OpportunityType,
 } from "../prompts/context"
+
+type ExtractedTonePhrases = Pick<
+  ToneProfile,
+  "signaturePhrases" | "avoidPhrases" | "confidence"
+>
 
 const client = new Anthropic()
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -39,6 +52,39 @@ async function askMultiline(prompt: string, sentinel = "END"): Promise<string> {
     lines.push(line)
   }
   return lines.join("\n").trim()
+}
+
+async function pickOne<T extends string>(
+  label: string,
+  options: readonly T[],
+  defaultIdx: number,
+): Promise<T> {
+  console.log(`${label}:`)
+  options.forEach((opt, i) => console.log(`  ${i + 1}. ${opt}`))
+  const raw = await ask(`Pick (1-${options.length})`, String(defaultIdx + 1))
+  const idx = Math.max(0, Math.min(options.length - 1, parseInt(raw, 10) - 1))
+  return options[idx]
+}
+
+async function pickMany<T extends string>(
+  label: string,
+  options: readonly T[],
+  defaultPicks: T[],
+): Promise<T[]> {
+  console.log(`${label} (comma-separated indices, blank for none):`)
+  options.forEach((opt, i) => console.log(`  ${i + 1}. ${opt}`))
+  const defaultStr = defaultPicks
+    .map(p => options.indexOf(p) + 1)
+    .filter(n => n > 0)
+    .join(",")
+  const raw = await ask(`Pick`, defaultStr || "(none)")
+  if (raw === "(none)" || raw === "") return []
+  const picked = raw
+    .split(",")
+    .map(s => parseInt(s.trim(), 10))
+    .filter(n => Number.isFinite(n) && n >= 1 && n <= options.length)
+    .map(n => options[n - 1])
+  return Array.from(new Set(picked))
 }
 
 const DEFAULT_WRITING_SAMPLE = `Built a thing this weekend that scrapes professor pages and dumps a CSV. Honestly thought it'd take 2 hours, ended up shipping at 4am. The gnarly part was OpenAlex rate limits — I ended up batching with backoff and that fixed it. Not perfect but it works on three universities.`
@@ -128,10 +174,10 @@ const PROFESSORS: Professor[] = [
   },
 ]
 
-async function extractTone(sample: string): Promise<ToneProfile> {
+async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases> {
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
-    max_tokens: 1500,
+    max_tokens: 800,
     system: EXTRACT_TONE_SYSTEM,
     tools: [TONE_PROFILE_TOOL as unknown as Anthropic.Messages.Tool],
     tool_choice: { type: "tool", name: TONE_PROFILE_TOOL.name },
@@ -139,7 +185,7 @@ async function extractTone(sample: string): Promise<ToneProfile> {
   })
   for (const block of response.content) {
     if (block.type === "tool_use" && block.name === TONE_PROFILE_TOOL.name) {
-      return block.input as ToneProfile
+      return block.input as ExtractedTonePhrases
     }
   }
   throw new Error(
@@ -192,13 +238,17 @@ async function main() {
     useDefault === "n" ? await askMultiline("Paste your writing sample:") : DEFAULT_WRITING_SAMPLE
   console.log()
 
-  // 2. user fields
+  // 2. user profile fields
   console.log("--- USER PROFILE ---")
-  const name = await ask("Name", "Sid Balaji")
-  const school = await ask("School", "Cal Poly SLO")
-  const interestsStr = await ask("Interests (comma-separated)", "program synthesis, distributed systems")
-  const interests = interestsStr.split(",").map(s => s.trim()).filter(Boolean)
-  const goals = await ask("Goals (one line)", "looking for a research role for fall 2026")
+  const fullName = await ask("Full name", "Sid Balaji")
+  const university = await ask("University", "California Polytechnic State University, San Luis Obispo")
+  const major = await ask("Major", "Computer Science")
+  const gpaRaw = await ask("GPA (or blank)", "3.7")
+  const gpaParsed = parseFloat(gpaRaw)
+  const gpa = Number.isFinite(gpaParsed) ? gpaParsed : null
+  const interestsStr = await ask("Research interests (comma-separated)", "program synthesis, distributed systems")
+  const researchInterests = interestsStr.split(",").map(s => s.trim()).filter(Boolean)
+  const shortBio = await ask("Short bio (one line)", "CS junior at Cal Poly, focused on systems and verification. Looking for a research role for fall 2026.")
   console.log()
 
   // 3. experience — type your own
@@ -213,7 +263,18 @@ async function main() {
   }
   console.log()
 
-  // 4. professor
+  // 4. style and tone (user-selected, not extracted)
+  console.log("--- STYLE & TONE ---")
+  const voice: ToneVoice = await pickOne("Voice", TONE_VOICES, 0)
+  const length: ToneLength = await pickOne("Email length", TONE_LENGTHS, 1)
+  const traits: ToneTrait[] = await pickMany(
+    "Writing traits",
+    TONE_TRAITS,
+    ["mentions_specific_paper", "asks_genuine_question", "avoids_buzzwords"],
+  )
+  console.log()
+
+  // 5. professor
   console.log("--- TARGET PROFESSOR ---")
   PROFESSORS.forEach((p, i) => {
     const concepts = p.concepts.slice(0, 3).map(c => c.name).join(", ")
@@ -224,43 +285,52 @@ async function main() {
   const professor = PROFESSORS[profIdx]
   console.log()
 
-  // 5. opportunity
+  // 6. opportunity
   const oppRaw = (await ask("Opportunity type (research/internship)", "research")).toLowerCase()
   const opportunity: OpportunityType = oppRaw === "internship" ? "internship" : "research"
 
-  // 6. optional notes
-  const userNotesRaw = await ask("Optional notes for the writer (e.g. 'mention I have GPA 3.9')", "")
+  // 7. optional notes
+  const userNotesRaw = await ask("Optional notes for the writer (blank for none)", "")
   const userNotes = userNotesRaw.trim() || undefined
   console.log()
 
   rl.close()
 
-  // 7. extract tone
+  // 8. extract tone phrases
   console.log("=".repeat(72))
-  console.log("Step 1: extracting tone profile from writing sample (Haiku)…")
+  console.log("Step 1: extracting phrasing patterns from writing sample (Haiku)…")
   console.log("=".repeat(72))
-  const tone = await extractTone(sample)
-  console.log(JSON.stringify(tone, null, 2))
+  const phrases = await extractTonePhrases(sample)
+  console.log(JSON.stringify(phrases, null, 2))
   console.log()
 
-  // 8. compose user profile
+  // 9. compose full ToneProfile (user-selected + extracted)
+  const tone: ToneProfile = {
+    voice,
+    length,
+    traits,
+    ...phrases,
+  }
+
+  // 10. compose user profile
   const user: UserProfile = {
-    name,
-    email: "you@example.com",
-    school,
-    interests,
+    fullName,
+    university,
+    major,
+    gpa,
+    researchInterests,
+    shortBio,
     experience: [experience],
-    goals,
     tone,
   }
 
-  // 9. draft email
+  // 11. draft email
   console.log("=".repeat(72))
   console.log("Step 2: drafting email (Sonnet, streaming)…")
   console.log("=".repeat(72))
   const draft = await streamDraftEmail({ user, professor, opportunity, userNotes })
 
-  // 10. final draft pretty-print
+  // 12. final draft pretty-print
   console.log()
   console.log("=".repeat(72))
   console.log("Final EmailDraft:")
@@ -283,7 +353,7 @@ async function main() {
   }
   console.log()
 
-  // 11. mailto preview
+  // 13. mailto preview
   if (professor.email) {
     const url = `mailto:${professor.email}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`
     console.log("mailto:")
