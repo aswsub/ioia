@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Run Dashboard Locally",
+  "description": "When triggered, installs npm dependencies for the \"Create minimalist dashboard\" project and starts the Vite dev server so the app runs locally.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm install && npm run dev",
+    "timeout": 0
+  }
+}

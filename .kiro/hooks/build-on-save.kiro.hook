@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Build on Save",
+  "description": "Runs a Vite production build of the dashboard after any source file is saved, so build errors are caught immediately during development.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.tsx",
+      "src/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm run build 2>&1 | tail -20",
+    "timeout": 60
+  }
+}
