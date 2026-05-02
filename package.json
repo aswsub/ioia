@@ -1,13 +1,18 @@
 {
-  "name": "@figma/my-make-file",
+  "name": "ioia",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "smoke:tone": "tsx --env-file=.env cold_email_workflow/tests/smoke.ts",
+    "extract:tone": "tsx --env-file=.env cold_email_workflow/extract_tone_runner.ts",
+    "test:e2e": "tsx --env-file=.env cold_email_workflow/tests/end_to_end.ts",
+    "test:pipeline": "tsx --env-file=.env cold_email_workflow/tests/pipeline.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.5",
@@ -63,12 +68,16 @@
     "sonner": "2.0.3",
     "tailwind-merge": "3.2.0",
     "tw-animate-css": "1.3.8",
-    "vaul": "1.1.2"
+    "vaul": "1.1.2",
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
+    "@types/node": "^25.6.0",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
     "vite": "6.3.5"
   },
   "peerDependencies": {

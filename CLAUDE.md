@@ -73,18 +73,19 @@ What we know about the student.
   interests: string[]              // ["program synthesis", "distributed systems"]
   experience: ExperienceItem[]     // structured from resume
   goals: string                    // free text, what they want
-  tone: TonePr ofile                // extracted from writing sample
+  tone: ToneProfile                 // extracted from writing sample
 }
 ```
 
-### `TonePr ofile`
+### `ToneProfile`
 Extracted once at onboarding. Injected into every email-writer call.
 ```ts
 {
   formality: "casual" | "neutral" | "formal"
   sentenceLength: "short" | "medium" | "long"
-  contractions: boolean
+  contractions: "uses" | "avoids" | "unknown"
   hedging: "low" | "medium" | "high"
+  confidence: "low" | "medium" | "high"
   signaturePhrases: string[]       // recurring constructions from the sample
   avoidPhrases: string[]           // things they would never say
 }
@@ -234,7 +235,7 @@ Wrapper lives in `lib/claude.ts`. Always go through it.
 - Set `max_tokens` explicitly per call. Profile extraction: 1500. Email draft: 800.
 - Use Haiku for extraction/classification, Sonnet for generation. Don't use Opus unless you've measured Sonnet falling short.
 - Stream the email draft to the client. Other calls can be non-streaming.
-- The API key is `ANTHROPIC_API_KEY` in `.env.local`. Never commit it. Never log it.
+- The API key is `ANTHROPIC_API_KEY` in `.env`. Never commit it. Never log it.
 
 ---
 
@@ -316,7 +317,7 @@ npm run lint
 
 Environment:
 ```bash
-# .env.local
+# .env
 ANTHROPIC_API_KEY=sk-ant-...
 OPENALEX_EMAIL=team@example.com   # for OpenAlex User-Agent
 ```
