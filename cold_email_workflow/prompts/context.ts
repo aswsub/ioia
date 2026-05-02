@@ -1,4 +1,10 @@
 import type { ToneProfile } from "./tone"
+import { wrapAsData } from "../sanitize"
+
+// Local convenience: wrap a user-controlled string as untrusted data.
+// Pair with the EMAIL_WRITER_ROLE clause that tells the model to treat
+// content inside <ut> tags as data, not instructions.
+const ut = (s: string) => wrapAsData(s, "ut")
 
 export type ExperienceItem = {
   title: string
@@ -59,9 +65,9 @@ function truncate(text: string, max: number): string {
 function renderPapers(papers: RecentPaper[]): string {
   return papers
     .map((p, i) => {
-      const head = `${i + 1}. "${p.title}" (${p.year}) — ${p.url}`
+      const head = `${i + 1}. ${ut(p.title)} (${p.year}) — ${ut(p.url)}`
       if (!p.abstract) return head
-      return `${head}\n   abstract: ${truncate(p.abstract, ABSTRACT_MAX_CHARS)}`
+      return `${head}\n   abstract: ${ut(truncate(p.abstract, ABSTRACT_MAX_CHARS))}`
     })
     .join("\n")
 }
@@ -69,9 +75,10 @@ function renderPapers(papers: RecentPaper[]): string {
 function renderExperience(items: ExperienceItem[]): string {
   return items
     .map((e, i) => {
-      const dates = [e.startDate, e.endDate].filter(Boolean).join("–")
-      const head = `${i + 1}. ${e.title}, ${e.org}${dates ? ` (${dates})` : ""}`
-      return `${head}\n   ${e.description}`
+      const dateParts = [e.startDate, e.endDate].filter((d): d is string => Boolean(d)).map(ut)
+      const dates = dateParts.join("–")
+      const head = `${i + 1}. ${ut(e.title)}, ${ut(e.org)}${dates ? ` (${dates})` : ""}`
+      return `${head}\n   ${ut(e.description)}`
     })
     .join("\n")
 }
@@ -89,13 +96,13 @@ export function renderContextBlock(input: ContextInput): string {
     `Opportunity type: ${opportunity}`,
     "",
     "PROFESSOR:",
-    `- Name: ${professor.name}`,
-    `- Affiliation: ${professor.affiliation}`,
-    `- Email: ${professor.email ?? "null"}`,
+    `- Name: ${ut(professor.name)}`,
+    `- Affiliation: ${ut(professor.affiliation)}`,
+    `- Email: ${professor.email === null ? "null" : ut(professor.email)}`,
   ]
 
   if (concepts.length > 0) {
-    sections.push(`- Top research concepts: ${concepts.join(", ")}`)
+    sections.push(`- Top research concepts: ${concepts.map(ut).join(", ")}`)
   }
 
   sections.push(
@@ -106,19 +113,19 @@ export function renderContextBlock(input: ContextInput): string {
       : "  (no recent papers available — return EmailDraft with confidence: \"low\" and a warning)",
     "",
     "USER:",
-    `- Name: ${user.fullName}`,
-    `- University: ${user.university}`,
-    `- Major: ${user.major}`,
+    `- Name: ${ut(user.fullName)}`,
+    `- University: ${ut(user.university)}`,
+    `- Major: ${ut(user.major)}`,
   )
 
   if (user.gpa !== null) {
     sections.push(`- GPA: ${user.gpa}`)
   }
   if (user.researchInterests.length > 0) {
-    sections.push(`- Research interests: ${user.researchInterests.join(", ")}`)
+    sections.push(`- Research interests: ${user.researchInterests.map(ut).join(", ")}`)
   }
   if (user.shortBio.trim()) {
-    sections.push(`- Short bio: ${user.shortBio.trim()}`)
+    sections.push(`- Short bio: ${ut(user.shortBio.trim())}`)
   }
 
   sections.push(
@@ -131,7 +138,7 @@ export function renderContextBlock(input: ContextInput): string {
     sections.push(
       "",
       "User notes (incorporate if directly relevant; otherwise ignore):",
-      userNotes.trim(),
+      ut(userNotes.trim()),
     )
   }
 
