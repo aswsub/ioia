@@ -1,8 +1,9 @@
 export type ToneProfile = {
   formality: "casual" | "neutral" | "formal"
   sentenceLength: "short" | "medium" | "long"
-  contractions: boolean
+  contractions: "uses" | "avoids" | "unknown"
   hedging: "low" | "medium" | "high"
+  confidence: "low" | "medium" | "high"
   signaturePhrases: string[]
   avoidPhrases: string[]
 }
@@ -31,7 +32,25 @@ const HEDGING: Record<ToneProfile["hedging"], string> = {
   medium:
     "Hedging: medium. One soft phrase like 'I think' or 'it seems' is allowed in the connection paragraph only. Nowhere else.",
   high:
-    "Hedging: high. Soften claims about the professor's work and your own with 'it seems,' 'I might,' 'I'm curious whether.' The ask itself must still be direct — do not hedge the ask.",
+    "Hedging: high. Soften claims about the professor's work and your own with 'it seems,' 'I might,' 'I am curious whether.' The ask itself must still be direct — do not hedge the ask.",
+}
+
+const CONTRACTIONS: Record<ToneProfile["contractions"], string> = {
+  uses:
+    "Contractions: yes. Use 'I'm,' 'don't,' 'it's,' 'I've' naturally. Avoid only when they create awkwardness.",
+  avoids:
+    "Contractions: no. Write 'I am,' 'do not,' 'it is,' 'I have.'",
+  unknown:
+    "Contractions: unknown. Use natural professional defaults; contractions are allowed if they keep the email from sounding stiff.",
+}
+
+const CONFIDENCE: Record<ToneProfile["confidence"], string> = {
+  high:
+    "Tone confidence: high. Mirror these traits, while still following the etiquette block.",
+  medium:
+    "Tone confidence: medium. Use these traits lightly and prioritize clear, natural professor outreach.",
+  low:
+    "Tone confidence: low. Use a neutral, professional student voice and do not overfit the sample.",
 }
 
 function bullets(items: string[]): string {
@@ -43,11 +62,10 @@ export function renderToneBlock(tone: ToneProfile): string {
     "TONE — MIRROR THE USER'S VOICE.",
     "When the tone block conflicts with the etiquette block, the etiquette block wins. Tone controls HOW the user sounds, not whether the hard rules apply.",
     "",
+    CONFIDENCE[tone.confidence],
     FORMALITY[tone.formality],
     SENTENCE_LENGTH[tone.sentenceLength],
-    tone.contractions
-      ? "Contractions: yes. Use 'I'm,' 'don't,' 'it's,' 'I've' naturally. Avoid only when they create awkwardness."
-      : "Contractions: no. Write 'I am,' 'do not,' 'it is,' 'I have.'",
+    CONTRACTIONS[tone.contractions],
     HEDGING[tone.hedging],
   ]
 

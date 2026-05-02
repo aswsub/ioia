@@ -6,8 +6,9 @@ const profiles: { label: string; tone: ToneProfile }[] = [
     tone: {
       formality: "casual",
       sentenceLength: "short",
-      contractions: true,
+      contractions: "uses",
       hedging: "low",
+      confidence: "high",
       signaturePhrases: ["I built", "ended up shipping", "the gnarly part was"],
       avoidPhrases: ["leverage", "synergize", "passionate about"],
     },
@@ -17,8 +18,9 @@ const profiles: { label: string; tone: ToneProfile }[] = [
     tone: {
       formality: "formal",
       sentenceLength: "long",
-      contractions: false,
+      contractions: "avoids",
       hedging: "high",
+      confidence: "high",
       signaturePhrases: ["I am particularly drawn to", "this raises the question of"],
       avoidPhrases: ["super cool", "pretty awesome"],
     },
@@ -28,8 +30,9 @@ const profiles: { label: string; tone: ToneProfile }[] = [
     tone: {
       formality: "neutral",
       sentenceLength: "medium",
-      contractions: true,
+      contractions: "unknown",
       hedging: "medium",
+      confidence: "medium",
       signaturePhrases: [],
       avoidPhrases: [],
     },
