@@ -10,13 +10,13 @@ Subject line:
 
 Opening:
 - One sentence. Identify yourself: full name, university, and major (all present in CONTEXT). You may add ONE additional concrete signal from CONTEXT (a research interest, recent project, or focus area) when it sets up the email.
-- Do NOT invent year, age, or any biographical detail not present in CONTEXT. GPA is in CONTEXT but should be referenced only if it directly supports the ask — do not include it as a generic credential.
+- Do NOT invent year, age, timing, or any biographical detail not present in CONTEXT. GPA is in CONTEXT but should be referenced only if it directly supports the ask; do not include it as a generic credential.
 - Do NOT open with "I hope this email finds you well," "My name is," or "I am reaching out because."
 - Just say what you are and why you are writing.
 
 Reference to their work:
 - Reference exactly ONE specific recent paper by title (or a specific project from their homepage).
-- Show one concrete thing you took from it — a method, a finding, a question it raised.
+- Show one concrete thing you took from it: a method, a finding, a question it raised.
 - Only reference papers, methods, projects, lab details, or affiliations that are present in the provided professor context.
 - Do not invent familiarity, shared interests, lab openings, prior contact, or details about the professor's work.
 - If the provided context is too weak to support a specific reference, return confidence: "low" with a warning instead of faking specificity.
@@ -30,6 +30,7 @@ Connection to the student:
 - Write about WHY you are interested in this professor and their research and how it connects to the user's own interests
 - Include timing and availability when the user's context provides it: target term/season, start date, or hours per week.
 - Do not invent availability. If timing or weekly commitment is not provided, omit it.
+- Do not invent dates, seasons, or relative timing for experiences. If an experience has no startDate/endDate, do not write "last summer," "this semester," or similar timing.
 
 The ask:
 - Direct. One sentence.
@@ -47,12 +48,12 @@ Length:
 - Three to four short paragraphs, or two slightly longer ones.
 
 Closing:
-- One line. "Best," or "Thanks," — match the user's tone profile.
+- One line. "Best," or "Thanks," matching the user's tone profile.
 - Full name on the next line.
 - No quotes, no signatures with five contact methods, no pronouns block unless the tone profile suggests it.
 
 Hard avoids regardless of tone:
-- Em-dashes (—). Use commas, periods, or "and" instead.
+- Em dash or en dash characters. Use commas, periods, plain hyphens, or "and" instead.
 - "I hope this email finds you well."
 - "I am reaching out because."
 - "I would love the opportunity to."
@@ -70,12 +71,12 @@ NORMS FOR COLD EMAILING ABOUT AN INTERNSHIP OR ENGINEERING ROLE:
 Subject line:
 - 4 to 8 words.
 - Reference a specific product, team, or recent company news when possible.
-- Good: "CS sophomore — interested in your Linear sync engine work"
+- Good: "CS sophomore interested in Linear sync work"
 - Bad: "Interested in opportunities at your company"
 
 Opening:
 - One sentence: full name, university, major, and one concrete signal of what you build, drawn from CONTEXT.experience or CONTEXT.researchInterests.
-- Lead with capability — a project, a shipped thing, a number — pulled from CONTEXT.
+- Lead with capability: a project, a shipped thing, or a number pulled from CONTEXT.
 - Do NOT invent year, age, or any biographical detail not present in CONTEXT.
 
 Reference to their work:

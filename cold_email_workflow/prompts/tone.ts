@@ -45,9 +45,9 @@ const VOICE: Record<ToneVoice, string> = {
   direct:
     "Voice: direct. Short sentences. Get to the point fast. State things as claims. No throat-clearing, no unnecessary qualifiers, no preambles. The ask is one sentence.",
   enthusiastic:
-    "Voice: enthusiastic. Show genuine curiosity and energy in word choice. Contractions are natural. Etiquette caps exclamation points at one — do not exceed that.",
+    "Voice: enthusiastic. Show genuine curiosity and energy in word choice. Contractions are natural. Etiquette caps exclamation points at one; do not exceed that.",
   humble:
-    "Voice: humble. Frame your own contribution modestly without false modesty. Light hedging is OK ('it seems,' 'I think'). Do NOT hedge the ask itself — it must still be direct.",
+    "Voice: humble. Frame your own contribution modestly without false modesty. Light hedging is OK ('it seems,' 'I think'). Do NOT hedge the ask itself; it must still be direct.",
 }
 
 const LENGTH: Record<ToneLength, string> = {
@@ -56,12 +56,12 @@ const LENGTH: Record<ToneLength, string> = {
   moderate:
     "Length preference: moderate. Use the middle of the etiquette cap. Three short paragraphs is a good shape.",
   detailed:
-    "Length preference: detailed. Approach the etiquette cap, do not exceed it. Every sentence still earns its place — do not pad.",
+    "Length preference: detailed. Approach the etiquette cap, do not exceed it. Every sentence still earns its place; do not pad.",
 }
 
 const TRAIT: Record<ToneTrait, string> = {
   mentions_specific_paper:
-    "Reference one specific recent paper by title with a concrete idea you took from it (already required by etiquette — do it well).",
+    "Reference one specific recent paper by title with a concrete idea you took from it (already required by etiquette; do it well).",
   asks_genuine_question:
     "Include one genuine question about the professor's work that you would actually want to discuss in person. The question must be specific and tied to the cited paper or concept.",
   references_shared_interest:
@@ -75,12 +75,12 @@ const TRAIT: Record<ToneTrait, string> = {
   keeps_it_personal:
     "Lean on first-person voice and concrete personal stakes. Avoid passive voice and impersonal framing.",
   data_driven_language:
-    "Include at least one concrete number, metric, or measurable outcome from the user's experience (lines of code, users served, latency, dataset size, etc.). Skip if the user's experience does not provide one — do NOT invent metrics.",
+    "Include at least one concrete number, metric, or measurable outcome from the user's experience (lines of code, users served, latency, dataset size, etc.). Skip if the user's experience does not provide one; do NOT invent metrics.",
 }
 
 const CONFIDENCE: Record<ToneConfidence, string> = {
   high:
-    "Tone-extraction confidence: high. The signature and avoid phrases below are reliable — mirror them, while still following the etiquette block.",
+    "Tone-extraction confidence: high. The signature and avoid phrases below are reliable; mirror them while still following the etiquette block.",
   medium:
     "Tone-extraction confidence: medium. Use the signature and avoid phrases below lightly and prioritize clear, natural professor outreach.",
   low:
@@ -93,7 +93,7 @@ function bullets(items: string[]): string {
 
 export function renderToneBlock(tone: ToneProfile): string {
   const sections: string[] = [
-    "TONE — MIRROR THE USER'S VOICE.",
+    "TONE: MIRROR THE USER'S VOICE.",
     "When the tone block conflicts with the etiquette block, the etiquette block wins, EXCEPT where a user-selected trait below explicitly overrides a specific etiquette rule.",
     "",
     VOICE[tone.voice],
@@ -103,7 +103,7 @@ export function renderToneBlock(tone: ToneProfile): string {
   if (tone.traits.length > 0) {
     sections.push(
       "",
-      "Writing traits the user selected — incorporate these where natural:",
+      "Writing traits the user selected, incorporate these where natural:",
       tone.traits.map(t => `  - ${TRAIT[t]}`).join("\n"),
     )
   }

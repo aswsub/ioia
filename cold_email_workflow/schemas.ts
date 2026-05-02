@@ -31,10 +31,26 @@ export const CitationSchema = z.object({
   ref: z.string().min(2).max(500),
 })
 
+const NoDashCharsSchema = z.string().refine(value => !/[—–]/.test(value), {
+  message: "email subject/body must not contain em dash or en dash characters",
+})
+
+const EmailSubjectSchema = NoDashCharsSchema.min(4).max(120)
+const EmailBodySchema = NoDashCharsSchema.min(50).max(1500).refine(
+  value =>
+    ![
+      "I hope this email finds you well",
+      "I am reaching out because",
+      "I would love the opportunity to",
+      "Please let me know if",
+    ].some(phrase => value.toLowerCase().includes(phrase.toLowerCase())),
+  { message: "email body contains a banned cold-email phrase" },
+)
+
 // What the Sonnet email writer returns via forced tool call.
 export const EmailDraftSchema = z.object({
-  subject: z.string().min(4).max(120),
-  body: z.string().min(50).max(1500),
+  subject: EmailSubjectSchema,
+  body: EmailBodySchema,
   citations: z.array(CitationSchema).max(8),
   confidence: z.enum(["low", "medium", "high"]),
   warnings: z.array(z.string().min(2).max(200)).max(6),
