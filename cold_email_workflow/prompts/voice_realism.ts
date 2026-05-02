@@ -101,6 +101,18 @@ One slightly-awkward, specific detail (authenticity signal):
 - If CONTEXT does not provide enough material to ground a slightly-awkward specific detail honestly, do NOT manufacture one. Instead, DROP the experience paragraph entirely. The body becomes: greeting, paper-reference paragraph, ask. This OVERRIDES the etiquette requirement to include an experience tie. When you do this, add the warning "no awkward-specific detail available, omitted experience paragraph per realism rule" and lower confidence to at most "medium."
 - The detail is one detail, not a series. One concrete weird fact carries the whole signal; two starts to feel performative.
 
+The experience paragraph (lead with the system, bury the metric):
+- The default LLM shape for this paragraph is a perfectly clean three-sentence summary: setup, result, gnarly part. That tidy shape is itself the AI tell. Real engineers describing a project are bumpier.
+- Lead with the SYSTEM, not the role or the impact. "I built a CSV-to-Stripe importer at Stripe last summer" beats "As a Software Engineering Intern at Stripe, I shipped a pipeline that..." The verb of doing comes first; the title and the role-framing come not at all.
+- Then do ONE of these two moves (do NOT do both — one is the texture; both is performance):
+  (a) LEAD WITH THE FAILURE OR SURPRISE. After the system sentence, name what broke, what was unexpected, or what didn't work the first time. "The hard part wasn't the API" / "It worked, then it didn't, then we figured out why."
+  (b) GET SPECIFIC ABOUT THE WRONG THING. After the system sentence, drill into a narrow technical detail a polished bullet would have left out: a constraint, a data shape, an edge case, a tool version, a particular row that broke a batch.
+- BURY the impact metric. Do NOT lead the paragraph with the number. Do NOT put it in subject position. Drop it casually at the end, after the technical detail. "Got onboarding from 3 days to 4 hours once we figured out the batching" buries it; "Cut onboarding from 3 days to 4 hours" reads as a resume bullet.
+- All technical detail (failure modes, constraints, row counts, tool names, edge cases) MUST be traceable to CONTEXT.experience or CONTEXT.shortBio. Do NOT invent constraints, error modes, or system internals not present in CONTEXT. If CONTEXT only names a stack and a metric, your textured paragraph will be shorter than the example below — that is correct. The shape rule and the no-invention rule both hold; sparse CONTEXT means a sparser paragraph, not an invented one.
+- Example shape (illustrative only — do NOT copy verbatim. Specifics here would only be valid if CONTEXT supports them):
+  "I built a CSV-to-Stripe importer at Stripe last summer. The hard part was not the API. It was that we couldn't validate merchant data against our Postgres constraints before hitting Stripe, so one bad row would tank a 10,000-row batch and there was no clean way to resume. Got onboarding from 3 days to 4 hours once we figured out the batching."
+- What that example does right: leads with the system (built X), names the failure mode in concrete terms (couldn't validate before hitting Stripe, one bad row tanked a batch, no clean resume), buries the impact metric in a casual closing sentence. It reads as someone who actually built the thing, not someone summarizing a resume bullet.
+
 No transition sentence between user experience and professor's work:
 - Do NOT write any sentence whose job is to bridge the user's experience to the professor's work. The reader will see the connection from the choice of paper and the choice of experience. Spelling the link out is the AI tell.
 - Banned bridge shapes (do not write these or close paraphrases):
