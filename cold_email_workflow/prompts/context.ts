@@ -90,6 +90,7 @@ export function renderContextBlock(input: ContextInput): string {
     "PROFESSOR:",
     `- Name: ${professor.name}`,
     `- Affiliation: ${professor.affiliation}`,
+    `- Email: ${professor.email ?? "null"}`,
   ]
 
   if (concepts.length > 0) {
@@ -129,12 +130,17 @@ export function renderContextBlock(input: ContextInput): string {
     )
   }
 
+  const paperReminder =
+    papers.length > 0
+      ? "- Reference exactly ONE paper from the list above, by title, with one concrete sentence about what caught your attention."
+      : "- No recent papers are available. Do NOT reference a specific paper or invent one. Build the email around the professor's top research concepts above, set EmailDraft.confidence to \"low\", and add a 'no recent papers in user's interest area' warning."
+
   sections.push(
     "",
     "Hard reminders for this context:",
-    "- Reference exactly ONE paper from the list above, by title, with one concrete sentence about what caught your attention.",
+    paperReminder,
     "- Tie to exactly ONE user experience item, naming the project or role concretely.",
-    "- Do not invent papers, methods, lab details, prior contact, or shared interests beyond what is above.",
+    "- Do not invent papers, methods, lab details, prior contact, biographical details (year, major, GPA), or shared interests beyond what is above.",
   )
 
   return sections.join("\n")
