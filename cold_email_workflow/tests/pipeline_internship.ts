@@ -103,14 +103,19 @@ type Scenario = {
 
 const SCENARIOS: Scenario[] = [
   {
-    label: "Linear / Daniel Park (IC, talk author = Tuomas Artman)",
+    label: "Linear / Daniel Park (IC, talk author = Tuomas Artman, cofounder)",
     query: "Linear sync engine internship",
     teamFocus: "Sync Engine",
   },
   {
-    label: "Vercel / Lydia Mendez (IC, post author = Lydia Hallie — name-similarity canary)",
+    label: "Vercel / Lydia Mendez (IC, post author = Lydia Hallie — peer-level + name-similarity canary)",
     query: "Vercel edge runtime",
     teamFocus: "Edge Runtime",
+  },
+  {
+    label: "Anthropic / Marcus Chen (IC, both notableWork have author=null)",
+    query: "Anthropic Claude Code internship",
+    teamFocus: "Claude Code",
   },
 ]
 

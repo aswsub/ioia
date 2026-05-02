@@ -149,10 +149,14 @@ Format: "[Strongest credential] interested in [specific team or product] @ [Comp
 - Bad: "Internship inquiry," "Software engineering opportunities," "Cal Poly student interested in your company"
 - Forbidden words in subject lines: inquiry, opportunity, opportunities, application, request, hello.
 
-OPENING (one sentence):
-- Name, year, school, strongest credential, in that order. Repeat the credential from the subject line.
+OPENING (one or two sentences):
+- Sentence 1: Name, year, school, strongest credential, in that order. Repeat the credential from the subject line.
+- Sentence 2 (optional but PREFERRED): What the writer has been trying to learn or build this term, framed in a way that connects to the hook that follows. Keep it short, one short clause is enough.
+- The second sentence is what makes the rest of the email cohere. Without it, the email is a list of facts. With it, the email is an argument. See the LOGICAL THREAD section above.
 - Forbidden openers: "I hope this email finds you well," "I am reaching out," "My name is," "I came across [Company]."
-- Good: "I'm Sid, a CS junior at Cal Poly, ex-Stripe intern."
+- Good (with intent): "I'm Sid, CS junior at Cal Poly, ex-Stripe intern. Been trying to figure out streaming and state-reconciliation patterns this term."
+- Good (no second sentence, only when the credential itself implies intent): "I'm Sid, CS junior at Cal Poly, ex-Stripe intern who shipped a CSV importer used by 200+ merchants."
+- BAD: "I'm Sid Balaji, a CS junior at Cal Poly, ex-Stripe intern." (period, end. No intent declared, leaves the rest of the email as disconnected facts.)
 
 THE HOOK (one sentence) - depends on the recipient AND on whether the artifact has a named author:
 
@@ -220,10 +224,36 @@ HARD AVOIDS:
 - Mentioning the company without referencing a specific artifact.
 - Asking for "any opportunities."
 - Listing more than one prior experience in the body. Compress secondary experience to a credential phrase in the opener if needed.
+- Tech stack listed as a standalone sentence ("Stack: TypeScript, Postgres, the Stripe API."). Stack details belong inline in the project description, or omitted entirely. The link to the repo is sufficient — readers who want the stack will click.
+- Stacking three or more phrases from the casual-technical-deflection register ("landed for me," "stuck on," "gnarly part," "same shape," "closest thing"). Cap is two per email. See REGISTER VARIATION below.
+- Idiom in every sentence. At least one sentence must use literal, direct language.
 
 VOICE:
 - Lead with verbs and concrete nouns. "I built X" beats "I have experience with X."
 - Strip every word that does not change meaning. Delete-test every sentence.
 - One technical detail per sentence. Not three.
 - Slight choppiness is correct. This email is read in 10 seconds. Polished prose that smooths out punch is a loss.
+
+REGISTER VARIATION:
+
+Real writing varies its register sentence to sentence. AI writing locks into one mode. The most common failure mode for this writer is to use too many "casual-technical-deflection" phrases, colloquial understatement of specific or strong claims.
+
+Examples of this register (each fine alone, but do not stack):
+- "landed for me" / "stuck with me" / "stuck on"
+- "gnarly part" / "tricky bit" / "messy"
+- "same shape of problem" / "same shape" / "similar problem"
+- "closest thing I've shipped" / "best example I have"
+- "got me thinking about" / "made me curious about"
+
+CAP: Use AT MOST TWO phrases from the casual-technical-deflection register per email. If you need to express the same kind of idea a third time, use a different register.
+
+Alternative registers to break the monoculture:
+- Direct: "I couldn't figure out conflict resolution." (instead of "stuck on")
+- Concrete: "The hardest problem was reconciling state between the CSV and Postgres." (instead of "gnarly part")
+- Specific: "The CEGIS verification step in section 4." (instead of "same shape of problem")
+- Plain: "I read it twice." (instead of "landed for me")
+
+REQUIREMENT: At least one sentence per email must be in a register different from the rest. If the email is mostly casual-understated, one sentence should be blunt or literal. If mostly direct, one sentence can be casual. Mixing is the goal.
+
+Self-check before producing: count the casual-technical-deflection phrases in the draft. If more than 2, rewrite at least one of them in a different register.
 `.trim()
