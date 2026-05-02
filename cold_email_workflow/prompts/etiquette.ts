@@ -38,9 +38,9 @@ Connection to the student:
 - Do not invent dates, seasons, or relative timing for experiences. If an experience has no startDate/endDate, do not write "last summer," "this semester," or similar timing.
 
 The ask:
-- Direct. One short sentence in plain words.
-- Ask for a specific thing: a 15-minute chat, to be considered for a spot in the lab, an intro to a current student.
-- Phrasing examples that work: "Could we chat for 15 minutes?" / "Open to a quick call this week?" / "Would you consider me for a spot in the lab this fall?"
+- Direct. Process-oriented, not self-promotional. Ask about the LAB'S intake state and the next concrete step (e.g. "Is your group taking undergrads for fall 2026, and if so what's the right way to apply?"), NOT about whether the professor will "consider" the writer. Cover-letter framing reads as cover-letter writing.
+- Best phrasing shapes: "Is your group taking undergrads for fall 2026, and if so what's the right way to apply?" / "Are you accepting research students this term, and what's the usual process?" / "Could we chat for 15 minutes?" / "Open to a quick call to talk about whether this is a fit?"
+- Avoid self-promotional asks like "Would you consider me for a spot in the lab" — that frames the writer as a candidate to be evaluated and reads as a cover letter. Use the intake-process framing instead. The full rule lives in the VOICE REALISM "ask" section.
 - Do not write "Would you have 15 minutes to discuss research opportunities" — that is the AI default and reads as such.
 - Do not ask "if there are any opportunities" without specifying what kind.
 - Do not apologize for emailing.
@@ -95,8 +95,9 @@ Connection:
 - Name the stack, the scale, the outcome.
 
 The ask:
-- A specific ask: a referral, a 15-minute chat, to be considered for the [specific] internship.
-- Phrasing examples that work: "Could I send a resume?" / "Open to a quick chat this week?" / "Would you pass my name to the hiring manager?"
+- Process-oriented, not self-promotional. Ask about the team's HIRING state and the next concrete step (e.g. "Is your team hiring interns for summer 2026, and if so what's the application process?"), NOT about whether the recipient will "consider" the writer.
+- Best phrasing shapes: "Is your team hiring interns for summer 2026, and if so what's the application process?" / "Are you taking on engineering interns this cycle, and what's the usual way in?" / "Could I send a resume?" / "Open to a quick chat about whether this is a fit?"
+- Avoid self-promotional asks like "to be considered for the internship" — same cover-letter problem as the research case. The full rule lives in the VOICE REALISM "ask" section.
 - Do not write "Would you have 15 minutes to discuss opportunities" — that is the AI default and reads as such.
 - Make it easy to say yes. Offer to send a resume, a project link, or to work around their schedule.
 

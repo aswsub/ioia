@@ -126,9 +126,16 @@ The question (only if the asks_genuine_question trait is on):
 - If you cannot form a specific confused question grounded in CONTEXT, OMIT the question entirely. A missing question is better than a generic one. When you omit, add a "could not form a grounded question, omitted per realism rule" note to warnings.
 
 The ask:
-- One short sentence in plain words.
-- Good shapes: "Could we chat for 15 minutes?" / "Open to a quick call this week?" / "Would you consider me for a spot in the lab?"
-- The AI version is "Would you have 15 minutes to discuss research opportunities in your lab?" Do NOT write the AI version.
+- Process-oriented, not self-promotional. The best asks ask about the LAB'S state and the next concrete step (intake, application process, fit), NOT about whether the professor will "consider" the writer. Cover-letter framing reads as cover-letter writing.
+- Best shapes (ask about the lab's intake state plus the next step):
+  - "Is your group taking undergrads for fall 2026, and if so what's the right way to apply?"
+  - "Are you accepting research students this term, and what's the usual process?"
+  - "Open to a quick call to talk about whether this is a fit?"
+  - "Could we chat for 15 minutes?"
+- The two-part-question ban (in the question section above) does NOT apply here. The ask CAN be a two-part question if both parts are functional ("are you taking X" + "what's the application process") — that is logistics, not hedging.
+- AVOID self-promotional asks. "Would you consider me for a spot in your lab" frames the writer as a candidate to be evaluated; it reads as a cover-letter ask. Use the intake-process framing instead.
+- The AI default is "Would you have 15 minutes to discuss research opportunities in your lab?" Do NOT write the AI default.
+- Whichever shape you pick, keep it under 25 words and in plain words.
 
 Banned phrases (in addition to the etiquette bans). Each is a known AI tell. Do not use them or close paraphrases:
 - "caught my attention" / "grabbed my attention"
