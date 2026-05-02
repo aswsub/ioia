@@ -27,9 +27,7 @@ type EmailDraft = z.infer<typeof EmailDraftSchema>
 const client = new Anthropic()
 
 // ============================================================================
-// Pipeline helpers (non-streaming variant for testing — duplicated from
-// tests/end_to_end.ts. Lift into shared `runtime.ts` when both call sites
-// would benefit from changes propagating.)
+// Pipeline helpers (non-streaming variant, mirrors tests/pipeline.ts).
 // ============================================================================
 
 async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases> {
@@ -83,30 +81,38 @@ async function draftEmail(input: DraftEmailInput): Promise<EmailDraft> {
 }
 
 // ============================================================================
-// Single fixture input — change values here to test against different inputs.
+// Single fixture input — internship outreach.
+//
+// The Professor type is reused here as the "company / team contact" shape:
+//   - name         -> recipient (hiring manager, eng lead, CEO)
+//   - affiliation  -> company
+//   - concepts     -> team's technical areas
+//   - recentPapers -> blog posts, launches, or talks (rendered with
+//                     internship-appropriate labels by renderContextBlock
+//                     when opportunity = "internship")
 // ============================================================================
 
-const PROFESSOR: Professor = {
-  id: "fixture_berkeley_1",
-  name: "Dr. Sanjit Seshia",
-  affiliation: "UC Berkeley",
+const COMPANY: Professor = {
+  id: "fixture_linear_1",
+  name: "Karri Saarinen",
+  affiliation: "Linear",
   email: null,
-  homepage: "https://people.eecs.berkeley.edu/~sseshia/",
+  homepage: "https://linear.app/about",
   concepts: [
-    { name: "formal methods", score: 0.81 },
-    { name: "program synthesis", score: 0.74 },
-    { name: "cyber-physical systems", score: 0.58 },
+    { name: "realtime sync", score: 0.85 },
+    { name: "API design", score: 0.72 },
+    { name: "distributed systems", score: 0.65 },
   ],
   recentPapers: [
     {
-      title: "Inductive synthesis of distributed-system invariants from execution traces",
+      title: "Scaling the Linear Sync Engine",
       year: 2024,
       abstract:
-        "We present a CEGIS-based pipeline for inferring invariants of distributed protocols from finite trace samples. The synthesized invariants are verified against TLA+ models and explored in case studies on Raft and Paxos variants.",
-      url: "https://example.org/papers/cegis-distributed",
+        "A deep dive into how Linear rebuilt its realtime sync engine from scratch to handle larger workspaces, focusing on the tradeoffs between client-side caching, server-side reconciliation, and conflict resolution at scale.",
+      url: "https://linear.app/blog/scaling-the-linear-sync-engine",
     },
   ],
-  matchScore: 0.84,
+  matchScore: 0.78,
 }
 
 const WRITING_SAMPLE = `Built a thing this weekend that scrapes professor pages and dumps a CSV. Honestly thought it'd take 2 hours, ended up shipping at 4am. The gnarly part was OpenAlex rate limits — I ended up batching with backoff and that fixed it. Not perfect but it works on three universities.`
@@ -120,7 +126,7 @@ const EXPERIENCE: ExperienceItem[] = [
   },
 ]
 
-const RESEARCH_INTERESTS = ["program synthesis", "distributed systems"]
+const RESEARCH_INTERESTS = ["realtime sync", "developer tools"]
 
 // ============================================================================
 // Run
@@ -138,7 +144,8 @@ function printDraft(draft: EmailDraft): void {
     console.log(`  [${c.source}] ${c.claim}`)
     console.log(`          ref: ${c.ref}`)
   }
-  console.log(`body:`)
+  const wordCount = draft.body.trim().split(/\s+/).length
+  console.log(`body (${wordCount} words):`)
   console.log("-".repeat(70))
   for (const line of draft.body.split("\n")) console.log(line)
   console.log("-".repeat(70))
@@ -153,9 +160,9 @@ async function main(): Promise<void> {
   const phrases = await extractTonePhrases(WRITING_SAMPLE)
 
   const tone: ToneProfile = {
-    voice: "conversational",
-    length: "moderate",
-    traits: ["mentions_specific_paper", "asks_genuine_question", "avoids_buzzwords"],
+    voice: "direct",
+    length: "concise",
+    traits: ["mentions_specific_paper", "data_driven_language", "avoids_buzzwords"],
     ...phrases,
   }
 
@@ -166,15 +173,15 @@ async function main(): Promise<void> {
     gpa: 3.7,
     researchInterests: RESEARCH_INTERESTS,
     shortBio:
-      "CS junior at Cal Poly, focused on systems and verification. Looking for a research role for fall 2026.",
+      "CS junior at Cal Poly. Looking for a SWE internship for summer 2026, ideally on a team building developer tooling or realtime systems.",
     experience: EXPERIENCE,
     tone,
   }
 
   const draft = await draftEmail({
     user,
-    professor: PROFESSOR,
-    opportunity: "research",
+    professor: COMPANY,
+    opportunity: "internship",
   })
 
   printDraft(draft)

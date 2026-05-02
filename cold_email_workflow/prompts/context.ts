@@ -83,8 +83,59 @@ function renderExperience(items: ExperienceItem[]): string {
     .join("\n")
 }
 
+// Opportunity-aware labels for the rendered CONTEXT block.
+// Research uses "PROFESSOR / paper / lab" vocabulary; internship uses
+// "RECIPIENT / post / team" vocabulary. The Professor type is reused as a
+// generic recipient shape (recentPapers carries blog posts/launches when
+// opportunity = internship).
+type ContextLabels = {
+  recipientHeader: string
+  conceptsLabel: string
+  itemsHeader: string
+  itemsEmpty: string
+  conceptsNoun: string
+  paperReminderHas: string
+  paperReminderEmpty: string
+  inventionAvoid: string
+}
+
+function labelsForOpportunity(opportunity: OpportunityType): ContextLabels {
+  if (opportunity === "internship") {
+    return {
+      recipientHeader: "RECIPIENT (company contact):",
+      conceptsLabel: "Team's technical areas",
+      itemsHeader:
+        "Recent posts, launches, or talks (pick exactly ONE to reference, by title):",
+      itemsEmpty:
+        "  (no recent posts or launches available. Return EmailDraft with confidence: \"low\" and a warning)",
+      conceptsNoun: "team's technical areas",
+      paperReminderHas:
+        "- Reference exactly ONE post or launch from the list above, by title, with one concrete sentence about what caught your attention.",
+      paperReminderEmpty:
+        "- No recent posts or launches are available. Do NOT reference a specific post or invent one. Build the email around the team's technical areas above, set EmailDraft.confidence to \"low\", and add a 'no recent posts or launches in user's interest area' warning.",
+      inventionAvoid:
+        "- Do not invent posts, products, team details, prior contact, year, age, or any biographical detail not present in CONTEXT, or shared interests beyond what is above.",
+    }
+  }
+  return {
+    recipientHeader: "PROFESSOR:",
+    conceptsLabel: "Top research concepts",
+    itemsHeader: "Recent papers (pick exactly ONE to reference, by title):",
+    itemsEmpty:
+      "  (no recent papers available. Return EmailDraft with confidence: \"low\" and a warning)",
+    conceptsNoun: "professor's top research concepts",
+    paperReminderHas:
+      "- Reference exactly ONE paper from the list above, by title, with one concrete sentence about what caught your attention.",
+    paperReminderEmpty:
+      "- No recent papers are available. Do NOT reference a specific paper or invent one. Build the email around the professor's top research concepts above, set EmailDraft.confidence to \"low\", and add a 'no recent papers in user's interest area' warning.",
+    inventionAvoid:
+      "- Do not invent papers, methods, lab details, prior contact, year, age, or any biographical detail not present in CONTEXT, or shared interests beyond what is above.",
+  }
+}
+
 export function renderContextBlock(input: ContextInput): string {
   const { user, professor, opportunity, userNotes } = input
+  const labels = labelsForOpportunity(opportunity)
 
   const papers = professor.recentPapers.slice(0, MAX_PAPERS)
   const experience = user.experience.slice(0, MAX_EXPERIENCE)
@@ -95,22 +146,20 @@ export function renderContextBlock(input: ContextInput): string {
     "",
     `Opportunity type: ${opportunity}`,
     "",
-    "PROFESSOR:",
+    labels.recipientHeader,
     `- Name: ${ut(professor.name)}`,
     `- Affiliation: ${ut(professor.affiliation)}`,
     `- Email: ${professor.email === null ? "null" : ut(professor.email)}`,
   ]
 
   if (concepts.length > 0) {
-    sections.push(`- Top research concepts: ${concepts.map(ut).join(", ")}`)
+    sections.push(`- ${labels.conceptsLabel}: ${concepts.map(ut).join(", ")}`)
   }
 
   sections.push(
     "",
-    "Recent papers (pick exactly ONE to reference, by title):",
-    papers.length > 0
-      ? renderPapers(papers)
-      : "  (no recent papers available — return EmailDraft with confidence: \"low\" and a warning)",
+    labels.itemsHeader,
+    papers.length > 0 ? renderPapers(papers) : labels.itemsEmpty,
     "",
     "USER:",
     `- Name: ${ut(user.fullName)}`,
@@ -143,9 +192,7 @@ export function renderContextBlock(input: ContextInput): string {
   }
 
   const paperReminder =
-    papers.length > 0
-      ? "- Reference exactly ONE paper from the list above, by title, with one concrete sentence about what caught your attention."
-      : "- No recent papers are available. Do NOT reference a specific paper or invent one. Build the email around the professor's top research concepts above, set EmailDraft.confidence to \"low\", and add a 'no recent papers in user's interest area' warning."
+    papers.length > 0 ? labels.paperReminderHas : labels.paperReminderEmpty
 
   const experienceReminder =
     experience.length > 0
@@ -157,7 +204,7 @@ export function renderContextBlock(input: ContextInput): string {
     "Hard reminders for this context:",
     paperReminder,
     experienceReminder,
-    "- Do not invent papers, methods, lab details, prior contact, year, age, or any biographical detail not present in CONTEXT, or shared interests beyond what is above.",
+    labels.inventionAvoid,
     "- Do not invent dates, seasons, or relative timing for user experience. If an experience item has no dates, do not write 'last summer,' 'this semester,' or similar timing.",
   )
 

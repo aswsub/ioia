@@ -88,8 +88,31 @@ export function buildDraftEmailSystem(input: DraftEmailInput): string {
   ].join("\n")
 }
 
+// Body word cap by opportunity type. Internship is shorter on purpose:
+// recruiters/engineers read these in 10 seconds and the new INTERNSHIP_ETIQUETTE
+// targets 75-110 words with a hard cap of 130. Research stays at 150.
+export const BODY_WORD_CAP_BY_OPPORTUNITY = {
+  research: 150,
+  internship: 130,
+} as const
+
+// Recommended max_tokens for the email writer call, by opportunity. The total
+// budget covers: subject (~15 tokens) + body (body_words * ~1.4) + 1-3 citation
+// objects (~80 tokens each, including claim/source/ref) + confidence (~5) +
+// warnings (~30) + JSON tool-call wrapper (~50). For a 130-word internship body
+// with 2 citations that lands near ~600 tokens; 500 was too tight in practice
+// and truncated. 700 leaves headroom; research keeps 800 for the longer cap.
+export const EMAIL_WRITER_MAX_TOKENS = {
+  research: 800,
+  internship: 700,
+} as const
+
+export function maxTokensFor(opportunity: ContextInput["opportunity"]): number {
+  return EMAIL_WRITER_MAX_TOKENS[opportunity]
+}
+
 export function buildDraftEmailUserMessage(input: DraftEmailInput): string {
-  const cap = input.opportunity === "research" ? 150 : 180
+  const cap = BODY_WORD_CAP_BY_OPPORTUNITY[input.opportunity]
   return `Draft the cold email now. Body must be under ${cap} words. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written. Hard constraints, all from the VOICE REALISM block:
 
 - OPENER: exactly TWO sentences. Sentence 1 = name + year + school. Sentence 2 = ONE specific reason for reaching out NOW (a class, a current project, a discovery chain, or a small-admission fallback), grounded in CONTEXT, that topically leads into the paper paragraph. No list of interests in either sentence.
@@ -162,7 +185,7 @@ export const EMAIL_DRAFT_TOOL = {
 //
 //   client.messages.stream({
 //     model: "claude-sonnet-4-5",
-//     max_tokens: 800,
+//     max_tokens: maxTokensFor(input.opportunity), // 800 for research, 700 for internship
 //     system: buildDraftEmailSystem(input),
 //     tools: [EMAIL_DRAFT_TOOL],
 //     tool_choice: { type: "tool", name: EMAIL_DRAFT_TOOL.name },

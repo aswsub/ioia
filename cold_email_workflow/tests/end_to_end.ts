@@ -11,6 +11,7 @@ import {
   EMAIL_DRAFT_TOOL,
   buildDraftEmailSystem,
   buildDraftEmailUserMessage,
+  maxTokensFor,
   type DraftEmailInput,
 } from "../prompts/draft_email"
 import {
@@ -209,7 +210,7 @@ async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases>
 async function streamDraftEmail(input: DraftEmailInput): Promise<EmailDraft> {
   const stream = client.messages.stream({
     model: "claude-sonnet-4-5",
-    max_tokens: 1500,
+    max_tokens: maxTokensFor(input.opportunity),
     system: buildDraftEmailSystem(input),
     tools: [EMAIL_DRAFT_TOOL as unknown as Anthropic.Messages.Tool],
     tool_choice: { type: "tool", name: EMAIL_DRAFT_TOOL.name },

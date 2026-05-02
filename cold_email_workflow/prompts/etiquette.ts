@@ -88,39 +88,87 @@ Hard avoids regardless of tone:
 `.trim()
 
 export const INTERNSHIP_ETIQUETTE = `
-NORMS FOR COLD EMAILING ABOUT AN INTERNSHIP OR ENGINEERING ROLE:
+NORMS FOR COLD EMAILING ABOUT A SOFTWARE ENGINEERING INTERNSHIP OR EARLY-CAREER ROLE:
 
-Subject line:
-- 4 to 8 words.
-- Reference a specific product, team, or recent company news when possible.
-- Good: "CS sophomore interested in Linear sync work"
-- Bad: "Interested in opportunities at your company"
+POSTURE:
+This email is a sales pitch for the writer as an engineer. It is not a research inquiry. The voice is shorter, punchier, more verb-driven, and more direct than a research email. The writer is selling capability, not curiosity.
 
-Opening:
-- One sentence: full name, university, major, and one concrete signal of what you build, drawn from CONTEXT.experience or CONTEXT.researchInterests.
-- Lead with capability: a project, a shipped thing, or a number pulled from CONTEXT.
-- Do NOT invent year, age, or any biographical detail not present in CONTEXT.
+SUBJECT LINE (this matters more than the body):
+- Format: "[Credential signal] interested in [specific role or team] @ [Company]"
+- 5 to 7 words. Must render on mobile (under 60 characters).
+- The credential before "interested in" is the click. Pick the strongest signal the writer has, in this priority order:
+  1. Prior internship at a known company ("Ex-Stripe intern...")
+  2. Shipped product with users or stars ("Built fere.dev (200 GitHub stars)...")
+  3. Hackathon win or competition placement ("HackMIT 2025 winner...")
+  4. School + concrete skill ("Cal Poly engineer who ships React Native...")
+  5. Specific technical achievement ("Built CSV importer that 10x'd onboarding speed...")
+- The "specific role or team" must reference an actual team, product, or technical area at the company, not the company in general.
+- Examples that work:
+  - "Ex-Stripe intern interested in Linear's sync engine"
+  - "Cal Poly junior who built a CSV importer @ Ramp"
+  - "HackMIT winner interested in Vercel's edge runtime"
+- Examples that fail:
+  - "Internship inquiry"
+  - "Software engineering opportunities"
+  - "Cal Poly student interested in your company"
+- Forbidden subject line words: "inquiry," "opportunity," "opportunities," "application," "request," "quick question," "hello."
 
-Reference to their work:
-- Reference a specific product decision, blog post, talk, or technical choice the recipient or their team made.
-- Show you understand the actual work, not the marketing copy.
+OPENER (sentence 1):
+- Identify the writer in one sentence: name, year, school, and the strongest credential signal repeated from the subject line.
+- Do NOT open with "I hope this email finds you well," "I am reaching out because," "My name is," or "I came across [Company] and."
+- Just state who you are and what you've done. Example shape: "I'm Sid, a CS junior at Cal Poly. Last summer I built X at Y."
 
-Connection:
-- Tie to one project of yours that demonstrates relevant skill.
-- Name the stack, the scale, the outcome.
+THE HOOK (sentence 2):
+- One sentence about a specific thing the company or team did, such as a blog post, a product decision, a technical talk, a recent launch, or an open-source repo.
+- Must be specific enough that it could not be sent to any other company unchanged.
+- Do NOT compliment the company. Do NOT say "I love what you're doing." Show the research by referencing a specific artifact.
+- Example: "Your post on rebuilding the sync engine from scratch was one of the better systems writeups I read this year."
 
-The ask:
-- Process-oriented, not self-promotional. Ask about the team's HIRING state and the next concrete step (e.g. "Is your team hiring interns for summer 2026, and if so what's the application process?"), NOT about whether the recipient will "consider" the writer.
-- Best phrasing shapes: "Is your team hiring interns for summer 2026, and if so what's the application process?" / "Are you taking on engineering interns this cycle, and what's the usual way in?" / "Could I send a resume?" / "Open to a quick chat about whether this is a fit?"
-- Avoid self-promotional asks like "to be considered for the internship" — same cover-letter problem as the research case. The full rule lives in the VOICE REALISM "ask" section.
-- Do not write "Would you have 15 minutes to discuss opportunities" — that is the AI default and reads as such.
-- Make it easy to say yes. Offer to send a resume, a project link, or to work around their schedule.
+THE PROOF (sentences 3-4):
+- One specific project the writer built, with numbers and a link.
+- Format: [what it does] + [scale/result number] + [link].
+- The project must be the one most relevant to the team being emailed, NOT the most impressive one. If the most impressive project is unrelated, demote it to a brief mention or omit.
+- Numbers required wherever possible: users, GitHub stars, latency improvement, dollars saved, time saved, scale processed.
+- Link to GitHub, a deployed URL, a demo video, or a portfolio. Inline link, not "see attached."
+- Example: "I built fere.dev, a macOS dev tool that maps local environments. 200+ stars, 1k installs in the first month: github.com/sid/fere"
 
-Length:
-- Under 180 words for the body.
+THE ASK (sentence 5):
+- Be specific. Not "would love to chat." Not "any opportunities."
+- Pick one of these shapes:
+  - "Are you taking summer 2026 SWE interns? Happy to send a resume."
+  - "Could I get 15 minutes to talk about the [specific team] internship?"
+  - "Would a referral to your recruiting team be possible?"
+- Include a specific timeframe ("summer 2026," "fall 2026"). Never just "an internship."
 
-Closing:
-- One line, signature, optional one-line link to portfolio or GitHub.
+OPTIONAL, SOCIAL PROOF / URGENCY (insert before the ask if applicable):
+- If the writer has a competing offer or interview at another known company, mention it in one short sentence: "I'm interviewing with [Company] but their team is less aligned with what I want to build."
+- This creates urgency. Use only if true.
 
-Hard avoids: same as research.
+CLOSING:
+- "Thanks," or "Best," to match tone profile.
+- Full name.
+- One line below: link to portfolio, GitHub, or LinkedIn. Pick one, not all three.
+
+LENGTH:
+- 75 to 110 words target. Hard cap 130. Shorter than research outreach.
+- 4 to 5 short sentences in the body. No long paragraphs.
+
+HARD AVOIDS (regardless of tone):
+- "I hope this email finds you well."
+- "I am reaching out because" / "I am writing to."
+- "I would love the opportunity to."
+- "I know I'm just a student" / "I don't have much experience yet" / any apology for credentials.
+- "Passionate," "deeply interested," "dream company," "love what you're doing."
+- "Set up a time to chat" without specifying duration or topic.
+- Em-dashes. Use commas, periods, or "and."
+- Adjectives like "innovative," "groundbreaking," "incredible," "exciting," "amazing."
+- Listing more than two prior experiences. Pick one and lean in.
+- Mentioning the company without referencing a specific product, team, post, or decision.
+- Asking for "any opportunities" without specifying summer/fall/spring + role type.
+
+VOICE NOTES:
+- Lead sentences with verbs and concrete nouns. "I built X" beats "I have experience with X."
+- Strip every word that does not change meaning. If you can delete it without losing information, delete it.
+- One technical detail per sentence. Not three.
+- It is fine to be slightly choppy. Internship emails are read in 10 seconds. Polish that smooths out punch is a loss.
 `.trim()
