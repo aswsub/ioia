@@ -16,6 +16,9 @@ Opening:
 Reference to their work:
 - Reference exactly ONE specific recent paper by title (or a specific project from their homepage).
 - Show one concrete thing you took from it — a method, a finding, a question it raised.
+- Only reference papers, methods, projects, lab details, or affiliations that are present in the provided professor context.
+- Do not invent familiarity, shared interests, lab openings, prior contact, or details about the professor's work.
+- If the provided context is too weak to support a specific reference, return confidence: "low" with a warning instead of faking specificity.
 - Do not say "I read your work" or "I find your research fascinating."
 - Do not summarize their entire research agenda back at them.
 
@@ -24,12 +27,19 @@ Connection to the student:
 - Be concrete: name the project, the tool, the result. Numbers if relevant.
 - Do not list multiple things. One bridge, well-built.
 - Write about WHY you are interested in this professor and their research and how it connects to the user's own interests
+- Include timing and availability when the user's context provides it: target term/season, start date, or hours per week.
+- Do not invent availability. If timing or weekly commitment is not provided, omit it.
 
 The ask:
 - Direct. One sentence.
 - Ask for a specific thing: a 15-minute call, to discuss research opportunities, to be considered for a position in the lab.
 - Do not ask "if there are any opportunities" without specifying what kind.
 - Do not apologize for emailing.
+
+Attachments and links:
+- Mention a resume, GitHub, portfolio, personal website, transcript, or project link only if it is present in the user's context.
+- Include at most two supporting materials, and prefer the most relevant one or two.
+- Do not say something is attached unless the workflow has actually attached it. Otherwise say it is available to send.
 
 Length:
 - Under 150 words for the body. Aim for 100 to 130.
@@ -52,36 +62,36 @@ Hard avoids regardless of tone:
 - Any sentence that could be sent to any other professor unchanged.
 `.trim()
 
-// export const INTERNSHIP_ETIQUETTE = `
-// NORMS FOR COLD EMAILING ABOUT AN INTERNSHIP OR ENGINEERING ROLE:
+export const INTERNSHIP_ETIQUETTE = `
+NORMS FOR COLD EMAILING ABOUT AN INTERNSHIP OR ENGINEERING ROLE:
 
-// Subject line:
-// - 4 to 8 words.
-// - Reference a specific product, team, or recent company news when possible.
-// - Good: "CS sophomore — interested in your Linear sync engine work"
-// - Bad: "Interested in opportunities at your company"
+Subject line:
+- 4 to 8 words.
+- Reference a specific product, team, or recent company news when possible.
+- Good: "CS sophomore — interested in your Linear sync engine work"
+- Bad: "Interested in opportunities at your company"
 
-// Opening:
-// - One sentence: name, year, school, what you build.
-// - Lead with a concrete signal of capability (a project, a shipped thing, a number).
+Opening:
+- One sentence: name, year, school, what you build.
+- Lead with a concrete signal of capability (a project, a shipped thing, a number).
 
-// Reference to their work:
-// - Reference a specific product decision, blog post, talk, or technical choice the recipient or their team made.
-// - Show you understand the actual work, not the marketing copy.
+Reference to their work:
+- Reference a specific product decision, blog post, talk, or technical choice the recipient or their team made.
+- Show you understand the actual work, not the marketing copy.
 
-// Connection:
-// - Tie to one project of yours that demonstrates relevant skill.
-// - Name the stack, the scale, the outcome.
+Connection:
+- Tie to one project of yours that demonstrates relevant skill.
+- Name the stack, the scale, the outcome.
 
-// The ask:
-// - A specific ask: a referral, a 15-minute chat, to be considered for the [specific] internship.
-// - Make it easy to say yes. Offer to send a resume, a project link, or to work around their schedule.
+The ask:
+- A specific ask: a referral, a 15-minute chat, to be considered for the [specific] internship.
+- Make it easy to say yes. Offer to send a resume, a project link, or to work around their schedule.
 
-// Length:
-// - Under 180 words for the body.
+Length:
+- Under 180 words for the body.
 
-// Closing:
-// - One line, signature, optional one-line link to portfolio or GitHub.
+Closing:
+- One line, signature, optional one-line link to portfolio or GitHub.
 
-// Hard avoids: same as research.
-// `.trim()
+Hard avoids: same as research.
+`.trim()
