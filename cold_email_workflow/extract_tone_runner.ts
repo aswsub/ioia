@@ -4,22 +4,11 @@ import {
   buildToneExtractorUserMessage,
   TONE_PROFILE_TOOL,
 } from "./prompts/extract_tone"
-
-// Mirrors the current TONE_PROFILE_TOOL schema.
-// Source of truth is the JSON Schema in extract_tone.ts; keep this in sync.
-type ExtractedToneProfile = {
-  formality: "casual" | "neutral" | "formal"
-  sentenceLength: "short" | "medium" | "long"
-  contractions: "uses" | "avoids" | "unknown"
-  hedging: "low" | "medium" | "high"
-  confidence: "low" | "medium" | "high"
-  signaturePhrases: string[]
-  avoidPhrases: string[]
-}
+import type { ToneProfile } from "./prompts/tone"
 
 const client = new Anthropic()
 
-async function extractTone(sample: string): Promise<ExtractedToneProfile> {
+async function extractTone(sample: string): Promise<ToneProfile> {
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 1500,
@@ -31,7 +20,7 @@ async function extractTone(sample: string): Promise<ExtractedToneProfile> {
 
   for (const block of response.content) {
     if (block.type === "tool_use" && block.name === TONE_PROFILE_TOOL.name) {
-      return block.input as ExtractedToneProfile
+      return block.input as ToneProfile
     }
   }
   throw new Error(

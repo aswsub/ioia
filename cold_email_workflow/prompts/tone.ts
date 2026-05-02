@@ -1,9 +1,15 @@
+export const TONE_FORMALITIES = ["casual", "neutral", "formal"] as const
+export const TONE_SENTENCE_LENGTHS = ["short", "medium", "long"] as const
+export const TONE_CONTRACTIONS = ["uses", "avoids", "unknown"] as const
+export const TONE_HEDGING = ["low", "medium", "high"] as const
+export const TONE_CONFIDENCE = ["low", "medium", "high"] as const
+
 export type ToneProfile = {
-  formality: "casual" | "neutral" | "formal"
-  sentenceLength: "short" | "medium" | "long"
-  contractions: "uses" | "avoids" | "unknown"
-  hedging: "low" | "medium" | "high"
-  confidence: "low" | "medium" | "high"
+  formality: (typeof TONE_FORMALITIES)[number]
+  sentenceLength: (typeof TONE_SENTENCE_LENGTHS)[number]
+  contractions: (typeof TONE_CONTRACTIONS)[number]
+  hedging: (typeof TONE_HEDGING)[number]
+  confidence: (typeof TONE_CONFIDENCE)[number]
   signaturePhrases: string[]
   avoidPhrases: string[]
 }

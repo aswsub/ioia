@@ -1,3 +1,11 @@
+import {
+  TONE_CONFIDENCE,
+  TONE_CONTRACTIONS,
+  TONE_FORMALITIES,
+  TONE_HEDGING,
+  TONE_SENTENCE_LENGTHS,
+} from "./tone"
+
 export const EXTRACT_TONE_SYSTEM = `
 You read a short writing sample from a student and return a structured ToneProfile that captures HOW they write — not what they write about.
 
@@ -86,11 +94,11 @@ export const TONE_PROFILE_TOOL = {
       "avoidPhrases",
     ],
     properties: {
-      formality: { type: "string", enum: ["casual", "neutral", "formal"] },
-      sentenceLength: { type: "string", enum: ["short", "medium", "long"] },
-      contractions: { type: "string", enum: ["uses", "avoids", "unknown"] },
-      hedging: { type: "string", enum: ["low", "medium", "high"] },
-      confidence: { type: "string", enum: ["low", "medium", "high"] },
+      formality: { type: "string", enum: TONE_FORMALITIES },
+      sentenceLength: { type: "string", enum: TONE_SENTENCE_LENGTHS },
+      contractions: { type: "string", enum: TONE_CONTRACTIONS },
+      hedging: { type: "string", enum: TONE_HEDGING },
+      confidence: { type: "string", enum: TONE_CONFIDENCE },
       signaturePhrases: {
         type: "array",
         items: { type: "string", minLength: 2, maxLength: 80 },
