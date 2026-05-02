@@ -31,6 +31,7 @@ import type {
 import {
   ExtractedTonePhrasesSchema,
   EmailDraftSchema,
+  assertDraftEmailInputViable,
 } from "../schemas"
 
 type ExtractedTonePhrases = z.infer<typeof ExtractedTonePhrasesSchema>
@@ -273,15 +274,18 @@ async function main() {
   const shortBio = await ask("Short bio (one line)", "CS junior at Cal Poly, focused on systems and verification. Looking for a research role for fall 2026.")
   console.log()
 
-  // 3. experience — type your own
-  console.log("--- EXPERIENCE (type your own) ---")
-  const expTitle = await ask("Experience title", "Software Engineering Intern")
-  const expOrg = await ask("Organization", "Stripe")
-  const expDescription = await askMultiline("Description (1–3 sentences):")
-  const experience: ExperienceItem = {
-    title: expTitle,
-    org: expOrg,
-    description: expDescription,
+  // 3. experience — type your own (blank title skips this block entirely)
+  console.log("--- EXPERIENCE (type your own; blank title skips) ---")
+  const expTitle = await ask("Experience title (blank to skip)", "Software Engineering Intern")
+  const experienceArr: ExperienceItem[] = []
+  if (expTitle.trim()) {
+    const expOrg = await ask("Organization", "Stripe")
+    const expDescription = await askMultiline("Description (1–3 sentences):")
+    experienceArr.push({
+      title: expTitle.trim(),
+      org: expOrg,
+      description: expDescription,
+    })
   }
   console.log()
 
@@ -318,6 +322,13 @@ async function main() {
 
   rl.close()
 
+  // 7b. Pre-flight: refuse to draft when the user profile is too sparse to anchor an email.
+  //     This must run BEFORE any API call so we don't burn a Haiku call on a doomed input.
+  assertDraftEmailInputViable({
+    experience: experienceArr,
+    researchInterests,
+  })
+
   // 8. extract tone phrases
   console.log("=".repeat(72))
   console.log("Step 1: extracting phrasing patterns from writing sample (Haiku)…")
@@ -342,7 +353,7 @@ async function main() {
     gpa,
     researchInterests,
     shortBio,
-    experience: [experience],
+    experience: experienceArr,
     tone,
   }
 

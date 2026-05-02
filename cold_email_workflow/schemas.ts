@@ -5,6 +5,7 @@ import {
   TONE_TRAITS,
   TONE_CONFIDENCE,
 } from "./prompts/tone"
+import type { UserProfile } from "./prompts/context"
 
 // Runtime validation at model-output boundaries.
 // Type definitions live in prompts/* and tests/* — keep them in sync with these schemas.
@@ -38,3 +39,34 @@ export const EmailDraftSchema = z.object({
   confidence: z.enum(["low", "medium", "high"]),
   warnings: z.array(z.string().min(2).max(200)).max(6),
 })
+
+export class DraftEmailInputError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "DraftEmailInputError"
+  }
+}
+
+/**
+ * Pre-flight check: refuse to call the email writer when the user profile is
+ * too sparse to anchor an email.
+ *
+ * The connection paragraph requires either a concrete experience item OR a
+ * stated research interest — without at least one, the writer has nothing to
+ * tie the user to the professor and would have to invent specificity.
+ *
+ * Soft cases (experience empty but interests/bio present) fall through to
+ * the in-prompt fallback in renderContextBlock; this function only catches
+ * the hard case where there is nothing to draft from.
+ */
+export function assertDraftEmailInputViable(
+  user: Pick<UserProfile, "experience" | "researchInterests">,
+): void {
+  if (user.experience.length === 0 && user.researchInterests.length === 0) {
+    throw new DraftEmailInputError(
+      "Cannot draft a cold email: user has no experience items AND no research interests. " +
+        "The connection paragraph requires at least one anchor. " +
+        "Populate either field before calling the writer.",
+    )
+  }
+}
