@@ -62,8 +62,8 @@ const LENGTH: Record<ToneLength, string> = {
 const TRAIT: Record<ToneTrait, string> = {
   mentions_specific_paper:
     "Reference one specific recent paper by title with a concrete idea you took from it (already required by etiquette; do it well).",
-    asks_genuine_question:
-    "Include one genuine question about the professor's work that you would actually want to discuss in person. ONE sentence, ONE clause, under 20 words. The question must be specific and tied to the cited paper or concept. Forbidden shape: 'Do you find that X, or does Y catch Z?' two-part hedged questions read as AI; ask one plain thing.",
+  asks_genuine_question:
+    "Include one anchored question about the professor's work. ONE sentence overall, under ~30 words. Every question must have one of two anchors: (a) a specific claim, mechanism, or assumption present in CONTEXT (do not invent section or figure numbers), OR (b) a half-sentence of context — either why the answer matters to the writer or what the writer already tried to figure out. Floating questions read as performative and are forbidden. Generic frames are also forbidden regardless of the noun: 'How do you decide X?', 'How does X handle Y?', 'What happens when X?', 'Do you find that X, or does Y?' Fallback if you cannot anchor: cut the question entirely and replace it with a one-sentence STATEMENT of what the writer took from the paper, plus the warning specified in the VOICE REALISM block.",
   references_shared_interest:
     "Explicitly name one research concept or topic that connects the user's interests to the professor's work. Drawn from CONTEXT only.",
   avoids_buzzwords:

@@ -90,7 +90,37 @@ export function buildDraftEmailSystem(input: DraftEmailInput): string {
 
 export function buildDraftEmailUserMessage(input: DraftEmailInput): string {
   const cap = input.opportunity === "research" ? 150 : 180
-  return `Draft the cold email now. Body must be under ${cap} words. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written: vary sentence length, stay concrete, and avoid every banned phrase in the VOICE REALISM block. Return only the report_email_draft tool call.`
+  return `Draft the cold email now. Body must be under ${cap} words. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written. Hard constraints, all from the VOICE REALISM block:
+
+- OPENER: exactly TWO sentences. Sentence 1 = name + year + school. Sentence 2 = ONE specific reason for reaching out NOW (a class, a current project, a discovery chain, or a small-admission fallback), grounded in CONTEXT, that topically leads into the paper paragraph. No list of interests in either sentence.
+
+- RHYTHM: include at least ONE rhythmic break — a 4-to-6-word sentence or fragment dropped among the longer ones ("It worked." / "Anyway." / "That part broke twice."). Uniform sentence length is the single biggest AI tell.
+
+- PARAGRAPH ARC: every paragraph follows setup -> development -> landing. The last sentence of every paragraph must carry weight. Never a metric, resume-bullet, filler, or transitional throat-clearing.
+
+- EXPERIENCE SELECTION: pick the SINGLE item from CONTEXT.experience that best overlaps with the professor's concepts and recent papers — even if a more brand-name or higher-impact item exists. May acknowledge a more-impressive-but-less-relevant item in one sentence ("I also interned at X, but the work most relevant to your group was Y"). Do NOT pick by impressiveness; that signals the writer didn't read the lab page.
+
+- NO OVERLAP FALLBACK: if NO experience item meaningfully overlaps with the professor's research, do NOT pretend it does. Write a SHORTER email (aim 80-110 words instead of 130-150), name the gap honestly in the interest-declaration sentence ("I haven't worked on X directly, but I want to spend the next two years learning how it actually works"), keep the experience paragraph to 1-2 sentences, frame the ask around joining-to-learn rather than topic match, and add the "no meaningful experience overlap" warning with confidence at most "medium." Do NOT manufacture overlap by re-describing an internship as adjacent work or by stringing buzzwords from the user's stack to claim a connection.
+
+- INTEREST DECLARATION: between the paper paragraph and the experience paragraph, include ONE sentence stating what kind of problem the writer wants to work on. Specific technical area not a broad field; honest about level (right verbs: "learn how X actually works," "build skill in X," "work on X under supervision" — NOT "contribute novel results in"); connect to the professor's domain without flattery ("This is the kind of work I want to spend the next two years on" — NOT "your group's work is exactly what I want to do"). Banned: "passionate," "deeply," "dream."
+
+- EXPERIENCE PARAGRAPH: lead with the system (not the role). Pick ONE: (a) lead with the failure or surprise, OR (b) get specific about the wrong thing — drawn from CONTEXT only, no invented constraints. Drop the impact metric in the MIDDLE of the paragraph, not at the end. Land on either (a) a sentence naming the technical concept the writer's work shares with the professor's domain WITHOUT announcing the connection ("the bug was always in the state machine, not the API"), OR (b) an admission of what was hard or surprising.
+
+- AWKWARD DETAIL: include exactly ONE slightly-awkward specific detail traceable to CONTEXT.experience or CONTEXT.shortBio. Do NOT invent; if CONTEXT does not support it, OMIT the experience paragraph entirely and add the warning.
+
+- NO TRANSITION sentence between the user's experience and the professor's work.
+
+- NO EVALUATIVE ADJECTIVES on the professor's work ("compelling," "fascinating," "interesting," "impressive," "novel," "elegant," "powerful," "important," etc., in any grammatical form). Convey significance through actions the writer took ("read it twice," "tried to reimplement it," "sent it to a friend").
+
+- NO concrete-evaluative shapes: "The idea of X is Y" / "What's interesting about X is Y." Subjects must be concrete (a system, person, paper, number, or result).
+
+- QUESTION (only if asks_genuine_question is on): the question must be ANCHORED — either (a) reference a specific claim/mechanism/assumption in CONTEXT, OR (b) include a half-sentence of context (why the answer matters or what the writer already tried). If you cannot anchor it, CUT the question and replace with a one-sentence STATEMENT of what the writer took from the paper, plus the warning.
+
+- ASK: process-oriented, not self-promotional. Ask about the lab's intake state and the next concrete step (e.g. "Is your group taking undergrads for fall 2026, and if so what's the right way to apply?"), NOT "would you consider me for a spot."
+
+- CLOSING: pick "Best," vs "Thanks," based on tone.voice per the etiquette closing rule.
+
+Return only the report_email_draft tool call.`
 }
 
 // Keep field set in sync with the EmailDraft type above.
