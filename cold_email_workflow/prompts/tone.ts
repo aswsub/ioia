@@ -62,8 +62,8 @@ const LENGTH: Record<ToneLength, string> = {
 const TRAIT: Record<ToneTrait, string> = {
   mentions_specific_paper:
     "Reference one specific recent paper by title with a concrete idea you took from it (already required by etiquette; do it well).",
-  asks_genuine_question:
-    "Include one genuine question about the professor's work that you would actually want to discuss in person. The question must be specific and tied to the cited paper or concept.",
+    asks_genuine_question:
+    "Include one genuine question about the professor's work that you would actually want to discuss in person. ONE sentence, ONE clause, under 20 words. The question must be specific and tied to the cited paper or concept. Forbidden shape: 'Do you find that X, or does Y catch Z?' two-part hedged questions read as AI; ask one plain thing.",
   references_shared_interest:
     "Explicitly name one research concept or topic that connects the user's interests to the professor's work. Drawn from CONTEXT only.",
   avoids_buzzwords:

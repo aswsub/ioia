@@ -33,8 +33,10 @@ Connection to the student:
 - Do not invent dates, seasons, or relative timing for experiences. If an experience has no startDate/endDate, do not write "last summer," "this semester," or similar timing.
 
 The ask:
-- Direct. One sentence.
-- Ask for a specific thing: a 15-minute call, to discuss research opportunities, to be considered for a position in the lab.
+- Direct. One short sentence in plain words.
+- Ask for a specific thing: a 15-minute chat, to be considered for a spot in the lab, an intro to a current student.
+- Phrasing examples that work: "Could we chat for 15 minutes?" / "Open to a quick call this week?" / "Would you consider me for a spot in the lab this fall?"
+- Do not write "Would you have 15 minutes to discuss research opportunities" — that is the AI default and reads as such.
 - Do not ask "if there are any opportunities" without specifying what kind.
 - Do not apologize for emailing.
 
@@ -89,6 +91,8 @@ Connection:
 
 The ask:
 - A specific ask: a referral, a 15-minute chat, to be considered for the [specific] internship.
+- Phrasing examples that work: "Could I send a resume?" / "Open to a quick chat this week?" / "Would you pass my name to the hiring manager?"
+- Do not write "Would you have 15 minutes to discuss opportunities" — that is the AI default and reads as such.
 - Make it easy to say yes. Offer to send a resume, a project link, or to work around their schedule.
 
 Length:
