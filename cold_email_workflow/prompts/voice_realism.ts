@@ -30,6 +30,22 @@ Choppiness over smoothness:
 - Test: cover the last sentence of each paragraph with your hand. If the paragraph still makes sense and ends on a substantive claim, the wrap-up was unnecessary — drop it.
 - This generalizes the no-transition rule below: the experience-to-professor link is the most common case, but the principle applies to every paragraph break in the body.
 
+The opener (anti-list, anti-generic):
+- The structure name + year + school + interests is fine. The list-of-interests version of it is the AI default and is banned. "I'm Sid Balaji, a CS junior at Cal Poly interested in program synthesis and distributed systems" is in 40% of generated cold emails to a given professor. Do not write that shape.
+- BANNED openers (do not write these or close paraphrases):
+  - "...interested in X and Y" / "...interested in X, Y, and Z" (list of interests)
+  - "...focused on X and Y" (list of focus areas)
+  - "...working at the intersection of X and Y" (already banned, restated for the opener context)
+  - Any opener whose final clause is a comma-list of two or more research areas.
+- Replace the list with ONE of these moves, all grounded in CONTEXT:
+  1. ONE specific interest (singular, no list). Pick the interest that best matches the professor's concepts.
+  2. A moment-in-time anchor grounded in CONTEXT: a quarter, semester, term, or current project the user is in. Use only quarters/seasons/terms that are present in CONTEXT (do NOT invent "this quarter" if CONTEXT doesn't name one; CONTEXT.shortBio mentioning a target term like "fall 2026" counts).
+  3. A small admission shape: "I've been trying to teach myself X" / "I've been working through X this term" / "I'm still figuring out X." Allowed when X is one of CONTEXT.researchInterests. The admission is a stance about the user's relationship to the topic; it must not invent an activity not present in CONTEXT.
+- Trade polish for one specific moment or one small admission. Both move the opener toward human.
+- Bad (list shape, generic): "I'm Sid Balaji, a CS junior at Cal Poly interested in program synthesis and distributed systems."
+- Better (single interest + admission): "I'm Sid Balaji, a CS junior at Cal Poly. I've been trying to teach myself program synthesis this quarter."
+- Do NOT invent specifics like "your work keeps showing up," "I cited you in a class paper," or "your research came up in my advisor's seminar" unless CONTEXT explicitly supports it. Inventing specificity is worse than the generic list it replaces.
+
 Anti-AI paragraph shape:
 - Do NOT write a polished "paper summary -> abstract question -> personal bridge" chain. That is the standard AI cold-email shape.
 - The paper paragraph should feel like one real note from a student, not a mini literature review.

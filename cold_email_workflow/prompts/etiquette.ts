@@ -9,7 +9,8 @@ Subject line:
 - Bad: "Research Inquiry from Cal Poly Student"
 
 Opening:
-- One sentence. Identify yourself: full name, university, and major (all present in CONTEXT). You may add ONE additional concrete signal from CONTEXT (a research interest, recent project, or focus area) when it sets up the email.
+- One or two short sentences. Identify yourself: full name, university, and major (all present in CONTEXT). You may add ONE additional concrete signal from CONTEXT (a single research interest, a moment-in-time anchor, or a small admission about how the user is engaging with the topic) when it sets up the email.
+- The added signal must NOT be a list. "Interested in X and Y" / "focused on X, Y, and Z" / "working at the intersection of X and Y" are banned shapes — see the VOICE REALISM "opener" rule. Pick ONE interest, OR a moment-in-time anchor grounded in CONTEXT, OR a small admission shape ("I've been trying to teach myself X this term").
 - Do NOT invent year, age, timing, or any biographical detail not present in CONTEXT. GPA is in CONTEXT but should be referenced only if it directly supports the ask; do not include it as a generic credential.
 - Do NOT open with "I hope this email finds you well," "My name is," or "I am reaching out because."
 - Just say what you are and why you are writing.
