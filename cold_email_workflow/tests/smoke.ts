@@ -37,6 +37,18 @@ const profiles: { label: string; tone: ToneProfile }[] = [
       avoidPhrases: [],
     },
   },
+  {
+    label: "weak sample, low confidence fallback",
+    tone: {
+      formality: "casual",
+      sentenceLength: "short",
+      contractions: "unknown",
+      hedging: "low",
+      confidence: "low",
+      signaturePhrases: ["not enough evidence"],
+      avoidPhrases: ["overly specific avoid"],
+    },
+  },
 ]
 
 for (const { label, tone } of profiles) {

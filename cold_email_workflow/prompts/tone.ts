@@ -56,8 +56,15 @@ const CONFIDENCE: Record<ToneProfile["confidence"], string> = {
   medium:
     "Tone confidence: medium. Use these traits lightly and prioritize clear, natural professor outreach.",
   low:
-    "Tone confidence: low. Use a neutral, professional student voice and do not overfit the sample.",
+    "Tone confidence: low. The sample is weak evidence of voice, so use the neutral fallback below instead of the inferred traits.",
 }
+
+const LOW_CONFIDENCE_FALLBACK = [
+  "Fallback tone: neutral, professional student voice.",
+  "Greet 'Hi Professor [LastName],' or 'Dear Professor [LastName],'.",
+  "Use medium-length sentences, plain wording, and natural contractions only when they keep the email from sounding stiff.",
+  "Keep the ask direct, and do not overfit signature phrases, slang, or formatting from the sample.",
+].join("\n")
 
 function bullets(items: string[]): string {
   return items.map(item => `  - ${item}`).join("\n")
@@ -69,11 +76,19 @@ export function renderToneBlock(tone: ToneProfile): string {
     "When the tone block conflicts with the etiquette block, the etiquette block wins. Tone controls HOW the user sounds, not whether the hard rules apply.",
     "",
     CONFIDENCE[tone.confidence],
+  ]
+
+  if (tone.confidence === "low") {
+    sections.push(LOW_CONFIDENCE_FALLBACK)
+    return sections.join("\n")
+  }
+
+  sections.push(
     FORMALITY[tone.formality],
     SENTENCE_LENGTH[tone.sentenceLength],
     CONTRACTIONS[tone.contractions],
     HEDGING[tone.hedging],
-  ]
+  )
 
   if (tone.signaturePhrases.length > 0) {
     sections.push(
