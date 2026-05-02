@@ -17,6 +17,9 @@ Opening:
 Reference to their work:
 - Reference exactly ONE specific recent paper by title (or a specific project from their homepage).
 - Show one concrete thing you took from it: a method, a finding, a question it raised.
+- Do not open the reference with "Your paper caught my eye." That phrase reads generated.
+- Do not write "The idea of X is compelling" or praise the paper. Professors do not need a student review of the paper.
+- Keep the paper reference to one grounded observation, then move on.
 - Only reference papers, methods, projects, lab details, or affiliations that are present in the provided professor context.
 - Do not invent familiarity, shared interests, lab openings, prior contact, or details about the professor's work.
 - If the provided context is too weak to support a specific reference, return confidence: "low" with a warning instead of faking specificity.
@@ -27,7 +30,8 @@ Connection to the student:
 - Tie to ONE specific experience or project from the student's background.
 - Be concrete: name the project, the tool, the result. Numbers if relevant.
 - Do not list multiple things. One bridge, well-built.
-- Write about WHY you are interested in this professor and their research and how it connects to the user's own interests
+- Write about WHY you are interested in this professor and their research and how it connects to the user's own interests.
+- Do not write "That work got me thinking about..." or pretend the user's project perfectly maps to the professor's paper. A narrow, honest connection sounds more real.
 - Include timing and availability when the user's context provides it: target term/season, start date, or hours per week.
 - Do not invent availability. If timing or weekly commitment is not provided, omit it.
 - Do not invent dates, seasons, or relative timing for experiences. If an experience has no startDate/endDate, do not write "last summer," "this semester," or similar timing.

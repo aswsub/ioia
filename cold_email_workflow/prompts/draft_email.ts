@@ -90,7 +90,7 @@ export function buildDraftEmailSystem(input: DraftEmailInput): string {
 
 export function buildDraftEmailUserMessage(input: DraftEmailInput): string {
   const cap = input.opportunity === "research" ? 150 : 180
-  return `Draft the cold email now. Body must be under ${cap} words. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written: vary sentence length, stay concrete, and avoid every banned phrase in the VOICE REALISM block. Return only the report_email_draft tool call.`
+  return `Draft the cold email now. Body must be under ${cap} words. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written: no abstract paper recap, no praise words like "compelling," no "got me thinking" bridge, and no banned phrase in the VOICE REALISM block. Return only the report_email_draft tool call.`
 }
 
 // Keep field set in sync with the EmailDraft type above.
