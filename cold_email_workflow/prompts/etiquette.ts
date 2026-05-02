@@ -116,10 +116,12 @@ If no specific shared concept exists, end on a concrete detail about what was ha
 Example of a connected thread (good):
 - Opener: "I'm Sid, CS junior at Cal Poly, ex-Stripe intern. Been trying to figure out streaming and state-reconciliation patterns this term."
 - Hook: "Your team's post on streaming from serverless Node landed for me. The callback URL bridge is what I've been trying to replicate in a side project."
-- Proof: "Closest thing I've shipped: a CSV-to-Stripe importer at Stripe last summer (200+ merchants, 3 days to 4 hours onboarding). The hard part was always reconciling state between the CSV parser and Postgres before hitting the API, same shape of problem, different stack."
+- Proof: "I built a CSV-to-Stripe importer at Stripe last summer. 200+ merchants, onboarding cut from 3 days to 4 hours. The actual hard problem was reconciling state between the CSV parser and Postgres before the API call. That's the exact pattern your team's post addresses."
 - Ask: "Are you taking summer 2026 SWE interns on Edge Runtime? Happy to send a resume."
 
-Notice: the opener declares intent (streaming + state reconciliation), the hook references the team's work on that exact thing, the proof describes a project on the same shape of problem, and the last sentence of the proof names the technical bridge ("same shape of problem") without announcing it as a bridge.
+Notice TWO things:
+1. CONNECTED THREAD: the opener declares intent (streaming + state reconciliation), the hook references the team's work on that exact thing, the proof describes a project that shares the technical pattern, and the proof's last sentence names the bridge ("That's the exact pattern your team's post addresses") without announcing it as a bridge.
+2. REGISTER VARIATION (see REGISTER VARIATION section below): the opener and hook are in casual-deflection register ("trying to figure out," "landed for me," "trying to replicate"). The proof shifts to a direct/literal register ("I built X at Y," "200+ merchants," "The actual hard problem was Z," "That's the exact pattern"). This shift is what makes the email read as written by a person rather than generated. Do NOT write the proof in the same casual-deflection register as the opener and hook.
 
 Example of a disconnected thread (bad, do not produce):
 - "I'm Sid, ex-Stripe intern."
