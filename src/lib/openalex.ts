@@ -240,7 +240,7 @@ export async function searchProfessors(
       const data = await get<OAList<OAWork>>("/works", {
         filter,
         sort: "cited_by_count:desc",
-        per_page: "25",
+        per_page: "50",
       });
       console.log("OpenAlex works count:", data.meta?.count ?? 0);
       const seen = new Set<string>();
@@ -250,9 +250,9 @@ export async function searchProfessors(
         for (const a of authorships) {
           const id = a.author?.id;
           if (id && !seen.has(id)) { seen.add(id); ids.push(fullId(id)); }
-          if (ids.length >= limit * 3) break;
+          if (ids.length >= Math.max(limit * 10, 30)) break;
         }
-        if (ids.length >= limit * 3) break;
+        if (ids.length >= Math.max(limit * 10, 30)) break;
       }
       console.log("OpenAlex authorIds collected:", ids.length);
       return ids;
@@ -264,11 +264,21 @@ export async function searchProfessors(
   };
 
   let authorIds: string[] = [];
-  const conceptsFilter = conceptIds.length > 0 ? conceptIds.slice(0, 2).join("|") : "";
+  const conceptsFilter = conceptIds.length > 0 ? conceptIds.slice(0, 4).join("|") : "";
 
   if (conceptIds.length > 0 && instId) {
     authorIds = await collectAuthorsFromWorks(
       `concepts.id:${conceptsFilter},institutions.id:${instId},publication_year:>2017`
+    );
+  }
+  if (authorIds.length === 0 && conceptIds.length > 0 && instId) {
+    authorIds = await collectAuthorsFromWorks(
+      `concepts.id:${conceptsFilter},institutions.id:${instId},publication_year:>2010`
+    );
+  }
+  if (authorIds.length === 0 && conceptIds.length > 0 && instId) {
+    authorIds = await collectAuthorsFromWorks(
+      `concepts.id:${conceptsFilter},institutions.id:${instId}`
     );
   }
   if (authorIds.length === 0 && conceptIds.length > 0) {
@@ -342,6 +352,32 @@ export async function getProfessorByOrcid(orcid: string): Promise<Professor | nu
     return enrichAuthor(data.results[0], []);
   } catch {
     return null;
+  }
+}
+
+export async function getRecentWorksByAuthor(
+  authorId: string,
+  limit = 8
+): Promise<RecentPaper[]> {
+  try {
+    const cleanId = authorId.startsWith("https://openalex.org/") ? authorId : `https://openalex.org/${authorId}`;
+    const data = await get<OAList<OAWork>>("/works", {
+      filter: `authorships.author.id:${cleanId},publication_year:>2018`,
+      sort: "publication_year:desc",
+      per_page: String(Math.min(limit, 25)),
+      select: "id,title,publication_year,primary_location",
+    });
+    return (data.results ?? [])
+      .filter((w) => w.title)
+      .slice(0, limit)
+      .map((w) => ({
+        title: w.title,
+        year: w.publication_year,
+        abstract: null,
+        url: w.primary_location?.landing_page_url ?? `https://openalex.org/${shortId(w.id)}`,
+      }));
+  } catch {
+    return [];
   }
 }
 

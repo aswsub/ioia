@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft, Send, Check, Trash2, ArrowUpRight,
   FileText, User, Building2, BookOpen, Mail,
 } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
+import { getRecentWorksByAuthor } from "../../lib/openalex";
 
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
@@ -53,8 +54,22 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
   const [subject, setSubject] = useState(draft.subject);
   const [editing, setEditing] = useState(false);
   const [justSent, setJustSent] = useState(false);
+  const [papers, setPapers] = useState(draft.professor.recentPapers ?? []);
   const isSent = draft.status === "sent";
   const citations = CITATIONS[draft.id] ?? [];
+
+  useEffect(() => {
+    setPapers(draft.professor.recentPapers ?? []);
+    if ((draft.professor.recentPapers?.length ?? 0) > 0) return;
+    const id = draft.professor.openAlexId?.trim();
+    if (!id) return;
+    getRecentWorksByAuthor(id, 8)
+      .then((ws) => {
+        if (ws.length === 0) return;
+        setPapers(ws.map((w) => ({ title: w.title, year: w.year, url: w.url })));
+      })
+      .catch(() => {});
+  }, [draft.id]);
 
   const handleSend = () => {
     setJustSent(true);
@@ -362,13 +377,50 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
               <p style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 400, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 10 }}>
                 Why this professor
               </p>
-              <p style={{ fontSize: 12.5, color: "#525252", fontWeight: 300, lineHeight: 1.7 }}>
-                Their work on{" "}
+              <p style={{ fontSize: 12.5, color: "#525252", fontWeight: 300, lineHeight: 1.7, marginBottom: 10 }}>
+                Picked for overlap on{" "}
                 <span style={{ color: "#0a0a0a", fontWeight: 400 }}>
-                  {draft.professor.research.slice(0, 2).join(" and ")}
-                </span>{" "}
-                directly overlaps with your stated research interests. The email references their most recent published work and connects it to a specific project from your profile.
+                  {draft.professor.research.slice(0, 2).join(" and ") || "your keywords"}
+                </span>
+                {papers?.[0]?.title ? (
+                  <>
+                    {" "}and a recent paper:{" "}
+                    <span style={{ color: "#0a0a0a", fontWeight: 400 }}>
+                      {papers[0].title}
+                    </span>.
+                  </>
+                ) : (
+                  "."
+                )}
               </p>
+
+              {(draft.professor.homepage || (papers?.length ?? 0) > 0) && (
+                <div className="flex flex-col gap-1.5">
+                  {draft.professor.homepage && (
+                    <a
+                      href={draft.professor.homepage}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5"
+                      style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 300 }}
+                    >
+                      <ArrowUpRight size={12} /> Homepage
+                    </a>
+                  )}
+                  {(papers ?? []).slice(0, 5).map((p) => (
+                    <a
+                      key={p.url}
+                      href={p.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5"
+                      style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 300 }}
+                    >
+                      <FileText size={12} /> {p.title} ({p.year})
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

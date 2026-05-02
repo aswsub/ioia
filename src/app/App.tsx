@@ -36,6 +36,9 @@ export default function App() {
           research: r.professor.research,
           email: r.professor.email ?? "",
           color: r.professor.color ?? "#f5f5f5",
+          openAlexId: r.professor.id?.startsWith("https://openalex.org/A") ? r.professor.id : null,
+          homepage: null,
+          recentPapers: [],
         },
         subject: r.subject,
         body: r.body,
@@ -49,7 +52,13 @@ export default function App() {
   }, []);
 
   const handleDraftsReady = (drafts: OutreachDraft[]) => {
-    setOutreachDrafts(drafts);
+    // Merge in new drafts instead of replacing (so older drafts don't "disappear" until refresh).
+    setOutreachDrafts((prev) => {
+      const byId = new Map<string, OutreachDraft>();
+      prev.forEach((d) => byId.set(d.id, d));
+      drafts.forEach((d) => byId.set(d.id, d));
+      return Array.from(byId.values());
+    });
     // Persist each new draft
     drafts.forEach((d) => saveDraft(d, "draft"));
   };

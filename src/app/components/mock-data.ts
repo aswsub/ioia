@@ -120,6 +120,9 @@ export type OutreachDraft = {
     research: string[];
     email: string;
     color: string;
+    openAlexId?: string | null;
+    homepage?: string | null;
+    recentPapers?: { title: string; year: number; url: string }[];
   };
   subject: string;
   body: string;

@@ -23,6 +23,55 @@ const SUGGESTIONS = [
   "Find professors working on formal verification",
 ];
 
+const PIPELINE_STEPS: ToolStep[] = [
+  { icon: "search", label: "Parsing your request" },
+  { icon: "search", label: "Searching OpenAlex for matching professors" },
+  { icon: "mail", label: "Drafting personalized emails" },
+  { icon: "check", label: "Done" },
+];
+
+function parseAtTags(raw: string): {
+  cleaned: string;
+  schools: string[];
+  topics: string[];
+  n: number | null;
+} {
+  const schools: string[] = [];
+  const topics: string[] = [];
+  let n: number | null = null;
+
+  const cleanedLines: string[] = [];
+  const tagRe =
+    /@(?:(school|topic|n|count)\s*:\s*([^\s@]+(?:\s+[^\s@]+)*?)|(\d{1,2}))(?:\b|$)/gi;
+
+  for (const line of raw.split("\n")) {
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(line)) !== null) {
+      const kind = (m[1] ?? "").toLowerCase();
+      const value = (m[2] ?? "").trim();
+      const shorthandNum = m[3] ? Number(m[3]) : NaN;
+      if (kind === "school" && value) schools.push(value);
+      if (kind === "topic" && value) topics.push(value);
+      if ((kind === "n" || kind === "count") && value) {
+        const parsed = Number(value.replace(/[^\d]/g, ""));
+        if (Number.isFinite(parsed) && parsed > 0) n = Math.min(parsed, 10);
+      }
+      if (!kind && Number.isFinite(shorthandNum) && shorthandNum > 0) n = Math.min(shorthandNum, 10);
+    }
+    const rest = line.replace(tagRe, "").replace(/\s{2,}/g, " ").trim();
+    if (rest) cleanedLines.push(rest);
+  }
+
+  const uniq = (arr: string[]) => Array.from(new Set(arr.map((s) => s.trim()).filter(Boolean)));
+
+  return {
+    cleaned: cleanedLines.join("\n").trim(),
+    schools: uniq(schools),
+    topics: uniq(topics),
+    n,
+  };
+}
+
 function ToolStepRow({ step, delay }: { step: ToolStep; delay: number }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setVisible(true), delay); return () => clearTimeout(t); }, [delay]);
@@ -80,11 +129,16 @@ export function AgentView({
   const [conversations, setConversations] = useState<DbConversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const messagesRef = useRef<Message[]>([]);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasMessages = messages.length > 0;
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // Load conversation list on mount
   useEffect(() => {
@@ -98,13 +152,22 @@ export function AgentView({
   useEffect(() => {
     if (!activeConvId) { setMessages([]); return; }
     loadChatMessages(activeConvId).then((rows) => {
-      setMessages(rows.map((r) => ({
+      // Avoid clobbering optimistic UI messages when the DB hasn't caught up yet.
+      if (rows.length === 0 && messagesRef.current.length > 0) return;
+      const fromDb = rows.map((r) => ({
         id: r.id,
         role: r.role as "user" | "agent",
         content: r.content,
         steps: r.steps ? (r.steps as ToolStep[]) : undefined,
         timestamp: new Date(r.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      })));
+      }));
+      const merged = (() => {
+        const byId = new Map<string, Message>();
+        for (const m of messagesRef.current) byId.set(m.id, m);
+        for (const m of fromDb) byId.set(m.id, m);
+        return Array.from(byId.values());
+      })();
+      setMessages(merged);
     });
   }, [activeConvId]);
 
@@ -162,12 +225,7 @@ export function AgentView({
     const thinkingId = (Date.now() + 1).toString();
     const thinkingMsg: Message = {
       id: thinkingId, role: "agent", content: "",
-      steps: [
-        { icon: "search", label: "Parsing your request" },
-        { icon: "search", label: "Searching OpenAlex for matching professors" },
-        { icon: "mail", label: "Drafting personalized emails" },
-        { icon: "check", label: "Done" },
-      ],
+      steps: PIPELINE_STEPS,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
     setMessages((prev) => [...prev, thinkingMsg]);
@@ -175,15 +233,22 @@ export function AgentView({
     try {
       const { researchAreas, institutions, opportunityType } = await extractKeywordsFromPrompt(value);
       // Heuristic fallback: if the LLM extractor misses an institution/count, infer from raw prompt.
-      const promptLower = value.toLowerCase();
       const inferredInstitutions = [...institutions];
+      const hasBerkeley = /\b(uc\s*berkeley|u\.?\s*c\.?\s*berkeley|university of california[, ]+berkeley|berkeley)\b/i.test(value);
+      const hasCMU = /\b(cmu|carnegie mellon)\b/i.test(value);
+      const hasUCLA = /\b(ucla|uc\s*los\s*angeles|u\.?\s*c\.?\s*l\.?\s*a\.?)\b/i.test(value);
+      const hasCalPoly = /\b(cal\s*poly(\s*slo)?|california\s*polytechnic\s*state\s*university)\b/i.test(value);
       if (inferredInstitutions.length === 0) {
-        if (/\b(uc\s*berkeley|u\.?\s*c\.?\s*berkeley|university of california[, ]+berkeley|berkeley)\b/i.test(value)) {
-          inferredInstitutions.push("UC Berkeley");
-        }
+        if (hasCMU) inferredInstitutions.push("CMU");
+        if (hasBerkeley) inferredInstitutions.push("UC Berkeley");
+        if (hasUCLA) inferredInstitutions.push("UCLA");
+        if (hasCalPoly) inferredInstitutions.push("Cal Poly");
       }
       const inferredCount = (() => {
-        const m = value.match(/\b(find|give|show|list)\s+(\d{1,2})\b/i) ?? value.match(/\b(\d{1,2})\s+(professors?|faculty)\b/i);
+        // Support "find me 10", "show us 5", etc.
+        const m =
+          value.match(/\b(find|give|show|list)\b(?:\s+\w+){0,3}\s+(\d{1,2})\b/i) ??
+          value.match(/\b(\d{1,2})\s+(professors?|faculty)\b/i);
         const n = m ? Number(m[2] ?? m[1]) : NaN;
         return Number.isFinite(n) && n > 0 ? Math.min(n, 10) : 5;
       })();
@@ -246,6 +311,7 @@ export function AgentView({
         const noMatchMsg: Message = {
           id: (Date.now() + 2).toString(), role: "agent",
           content: "I searched OpenAlex but couldn't find professors matching your request. Try different keywords or a broader research area.",
+          steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
@@ -253,6 +319,17 @@ export function AgentView({
         setIsThinking(false);
         return;
       }
+
+      // Persist/merge latest professor matches so the Professors tab can show a running history.
+      try {
+        localStorage.setItem("ioia:last_professors_batch", JSON.stringify(matched));
+        const raw = localStorage.getItem("ioia:last_professors");
+        const existing = raw ? (JSON.parse(raw) as Professor[]) : [];
+        const byId = new Map<string, Professor>();
+        for (const p of existing ?? []) if (p?.id) byId.set(p.id, p);
+        for (const p of matched) if (p?.id) byId.set(p.id, p);
+        localStorage.setItem("ioia:last_professors", JSON.stringify(Array.from(byId.values())));
+      } catch { /* ignore */ }
 
       const drafts: OutreachDraft[] = [];
       for (const prof of matched) {
@@ -266,6 +343,9 @@ export function AgentView({
               department: prof.concepts[0]?.name ?? "CS",
               research: prof.concepts.slice(0, 3).map((c) => c.name),
               email: prof.email ?? "", color: colors[drafts.length % colors.length],
+              openAlexId: prof.id,
+              homepage: prof.homepage,
+              recentPapers: prof.recentPapers?.map((p) => ({ title: p.title, year: p.year, url: p.url })) ?? [],
             },
             subject: emailDraft.subject, body: emailDraft.body, matchScore: prof.matchScore,
           });
@@ -273,8 +353,14 @@ export function AgentView({
       }
 
       const summary = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}. I've drafted personalized emails for each — review them in Outreach.`;
+      const requested = inferredCount;
+      const note = matched.length < requested
+        ? ` (you asked for ${requested}, but OpenAlex returned ${matched.length} strong matches for that school/topic)`
+        : "";
+      const summaryWithNote = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}${note}. I've drafted personalized emails for each — review them in Outreach.`;
       const agentMsg: Message = {
-        id: (Date.now() + 2).toString(), role: "agent", content: summary,
+        id: (Date.now() + 2).toString(), role: "agent", content: summaryWithNote,
+        steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => prev.map((m) => m.id === thinkingId ? agentMsg : m));
@@ -292,6 +378,7 @@ export function AgentView({
       const errMsg: Message = {
         id: (Date.now() + 2).toString(), role: "agent",
         content: `Something went wrong: ${err instanceof Error ? err.message : String(err)}`,
+        steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => prev.map((m) => m.id === thinkingId ? errMsg : m));

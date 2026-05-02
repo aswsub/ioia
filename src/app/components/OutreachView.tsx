@@ -199,9 +199,37 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
                     >
                       {initials(draft.professor.name)}
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col min-w-0">
                       <span style={{ fontSize: 12.5, fontWeight: 400, color: "#0a0a0a" }}>{draft.professor.name}</span>
                       <span style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 300 }}>{draft.professor.title}</span>
+                      {(draft.professor.homepage || (draft.professor.recentPapers?.length ?? 0) > 0) && (
+                        <div className="flex items-center gap-2 mt-1" style={{ fontSize: 11, fontWeight: 300 }}>
+                          {draft.professor.homepage && (
+                            <a
+                              href={draft.professor.homepage}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: "#a3a3a3" }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              homepage ↗
+                            </a>
+                          )}
+                          {(draft.professor.recentPapers ?? []).slice(0, 1).map((p) => (
+                            <a
+                              key={p.url}
+                              href={p.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: "#a3a3a3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 240 }}
+                              onClick={(e) => e.stopPropagation()}
+                              title={p.title}
+                            >
+                              {p.title} ({p.year})
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </td>
