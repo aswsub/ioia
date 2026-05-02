@@ -3,7 +3,6 @@ import {
   LayoutGrid,
   Send,
   Users,
-  PenLine,
   Settings,
   ChevronDown,
   CircleUser,
@@ -21,7 +20,6 @@ const navItems: NavItem[] = [
   { label: "Overview", icon: <LayoutGrid size={14} />, active: true },
   { label: "Outreach", icon: <Send size={14} /> },
   { label: "Professors", icon: <Users size={14} /> },
-  { label: "Compose", icon: <PenLine size={14} /> },
 ];
 
 const quickAccess: NavItem[] = [
@@ -47,8 +45,11 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
         <img
           src={ioiaLogo}
           alt="ioia"
-          style={{ height: 18, width: "auto", display: "block" }}
+          style={{ height: 28, width: "auto", display: "block", flexShrink: 0 }}
         />
+        <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          Rahul Thennarasu
+        </span>
         <ChevronsUpDown size={12} color="#999" style={{ marginLeft: "auto", flexShrink: 0 }} />
       </div>
 
