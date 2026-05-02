@@ -1,11 +1,11 @@
 /// <reference types="vite/client" />
 import { createClient } from "@supabase/supabase-js";
 
-const url = (import.meta.env.VITE_SUPABASE_URL as string)?.replace(/\/$/, ""); // strip trailing slash
+const url = (import.meta.env.VITE_SUPABASE_URL as string)?.replace(/\/$/, "");
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-if (!url || !key) {
-  throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env");
+if (!url || url === "your_supabase_project_url" || !key || key === "your_supabase_anon_key") {
+  console.error("⚠ Supabase env vars not set. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.");
 }
 
 export const supabase = createClient(url, key);
