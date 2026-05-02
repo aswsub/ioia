@@ -1,0 +1,29 @@
+{
+  "name": "ioia",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "smoke:tone": "tsx --env-file=.env.local cold_email_workflow/tests/smoke.ts",
+    "extract:tone": "tsx --env-file=.env.local cold_email_workflow/extract_tone_runner.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aswsub/ioia.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aswsub/ioia/issues"
+  },
+  "homepage": "https://github.com/aswsub/ioia#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}
