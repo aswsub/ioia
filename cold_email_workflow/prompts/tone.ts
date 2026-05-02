@@ -63,7 +63,7 @@ const TRAIT: Record<ToneTrait, string> = {
   mentions_specific_paper:
     "Reference one specific recent paper by title with a concrete idea you took from it (already required by etiquette; do it well).",
   asks_genuine_question:
-    "Include one genuine question about the professor's work that you would actually want to discuss in person. ONE sentence, ONE clause, under 16 words. The question must be specific and tied to the cited paper or concept. Forbidden shapes: 'How do you decide when X is representative enough?' and 'Do you find that X, or does Y?' These read as AI. Ask one plain thing.",
+    "Include one specific, confused question about the professor's work. ONE sentence, ONE clause, under 16 words. Two requirements, both must hold: (1) the question references a specific claim, mechanism, or assumption present in CONTEXT (do not invent section or figure numbers), and (2) the question reveals something the writer did not understand or got stuck on. Generic well-formed questions are forbidden, including the frames 'How do you decide X?', 'How does X handle Y?', 'What happens when X?', and 'Do you find that X, or does Y?' — these read as AI regardless of the noun. If you cannot form a specific confused question grounded in CONTEXT, OMIT the question entirely (a missing question is better than a generic one) and add the warning specified in the VOICE REALISM block.",
   references_shared_interest:
     "Explicitly name one research concept or topic that connects the user's interests to the professor's work. Drawn from CONTEXT only.",
   avoids_buzzwords:

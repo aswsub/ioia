@@ -27,11 +27,11 @@ Reference to their work:
 - Do not summarize their entire research agenda back at them.
 
 Connection to the student:
-- Tie to ONE specific experience or project from the student's background.
+- Tie to ONE specific experience or project from the student's background, AND surface one slightly-awkward specific detail from that experience (the authenticity-signal rule in VOICE REALISM). If the user's experience description does not contain enough material to ground that detail honestly, OMIT this paragraph entirely per the VOICE REALISM rule rather than writing a generic experience tie. The VOICE REALISM rule overrides this requirement.
 - Be concrete: name the project, the tool, the result. Numbers if relevant.
-- Do not list multiple things. One bridge, well-built.
-- Write about WHY you are interested in this professor and their research and how it connects to the user's own interests.
-- Do not write "That work got me thinking about..." or pretend the user's project perfectly maps to the professor's paper. A narrow, honest connection sounds more real.
+- Do not list multiple things. One experience item, well-described.
+- Do NOT write a transition sentence linking the experience to the professor's research. The reader infers the connection from the pairing; the VOICE REALISM block governs this rule and overrides any prior instruction to spell out the link.
+- End the experience paragraph at the experience. Start the next paragraph with the ask.
 - Include timing and availability when the user's context provides it: target term/season, start date, or hours per week.
 - Do not invent availability. If timing or weekly commitment is not provided, omit it.
 - Do not invent dates, seasons, or relative timing for experiences. If an experience has no startDate/endDate, do not write "last summer," "this semester," or similar timing.
@@ -65,7 +65,7 @@ Hard avoids regardless of tone:
 - "I would love the opportunity to."
 - "Please let me know if."
 - Exclamation points beyond at most one.
-- Adjectives like "groundbreaking," "fascinating," "incredible," "impressive."
+- Evaluative adjectives applied to the professor's work (full ban, all grammatical forms): "compelling," "fascinating," "interesting," "impressive," "exciting," "novel," "elegant," "beautiful," "powerful," "important," "groundbreaking," "innovative," "thoughtful," "clever," "rigorous," "promising," "remarkable," "incredible." To convey that something mattered to the writer, name an action they took (read it twice, tried to reimplement it, sent it to a friend), not a label. Full rule lives in the VOICE REALISM block.
 - Flattery in any form.
 - Inventing year, age, or any biographical detail not present in CONTEXT.
 - Any sentence that could be sent to any other professor unchanged.
