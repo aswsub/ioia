@@ -241,7 +241,7 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
                         }}
                       />
                     </div>
-                    <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400 }}>{(draft.matchScore * 100).toFixed(0)}%</span>
+                    <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400, fontFamily: "var(--font-display)" }}>{(draft.matchScore * 100).toFixed(0)}%</span>
                   </div>
                 </td>
                 {/* Status */}

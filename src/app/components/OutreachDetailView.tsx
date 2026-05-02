@@ -333,7 +333,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 Match score
               </p>
               <div className="flex items-end gap-3 mb-3">
-                <span style={{ fontSize: 36, fontWeight: 300, color: "#0a0a0a", letterSpacing: "-0.03em", lineHeight: 1 }}>
+                <span style={{ fontSize: 36, fontWeight: 300, color: "#0a0a0a", letterSpacing: "-0.03em", lineHeight: 1, fontFamily: "var(--font-display)" }}>
                   {(draft.matchScore * 100).toFixed(0)}
                 </span>
                 <span style={{ fontSize: 14, color: "#a3a3a3", fontWeight: 300, marginBottom: 4 }}>/ 100</span>

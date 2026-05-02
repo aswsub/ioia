@@ -79,6 +79,18 @@ const ALL_PROFESSORS: Professor[] = [
 
 const ALL_INSTITUTIONS = Array.from(new Set(ALL_PROFESSORS.map((p) => p.institution))).sort();
 
+// Soft tinted palette per institution — background + text + border
+const INSTITUTION_COLORS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+  "Cal Poly SLO": { bg: "#fdf2f8", text: "#9d174d", border: "#fbcfe8", dot: "#ec4899" },
+  "UC Berkeley":  { bg: "#f0fdf4", text: "#166534", border: "#bbf7d0", dot: "#22c55e" },
+  "UCLA":         { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe", dot: "#3b82f6" },
+};
+const DEFAULT_COLOR = { bg: "#f5f5f5", text: "#525252", border: "#e5e5e5", dot: "#a3a3a3" };
+
+function getInstColor(inst: string) {
+  return INSTITUTION_COLORS[inst] ?? DEFAULT_COLOR;
+}
+
 type GroupBy = "institution" | "none";
 
 function MatchBar({ score }: { score: number }) {
@@ -88,12 +100,13 @@ function MatchBar({ score }: { score: number }) {
       <div className="rounded-full overflow-hidden" style={{ width: 40, height: 3, background: "#f0f0f0" }}>
         <div className="h-full rounded-full" style={{ width: `${score * 100}%`, background: color }} />
       </div>
-      <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400 }}>{(score * 100).toFixed(0)}%</span>
+      <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400, fontFamily: "var(--font-display)" }}>{(score * 100).toFixed(0)}%</span>
     </div>
   );
 }
 
-function ProfRow({ prof, isLast }: { prof: Professor; isLast: boolean }) {
+function ProfRow({ prof, isLast, instColor }: { prof: Professor; isLast: boolean; instColor?: { bg: string; text: string; border: string; dot: string } }) {
+  const c = instColor ?? DEFAULT_COLOR;
   return (
     <div
       className="grid group hover:bg-gray-50 transition-colors cursor-pointer"
@@ -110,9 +123,9 @@ function ProfRow({ prof, isLast }: { prof: Professor; isLast: boolean }) {
         <span style={{ fontSize: 12, color: "#525252", fontWeight: 300 }}>{prof.institution}</span>
       </div>
       <div className="px-4 py-3 flex items-center gap-1.5 flex-wrap">
-        {prof.concepts.map((c) => (
-          <span key={c} className="rounded-full px-2 py-0.5" style={{ fontSize: 10.5, background: "#f5f5f5", color: "#525252", fontWeight: 300 }}>
-            {c}
+        {prof.concepts.map((concept) => (
+          <span key={concept} className="rounded-full px-2 py-0.5" style={{ fontSize: 10.5, background: c.bg, color: c.text, border: `1px solid ${c.border}`, fontWeight: 300 }}>
+            {concept}
           </span>
         ))}
       </div>
@@ -134,6 +147,7 @@ function ProfRow({ prof, isLast }: { prof: Professor; isLast: boolean }) {
 
 function ProfGroup({ label, professors, defaultOpen = true }: { label: string; professors: Professor[]; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
+  const c = getInstColor(label);
   return (
     <div className="rounded-lg border overflow-hidden mb-4" style={{ borderColor: "#e5e5e5", background: "#fff" }}>
       <button
@@ -143,7 +157,7 @@ function ProfGroup({ label, professors, defaultOpen = true }: { label: string; p
       >
         {open ? <ChevronDown size={13} color="#a3a3a3" /> : <ChevronRight size={13} color="#a3a3a3" />}
         <span style={{ fontSize: 13, fontWeight: 500, color: "#0a0a0a" }}>{label}</span>
-        <span className="ml-auto rounded-full px-2 py-0.5" style={{ fontSize: 11, background: "#f0f0f0", color: "#737373", fontWeight: 400 }}>
+        <span className="ml-auto rounded-full px-2 py-0.5" style={{ fontSize: 11, background: "#f0f0f0", color: "#a3a3a3", fontWeight: 400 }}>
           {professors.length}
         </span>
       </button>
@@ -157,7 +171,7 @@ function ProfGroup({ label, professors, defaultOpen = true }: { label: string; p
             ))}
           </div>
           {professors.map((prof, i) => (
-            <ProfRow key={prof.id} prof={prof} isLast={i === professors.length - 1} />
+            <ProfRow key={prof.id} prof={prof} isLast={i === professors.length - 1} instColor={c} />
           ))}
         </>
       )}
@@ -227,23 +241,27 @@ export function ProfessorsView() {
           >
             All
           </button>
-          {ALL_INSTITUTIONS.map((inst) => (
-            <button
-              key={inst}
-              onClick={() => setInstitutionFilter(institutionFilter === inst ? null : inst)}
-              className="rounded-full px-3 py-1 transition-all"
-              style={{
-                fontSize: 12,
-                fontWeight: institutionFilter === inst ? 400 : 300,
-                color: institutionFilter === inst ? "#0a0a0a" : "#737373",
-                background: institutionFilter === inst ? "#f0f0f0" : "transparent",
-                border: "1px solid",
-                borderColor: institutionFilter === inst ? "#0a0a0a" : "#e5e5e5",
-              }}
-            >
-              {inst}
-            </button>
-          ))}
+          {ALL_INSTITUTIONS.map((inst) => {
+            const active = institutionFilter === inst;
+            const c = getInstColor(inst);
+            return (
+              <button
+                key={inst}
+                onClick={() => setInstitutionFilter(active ? null : inst)}
+                className="rounded-full px-3 py-1 transition-all"
+                style={{
+                  fontSize: 12,
+                  fontWeight: active ? 400 : 300,
+                  color: active ? c.text : "#737373",
+                  background: active ? c.bg : "transparent",
+                  border: "1px solid",
+                  borderColor: active ? c.border : "#e5e5e5",
+                }}
+              >
+                {inst}
+              </button>
+            );
+          })}
         </div>
 
         {/* Group toggle */}

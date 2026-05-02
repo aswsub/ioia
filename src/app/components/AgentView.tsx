@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowUp, Paperclip, Loader2, Search, Mail, CheckCircle2, ArrowRight } from "lucide-react";
 import { OutreachDraft, MOCK_DRAFTS } from "./mock-data";
+import ioiaLogo from "figma:asset/ioia.png";
 
 type ToolStep = {
   icon: "search" | "mail" | "check";
@@ -78,11 +79,8 @@ function AgentMessage({ msg, isNew }: { msg: Message; isNew?: boolean }) {
   return (
     <div className="flex gap-3" style={{ animation: isNew ? "fadeSlideIn 0.3s ease" : "none" }}>
       {/* Avatar */}
-      <div
-        className="flex items-center justify-center rounded flex-shrink-0 mt-0.5"
-        style={{ width: 22, height: 22, background: "#0a0a0a" }}
-      >
-        <span style={{ color: "#fff", fontSize: 9, fontWeight: 600, letterSpacing: "-0.02em" }}>io</span>
+      <div className="flex-shrink-0 mt-0.5" style={{ width: 22, height: 22 }}>
+        <img src={ioiaLogo} alt="ioia" style={{ width: 22, height: 22, borderRadius: 6, display: "block" }} />
       </div>
 
       <div className="flex flex-col gap-2 flex-1 min-w-0">
@@ -332,12 +330,9 @@ export function AgentView({
             {/* Thinking state */}
             {isThinking && (
               <div className="flex gap-3 items-center" style={{ animation: "fadeSlideIn 0.25s ease" }}>
-                <div
-                  className="flex items-center justify-center rounded flex-shrink-0"
-                  style={{ width: 22, height: 22, background: "#0a0a0a" }}
-                >
-                  <span style={{ color: "#fff", fontSize: 9, fontWeight: 600 }}>io</span>
-                </div>
+              <div className="flex-shrink-0" style={{ width: 22, height: 22 }}>
+                <img src={ioiaLogo} alt="ioia" style={{ width: 22, height: 22, borderRadius: 6, display: "block" }} />
+              </div>
                 <Loader2 size={13} style={{ color: "#a3a3a3", animation: "spin 1s linear infinite" }} />
               </div>
             )}

@@ -3,7 +3,6 @@ import {
   LayoutGrid,
   Send,
   Users,
-  Settings,
   ChevronDown,
   CircleUser,
   ChevronsUpDown,
@@ -22,9 +21,7 @@ const navItems: NavItem[] = [
   { label: "Professors", icon: <Users size={14} /> },
 ];
 
-const quickAccess: NavItem[] = [
-  { label: "Settings", icon: <Settings size={14} /> },
-];
+const quickAccess: NavItem[] = [];
 
 interface SidebarProps {
   activeView: string;
@@ -45,7 +42,13 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
         <img
           src={ioiaLogo}
           alt="ioia"
-          style={{ height: 28, width: "auto", display: "block", flexShrink: 0 }}
+          style={{
+            height: 28,
+            width: "auto",
+            display: "block",
+            flexShrink: 0,
+            borderRadius: 6,
+          }}
         />
         <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           Rahul Thennarasu
@@ -104,48 +107,11 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Quick access */}
-      <div className="px-3 pb-1">
-        <nav className="flex flex-col gap-0.5">
-          {quickAccess.map((item) => (
-            <button
-              key={item.label}
-              className="flex items-center gap-2 w-full rounded px-2 py-1.5 transition-colors text-left"
-              style={{ fontSize: 12.5, color: "#525252", fontWeight: 400 }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#fafafa"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-            >
-              <span style={{ color: "#a3a3a3", flexShrink: 0 }}>{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Usage */}
-      <div
-        className="px-3 py-2 border-t"
-        style={{ borderColor: "#e5e5e5" }}
-      >
-        <div className="flex items-center justify-between mb-1.5">
-          <span style={{ fontSize: 11.5, color: "#525252", fontWeight: 400 }}>Usage</span>
-          <span
-            className="rounded px-1.5 py-0.5 cursor-pointer"
-            style={{ fontSize: 10.5, color: "#0a0a0a", background: "#f0f0f0", fontWeight: 400 }}
-          >
-            Free
-          </span>
-        </div>
-        <div className="rounded-full overflow-hidden" style={{ height: 3, background: "#e5e5e5" }}>
-          <div className="h-full rounded-full" style={{ width: "43%", background: "#0a0a0a" }} />
-        </div>
-        <p style={{ fontSize: 10.5, color: "#a3a3a3", marginTop: 5 }}>3 / 7 emails drafted</p>
-      </div>
-
       {/* User */}
+      <div style={{ height: 1, background: "#e5e5e5", margin: "0 12px" }} />
       <div
-        className="px-3 py-2.5 border-t flex items-center gap-2 cursor-pointer transition-colors"
-        style={{ borderColor: "#e5e5e5" }}
+        className="mx-2 mb-2 mt-1 rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
+        style={{ padding: "8px 10px" }}
         onClick={() => onNavigate("Profile")}
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f5f5f5"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
