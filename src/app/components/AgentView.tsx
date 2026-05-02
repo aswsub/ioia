@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowUp, Paperclip, Loader2, Search, Mail, CheckCircle2, ArrowRight } from "lucide-react";
 import { OutreachDraft, MOCK_DRAFTS } from "./mock-data";
 import ioiaLogo from "figma:asset/ioia.png";
+import { loadChatMessages, saveChatMessage } from "../../lib/db";
 
 type ToolStep = {
   icon: "search" | "mail" | "check";
@@ -136,6 +137,21 @@ export function AgentView({
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasMessages = messages.length > 0;
 
+  // Load persisted chat history on mount
+  useEffect(() => {
+    loadChatMessages().then((rows) => {
+      if (rows.length === 0) return;
+      const loaded: Message[] = rows.map((r) => ({
+        id: r.id,
+        role: r.role,
+        content: r.content,
+        steps: r.steps ?? undefined,
+        timestamp: new Date(r.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      }));
+      setMessages(loaded);
+    });
+  }, []);
+
   const autoResize = () => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -163,6 +179,9 @@ export function AgentView({
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsThinking(true);
 
+    // Persist user message
+    saveChatMessage({ id: userMsg.id, role: "user", content: userMsg.content, steps: null });
+
     const resp = MOCK_RESPONSES.default;
     const totalDelay = (resp.steps.length * 600) + 800;
 
@@ -177,6 +196,8 @@ export function AgentView({
       setMessages((prev) => [...prev, agentMsg]);
       setIsThinking(false);
       onDraftsReady?.(MOCK_DRAFTS);
+      // Persist agent message
+      saveChatMessage({ id: agentMsg.id, role: "agent", content: agentMsg.content, steps: agentMsg.steps ?? null });
     }, totalDelay);
   };
 

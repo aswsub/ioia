@@ -6,7 +6,9 @@ import {
   ChevronDown,
   CircleUser,
   ChevronsUpDown,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../../lib/auth";
 
 type NavItem = {
   label: string;
@@ -29,6 +31,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeView, onNavigate }: SidebarProps) {
+  const { user, signOut } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.email ?? "You";
   return (
     <aside
       className="flex flex-col h-full bg-white border-r"
@@ -51,7 +55,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
           }}
         />
         <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          Rahul Thennarasu
+          {displayName}
         </span>
         <ChevronsUpDown size={12} color="#999" style={{ marginLeft: "auto", flexShrink: 0 }} />
       </div>
@@ -109,20 +113,34 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
 
       {/* User */}
       <div style={{ height: 1, background: "#e5e5e5", margin: "0 12px" }} />
-      <div
-        className="mx-2 mb-2 mt-1 rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
-        style={{ padding: "8px 10px" }}
-        onClick={() => onNavigate("Profile")}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f5f5f5"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-      >
+      <div className="mx-2 mb-2 mt-1 flex flex-col gap-0.5">
         <div
-          className="flex items-center justify-center rounded-full"
-          style={{ width: 22, height: 22, background: "#e5e5e5", flexShrink: 0 }}
+          className="rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
+          style={{ padding: "8px 10px" }}
+          onClick={() => onNavigate("Profile")}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f5f5f5"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
         >
-          <CircleUser size={13} color="#666" />
+          <div
+            className="flex items-center justify-center rounded-full"
+            style={{ width: 22, height: 22, background: "#e5e5e5", flexShrink: 0 }}
+          >
+            <CircleUser size={13} color="#666" />
+          </div>
+          <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {displayName}
+          </span>
         </div>
-        <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 300 }}>Rahul Thennarasu</span>
+        <button
+          onClick={signOut}
+          className="rounded-lg flex items-center gap-2 transition-colors w-full text-left"
+          style={{ padding: "6px 10px" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#fafafa"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          <LogOut size={12} color="#a3a3a3" />
+          <span style={{ fontSize: 12, color: "#a3a3a3", fontWeight: 300 }}>Sign out</span>
+        </button>
       </div>
     </aside>
   );

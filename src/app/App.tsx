@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { AgentView } from "./components/AgentView";
 import { OutreachView } from "./components/OutreachView";
@@ -6,6 +6,12 @@ import { OutreachDetailView } from "./components/OutreachDetailView";
 import { ProfessorsView } from "./components/ProfessorsView";
 import { ProfileView } from "./components/ProfileView";
 import { OutreachDraft } from "./components/mock-data";
+import {
+  loadOutreachDrafts,
+  saveDraft,
+  updateDraftStatus,
+  deleteDraft,
+} from "../lib/db";
 
 type View = "Overview" | "Outreach" | "Professors" | "Profile";
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
@@ -16,8 +22,36 @@ export default function App() {
   const [draftStatuses, setDraftStatuses] = useState<Record<string, "draft" | "sent">>({});
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
 
+  // Load persisted drafts on mount
+  useEffect(() => {
+    loadOutreachDrafts().then((rows) => {
+      if (rows.length === 0) return;
+      const drafts: OutreachDraft[] = rows.map((r) => ({
+        id: r.id,
+        professor: {
+          name: r.professor.name,
+          title: r.professor.title ?? "",
+          university: r.professor.institution,
+          department: r.professor.department,
+          research: r.professor.research,
+          email: r.professor.email ?? "",
+          color: r.professor.color ?? "#f5f5f5",
+        },
+        subject: r.subject,
+        body: r.body,
+        matchScore: r.match_score,
+      }));
+      const statuses: Record<string, "draft" | "sent"> = {};
+      rows.forEach((r) => { statuses[r.id] = r.status; });
+      setOutreachDrafts(drafts);
+      setDraftStatuses(statuses);
+    });
+  }, []);
+
   const handleDraftsReady = (drafts: OutreachDraft[]) => {
     setOutreachDrafts(drafts);
+    // Persist each new draft
+    drafts.forEach((d) => saveDraft(d, "draft"));
   };
 
   const handleNavigateToOutreach = () => {
@@ -27,11 +61,13 @@ export default function App() {
 
   const handleSend = (id: string) => {
     setDraftStatuses((prev) => ({ ...prev, [id]: "sent" }));
+    updateDraftStatus(id, "sent");
   };
 
   const handleDiscard = (id: string) => {
     setOutreachDrafts((prev) => prev.filter((d) => d.id !== id));
     setDraftStatuses((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    deleteDraft(id);
   };
 
   const draftsWithStatus: DraftWithStatus[] = outreachDrafts.map((d) => ({
@@ -39,10 +75,11 @@ export default function App() {
     status: draftStatuses[d.id] ?? "draft",
   }));
 
-  const selectedDraft = selectedDraftId ? draftsWithStatus.find((d) => d.id === selectedDraftId) ?? null : null;
+  const selectedDraft = selectedDraftId
+    ? draftsWithStatus.find((d) => d.id === selectedDraftId) ?? null
+    : null;
 
   const renderView = () => {
-    // Detail page — full screen, replaces outreach list
     if (activeView === "Outreach" && selectedDraft) {
       return (
         <OutreachDetailView
@@ -91,7 +128,10 @@ export default function App() {
       className="flex h-screen w-screen overflow-hidden"
       style={{ fontFamily: "var(--font-sans)", background: "#fafafa" }}
     >
-      <Sidebar activeView={activeView} onNavigate={(v) => { setSelectedDraftId(null); setActiveView(v as View); }} />
+      <Sidebar
+        activeView={activeView}
+        onNavigate={(v) => { setSelectedDraftId(null); setActiveView(v as View); }}
+      />
       {renderView()}
     </div>
   );
