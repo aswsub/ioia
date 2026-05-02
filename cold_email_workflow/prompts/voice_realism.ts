@@ -32,21 +32,38 @@ Choppiness over smoothness:
 - Test: cover the last sentence of each paragraph with your hand. If the paragraph still makes sense and ends on a substantive claim, the wrap-up was unnecessary — drop it.
 - This generalizes the no-transition rule below: the experience-to-professor link is the most common case, but the principle applies to every paragraph break in the body.
 
-The opener (anti-list, anti-generic):
-- The structure name + year + school + interests is fine. The list-of-interests version of it is the AI default and is banned. "I'm Sid Balaji, a CS junior at Cal Poly interested in program synthesis and distributed systems" is in 40% of generated cold emails to a given professor. Do not write that shape.
-- BANNED openers (do not write these or close paraphrases):
+Paragraph arc (the last sentence carries weight):
+- Every paragraph in the body must follow a setup -> development -> landing arc. The last sentence of a paragraph is the one the reader remembers; make it carry weight.
+- The landing sentence MUST NOT be:
+  - A metric ("Cut onboarding from 3 days to 4 hours.")
+  - A resume-bullet summary ("Stack: TypeScript, Postgres, the Stripe API.")
+  - Filler ("Anyway, that is the gist.")
+  - Transitional throat-clearing ("Hope that gives a sense of the project.")
+  - A wrap-up evaluation (already banned in Choppiness, restated here for the landing position).
+- The landing sentence SHOULD be one of:
+  - A substantive observation about what the writer learned, noticed, or got stuck on.
+  - A specific technical claim about how something actually worked or broke.
+  - For the experience paragraph specifically: a sentence naming the technical concept the writer's work shares with the professor's domain WITHOUT announcing the connection (e.g. "The bug was always in the state machine, not the API"), OR an admission of what was hard or surprising.
+- Test: read just the last sentence of each paragraph. If those last sentences alone tell you something memorable about the writer, the arcs are working. If they read as throat-clearing or recap, rewrite.
+
+The opener (exactly two sentences):
+- The opener is exactly TWO sentences. Not one. Not three. Two.
+- Sentence 1: identify the writer. Name, year (only if in CONTEXT), school. Major if it adds signal. Stop there. Do NOT cram interests into sentence 1.
+- Sentence 2: ONE specific reason the writer is reaching out NOW. Pick exactly one of these shapes, all grounded in CONTEXT:
+  - A class the writer is currently taking, IF CONTEXT names one.
+  - A project the writer is currently working on, drawn from the most recent CONTEXT.experience item or CONTEXT.shortBio.
+  - A specific chain of how the writer found the professor (e.g. "I was reading X and your name came up"), IF CONTEXT supports the discovery path.
+  - Fallback: a small-admission shape grounded in CONTEXT.researchInterests ("I've been teaching myself X this term"). Use this when none of the above three are supported by CONTEXT.
+- Sentence 2 MUST topically lead into the paper-reference paragraph that follows. The "why I'm reaching out now" should naturally introduce the topic of the paper. This is NOT a transition sentence (those are banned); sentence 2 carries its own substantive content that happens to share vocabulary with the next paragraph.
+- BANNED opener shapes (do not write these or close paraphrases):
   - "...interested in X and Y" / "...interested in X, Y, and Z" (list of interests)
   - "...focused on X and Y" (list of focus areas)
-  - "...working at the intersection of X and Y" (already banned, restated for the opener context)
+  - "...working at the intersection of X and Y"
   - Any opener whose final clause is a comma-list of two or more research areas.
-- Replace the list with ONE of these moves, all grounded in CONTEXT:
-  1. ONE specific interest (singular, no list). Pick the interest that best matches the professor's concepts.
-  2. A moment-in-time anchor grounded in CONTEXT: a quarter, semester, term, or current project the user is in. Use only quarters/seasons/terms that are present in CONTEXT (do NOT invent "this quarter" if CONTEXT doesn't name one; CONTEXT.shortBio mentioning a target term like "fall 2026" counts).
-  3. A small admission shape: "I've been trying to teach myself X" / "I've been working through X this term" / "I'm still figuring out X." Allowed when X is one of CONTEXT.researchInterests. The admission is a stance about the user's relationship to the topic; it must not invent an activity not present in CONTEXT.
-- Trade polish for one specific moment or one small admission. Both move the opener toward human.
-- Bad (list shape, generic): "I'm Sid Balaji, a CS junior at Cal Poly interested in program synthesis and distributed systems."
-- Better (single interest + admission): "I'm Sid Balaji, a CS junior at Cal Poly. I've been trying to teach myself program synthesis this quarter."
-- Do NOT invent specifics like "your work keeps showing up," "I cited you in a class paper," or "your research came up in my advisor's seminar" unless CONTEXT explicitly supports it. Inventing specificity is worse than the generic list it replaces.
+  - Any one-sentence opener that crams identification + interest into a single sentence (the AI default).
+- Bad (one-sentence list, generic): "I'm Sid Balaji, a CS junior at Cal Poly interested in program synthesis and distributed systems."
+- Better (two sentences, present-tense reason for reaching out, grounded in CONTEXT): "I'm Sid Balaji, a CS junior at Cal Poly. I've been teaching myself program synthesis this term."
+- Do NOT invent specifics like "your work keeps showing up," "I cited you in a class paper," "your research came up in my advisor's seminar," or a class/project name not present in CONTEXT. Inventing specificity is worse than the small-admission fallback.
 
 Anti-AI paragraph shape:
 - Do NOT write a polished "paper summary -> abstract question -> personal bridge" chain. That is the standard AI cold-email shape.
@@ -101,17 +118,20 @@ One slightly-awkward, specific detail (authenticity signal):
 - If CONTEXT does not provide enough material to ground a slightly-awkward specific detail honestly, do NOT manufacture one. Instead, DROP the experience paragraph entirely. The body becomes: greeting, paper-reference paragraph, ask. This OVERRIDES the etiquette requirement to include an experience tie. When you do this, add the warning "no awkward-specific detail available, omitted experience paragraph per realism rule" and lower confidence to at most "medium."
 - The detail is one detail, not a series. One concrete weird fact carries the whole signal; two starts to feel performative.
 
-The experience paragraph (lead with the system, bury the metric):
+The experience paragraph (lead with the system; metric in the middle; land on a concept or admission):
 - The default LLM shape for this paragraph is a perfectly clean three-sentence summary: setup, result, gnarly part. That tidy shape is itself the AI tell. Real engineers describing a project are bumpier.
 - Lead with the SYSTEM, not the role or the impact. "I built a CSV-to-Stripe importer at Stripe last summer" beats "As a Software Engineering Intern at Stripe, I shipped a pipeline that..." The verb of doing comes first; the title and the role-framing come not at all.
 - Then do ONE of these two moves (do NOT do both — one is the texture; both is performance):
   (a) LEAD WITH THE FAILURE OR SURPRISE. After the system sentence, name what broke, what was unexpected, or what didn't work the first time. "The hard part wasn't the API" / "It worked, then it didn't, then we figured out why."
   (b) GET SPECIFIC ABOUT THE WRONG THING. After the system sentence, drill into a narrow technical detail a polished bullet would have left out: a constraint, a data shape, an edge case, a tool version, a particular row that broke a batch.
-- BURY the impact metric. Do NOT lead the paragraph with the number. Do NOT put it in subject position. Drop it casually at the end, after the technical detail. "Got onboarding from 3 days to 4 hours once we figured out the batching" buries it; "Cut onboarding from 3 days to 4 hours" reads as a resume bullet.
-- All technical detail (failure modes, constraints, row counts, tool names, edge cases) MUST be traceable to CONTEXT.experience or CONTEXT.shortBio. Do NOT invent constraints, error modes, or system internals not present in CONTEXT. If CONTEXT only names a stack and a metric, your textured paragraph will be shorter than the example below — that is correct. The shape rule and the no-invention rule both hold; sparse CONTEXT means a sparser paragraph, not an invented one.
+- METRIC POSITIONING (changed from earlier draft of this rule): the impact metric belongs in the MIDDLE of the paragraph, not at the end. Do NOT lead the paragraph with the number; do NOT end the paragraph on the number either. Mention it in passing somewhere between the failure-mode sentence and the landing sentence. "Got onboarding from 3 days to 4 hours once we figured out the batching" works as a mid-paragraph sentence, NOT as the closer.
+- LANDING SENTENCE: do NOT end the experience paragraph on the metric or any resume-bullet shape. The last sentence must be one of:
+  (a) A sentence naming the technical concept the writer's work SHARES with the professor's domain — without announcing the connection. The vocabulary does the work. Example: "The bug was always in the state machine, not the API." (Echoes a state-machine / invariants / formal-methods professor's domain without ever saying "which connects to your work.")
+  (b) An admission of what was hard or surprising. Example: "I still don't fully understand why batching helped as much as it did."
+- All technical detail (failure modes, constraints, row counts, tool names, edge cases) MUST be traceable to CONTEXT.experience or CONTEXT.shortBio. Do NOT invent constraints, error modes, or system internals not present in CONTEXT. If CONTEXT only names a stack and a metric, your paragraph will be shorter than the example below — that is correct. The shape rule and the no-invention rule both hold; sparse CONTEXT means a sparser paragraph, not an invented one.
 - Example shape (illustrative only — do NOT copy verbatim. Specifics here would only be valid if CONTEXT supports them):
-  "I built a CSV-to-Stripe importer at Stripe last summer. The hard part was not the API. It was that we couldn't validate merchant data against our Postgres constraints before hitting Stripe, so one bad row would tank a 10,000-row batch and there was no clean way to resume. Got onboarding from 3 days to 4 hours once we figured out the batching."
-- What that example does right: leads with the system (built X), names the failure mode in concrete terms (couldn't validate before hitting Stripe, one bad row tanked a batch, no clean resume), buries the impact metric in a casual closing sentence. It reads as someone who actually built the thing, not someone summarizing a resume bullet.
+  "I built a CSV-to-Stripe importer at Stripe last summer. We couldn't validate merchant data against our Postgres constraints before hitting Stripe, so one bad row would tank a 10,000-row batch. Got onboarding from 3 days to 4 hours once we figured out the batching. The bug was always in the state between the CSV and the database, not the API."
+- What that example does right: leads with the system, names the failure mode concretely, drops the impact metric in the third (middle-ish) sentence rather than the last, and lands on a sentence that names the shared technical concept (state between systems) without announcing any connection to the professor's research.
 
 No transition sentence between user experience and professor's work:
 - Do NOT write any sentence whose job is to bridge the user's experience to the professor's work. The reader will see the connection from the choice of paper and the choice of experience. Spelling the link out is the AI tell.
@@ -126,16 +146,18 @@ No transition sentence between user experience and professor's work:
 - This OVERRIDES any earlier instruction (including in ETIQUETTE or TONE) to "write about how the experience connects to the professor's research." The connection is communicated by the choice of paper and the choice of experience; not by a sentence.
 
 The question (only if the asks_genuine_question trait is on):
-- ONE sentence. ONE clause. Under 20 words.
-- Two requirements, both must hold:
-  1. The question must reference a specific section, figure, claim, mechanism, or assumption that is present in the CONTEXT abstract or homepage. Do NOT invent section numbers, figure numbers, or quotations that are not in CONTEXT — if CONTEXT only gives you an abstract, ground the question in a specific phrase or claim from that abstract.
-  2. The question must reveal something the writer did not understand or got stuck on. A confused, narrow question. Not a polished one.
-- Generic well-formed questions are FORBIDDEN, even if they sound technical. The frames "How do you decide X?", "How does X handle Y?", "What happens when X?" are generic and banned regardless of the noun you put inside.
-- Bad (generic, sounds smart but is empty): "How do you decide when the trace samples are representative enough?"
+- Floating questions read as performative. Every question MUST be anchored. Pick one of these two anchor types:
+  (a) A specific section, figure, claim, mechanism, or assumption named in CONTEXT (abstract or homepage). Do NOT invent section or figure numbers. If CONTEXT only gives an abstract, ground the question in a specific phrase or claim from that abstract.
+  (b) A half-sentence of context — either why the answer matters to the writer, OR what the writer already tried to figure out.
+- ONE sentence overall, including the anchor. Under ~30 words. The question itself is one clause; the (b)-style anchor can be a brief lead-in clause attached with a comma.
+- Generic well-formed questions (no anchor) are FORBIDDEN even if they sound technical. The frames "How do you decide X?", "How does X handle Y?", "What happens when X?", "How do you approach X?" are banned regardless of the noun.
+- Two-part hedged questions are also forbidden: "Do you find that X, or does Y catch Z?"
+- Bad (no anchor): "How do you decide when the trace samples are representative enough?"
 - Bad (two-part hedged): "Do you find that X, or does Y catch Z?"
-- Good (specific + confused, grounded in the abstract): "The abstract says invariants are verified against TLA+ models, but I could not tell if that is a soundness check or a way to prune candidates."
-- Good (specific + confused, narrower): "I am stuck on whether the Raft case study uses a single trace per run or a batch."
-- If you cannot form a specific confused question grounded in CONTEXT, OMIT the question entirely. A missing question is better than a generic one. When you omit, add a "could not form a grounded question, omitted per realism rule" note to warnings.
+- Good (anchor type a, grounded in the abstract): "The abstract says invariants are verified against TLA+ models, and I could not tell if that is a soundness check or a candidate-pruning step."
+- Good (anchor type b, why-it-matters): "I keep getting stuck on whether trace coverage matters more than trace count for this; the answer would change how I'd structure my own toy version."
+- Good (anchor type b, what-already-tried): "I tried to sketch the CEGIS loop on paper and got tangled on the verifier-counterexample handoff; was that handoff easier or harder than you expected?"
+- FALLBACK if you cannot anchor the question: do NOT ask a floating question. CUT the question entirely and REPLACE it with a one-sentence STATEMENT of what the writer took from the paper. Example: "What I took from this is that you can refine invariants from finite traces without exhaustive model checking, which I had not seen before." Add the warning "could not anchor the question, replaced with a takeaway statement per realism rule."
 
 The ask:
 - Process-oriented, not self-promotional. The best asks ask about the LAB'S state and the next concrete step (intake, application process, fit), NOT about whether the professor will "consider" the writer. Cover-letter framing reads as cover-letter writing.

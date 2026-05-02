@@ -9,8 +9,10 @@ Subject line:
 - Bad: "Research Inquiry from Cal Poly Student"
 
 Opening:
-- One or two short sentences. Identify yourself: full name, university, and major (all present in CONTEXT). You may add ONE additional concrete signal from CONTEXT (a single research interest, a moment-in-time anchor, or a small admission about how the user is engaging with the topic) when it sets up the email.
-- The added signal must NOT be a list. "Interested in X and Y" / "focused on X, Y, and Z" / "working at the intersection of X and Y" are banned shapes — see the VOICE REALISM "opener" rule. Pick ONE interest, OR a moment-in-time anchor grounded in CONTEXT, OR a small admission shape ("I've been trying to teach myself X this term").
+- Exactly TWO short sentences (per the VOICE REALISM "opener" rule).
+- Sentence 1: identify the writer. Full name, year (only if in CONTEXT), school. Major if it adds signal. Stop there.
+- Sentence 2: ONE specific reason the writer is reaching out NOW — a class they are taking, a project they are working on, a specific chain of how they found the professor, or (fallback) a small-admission shape ("I've been teaching myself X this term"). Must be grounded in CONTEXT, must topically lead into the paper paragraph that follows.
+- The added signal must NOT be a list. "Interested in X and Y" / "focused on X, Y, and Z" / "working at the intersection of X and Y" are banned shapes — see the VOICE REALISM "opener" rule.
 - Do NOT invent year, age, timing, or any biographical detail not present in CONTEXT. GPA is in CONTEXT but should be referenced only if it directly supports the ask; do not include it as a generic credential.
 - Do NOT open with "I hope this email finds you well," "My name is," or "I am reaching out because."
 - Just say what you are and why you are writing.
@@ -55,7 +57,10 @@ Length:
 - Three to four short paragraphs, or two slightly longer ones.
 
 Closing:
-- One line. "Best," or "Thanks," matching the user's tone profile.
+- One line. Pick "Best," or "Thanks," DELIBERATELY based on tone.voice — these are not interchangeable:
+  - "Thanks," when tone.voice is "conversational," "enthusiastic," or "humble." A 15-minute meeting is asking a small favor, and thanking in advance lands well in casual or warm voices.
+  - "Best," when tone.voice is "formal" or "direct." Slightly more formal; works when the writer does not personally know the recipient and avoids the implied warmth of "Thanks."
+  - When in doubt, "Best," is the safer default.
 - Full name on the next line.
 - No quotes, no signatures with five contact methods, no pronouns block unless the tone profile suggests it.
 
