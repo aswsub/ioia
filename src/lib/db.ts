@@ -2,22 +2,79 @@ import { supabase } from "./supabase";
 import type { DbProfessor, DbOutreachDraft, DbOutreachEmail, DbChatMessage } from "./supabase";
 import type { OutreachDraft } from "../app/components/mock-data";
 
+// Helper — get the current user's id without throwing
+async function uid(): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}
+
 // ── Chat messages ─────────────────────────────────────────────────────────────
 
-export async function loadChatMessages(): Promise<DbChatMessage[]> {
+export async function loadChatMessages(conversationId: string): Promise<DbChatMessage[]> {
   const { data, error } = await supabase
     .from("chat_messages")
     .select("*")
+    .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
   if (error) { console.error("loadChatMessages:", error.message); return []; }
   return data ?? [];
 }
 
 export async function saveChatMessage(
-  msg: Omit<DbChatMessage, "created_at">
+  msg: Omit<DbChatMessage, "created_at">,
+  conversationId: string
 ): Promise<void> {
-  const { error } = await supabase.from("chat_messages").upsert(msg);
+  const userId = await uid();
+  const { error } = await supabase.from("chat_messages").upsert({
+    ...msg,
+    user_id: userId,
+    conversation_id: conversationId,
+  });
   if (error) console.error("saveChatMessage:", error.message);
+}
+
+// ── Conversations ─────────────────────────────────────────────────────────────
+
+export type DbConversation = {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function loadConversations(): Promise<DbConversation[]> {
+  const { data, error } = await supabase
+    .from("conversations")
+    .select("*")
+    .order("updated_at", { ascending: false });
+  if (error) { console.error("loadConversations:", error.message); return []; }
+  return data ?? [];
+}
+
+export async function createConversation(id: string, title: string): Promise<void> {
+  const userId = await uid();
+  const { error } = await supabase.from("conversations").insert({
+    id,
+    user_id: userId,
+    title,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  if (error) console.error("createConversation:", error.message);
+}
+
+export async function updateConversationTitle(id: string, title: string): Promise<void> {
+  const { error } = await supabase
+    .from("conversations")
+    .update({ title, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) console.error("updateConversationTitle:", error.message);
+}
+
+export async function deleteConversation(id: string): Promise<void> {
+  const { error } = await supabase.from("conversations").delete().eq("id", id);
+  if (error) console.error("deleteConversation:", error.message);
 }
 
 // ── Professors ────────────────────────────────────────────────────────────────
@@ -34,7 +91,8 @@ export async function loadProfessors(): Promise<DbProfessor[]> {
 export async function upsertProfessor(
   prof: Omit<DbProfessor, "created_at">
 ): Promise<void> {
-  const { error } = await supabase.from("professors").upsert(prof);
+  const userId = await uid();
+  const { error } = await supabase.from("professors").upsert({ ...prof, user_id: userId });
   if (error) console.error("upsertProfessor:", error.message);
 }
 
@@ -74,6 +132,7 @@ export async function saveDraft(
     body: draft.body,
     match_score: draft.matchScore,
     status,
+    user_id: await uid(),
   });
   if (error) console.error("saveDraft:", error.message);
 }
@@ -111,6 +170,49 @@ export async function loadOutreachEmails(): Promise<DbOutreachEmail[]> {
 export async function saveOutreachEmail(
   email: Omit<DbOutreachEmail, "created_at">
 ): Promise<void> {
-  const { error } = await supabase.from("outreach_emails").upsert(email);
+  const userId = await uid();
+  const { error } = await supabase.from("outreach_emails").upsert({ ...email, user_id: userId });
   if (error) console.error("saveOutreachEmail:", error.message);
+}
+
+// ── User profile ──────────────────────────────────────────────────────────────
+
+export type DbUserProfile = {
+  id: string;                        // auth user id
+  full_name: string;
+  university: string;
+  major: string;
+  year: string;
+  gpa: number | null;
+  research_interests: string[];
+  short_bio: string;
+  resume_text: string | null;        // OCR extracted text
+  writing_sample_text: string | null; // OCR extracted text
+  tone_voice: string;
+  tone_length: string;
+  tone_traits: string[];
+  tone_signature_phrases: string[];
+  tone_avoid_phrases: string[];
+  tone_confidence: string;
+  updated_at: string;
+};
+
+export async function loadUserProfile(userId: string): Promise<DbUserProfile | null> {
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+  if (error) { return null; }
+  return data as DbUserProfile;
+}
+
+export async function saveUserProfile(
+  profile: Omit<DbUserProfile, "updated_at">
+): Promise<void> {
+  const { error } = await supabase.from("user_profiles").upsert({
+    ...profile,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) console.error("saveUserProfile:", error.message);
 }
