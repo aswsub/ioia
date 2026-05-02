@@ -14,12 +14,15 @@ import {
   type DraftEmailInput,
 } from "../prompts/draft_email"
 import type { ToneProfile } from "../prompts/tone"
-import type { ExperienceItem, Professor, UserProfile } from "../prompts/context"
+import type { ExperienceItem, UserProfile } from "../prompts/context"
 import {
   ExtractedTonePhrasesSchema,
   EmailDraftSchema,
   assertDraftEmailInputViable,
+  type Company,
+  type CompanyContact,
 } from "../schemas"
+import { findCompany } from "../find_company"
 
 type ExtractedTonePhrases = z.infer<typeof ExtractedTonePhrasesSchema>
 type EmailDraft = z.infer<typeof EmailDraftSchema>
@@ -58,7 +61,7 @@ async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases>
 async function draftEmail(input: DraftEmailInput): Promise<EmailDraft> {
   const response = await client.messages.create({
     model: "claude-sonnet-4-5",
-    max_tokens: maxTokensFor(input.opportunity),
+    max_tokens: maxTokensFor(input.target.kind),
     system: buildDraftEmailSystem(input),
     tools: [EMAIL_DRAFT_TOOL as unknown as Anthropic.Messages.Tool],
     tool_choice: { type: "tool", name: EMAIL_DRAFT_TOOL.name },
@@ -81,38 +84,51 @@ async function draftEmail(input: DraftEmailInput): Promise<EmailDraft> {
 }
 
 // ============================================================================
-// Single fixture input — internship outreach.
-//
-// The Professor type is reused here as the "company / team contact" shape:
-//   - name         -> recipient (hiring manager, eng lead, CEO)
-//   - affiliation  -> company
-//   - concepts     -> team's technical areas
-//   - recentPapers -> blog posts, launches, or talks (rendered with
-//                     internship-appropriate labels by renderContextBlock
-//                     when opportunity = "internship")
+// Internship outreach scenarios. Each scenario picks a Company + Contact
+// from the verified seed file via findCompany. Two scenarios verify the
+// authorship-attribution branch:
+//   1. Linear / Daniel Park — IC, but the talk's author is Tuomas Artman.
+//      The model must NOT say "your talk." Should attribute to Tuomas
+//      or "your team's."
+//   2. Vercel / Lydia Mendez — IC. The streaming post's author is Lydia
+//      Hallie. Same first name, different person. Authorship match is
+//      exact-string, so the model should NOT conflate them.
 // ============================================================================
 
-const COMPANY: Professor = {
-  id: "fixture_linear_1",
-  name: "Karri Saarinen",
-  affiliation: "Linear",
-  email: null,
-  homepage: "https://linear.app/about",
-  concepts: [
-    { name: "realtime sync", score: 0.85 },
-    { name: "API design", score: 0.72 },
-    { name: "distributed systems", score: 0.65 },
-  ],
-  recentPapers: [
-    {
-      title: "Scaling the Linear Sync Engine",
-      year: 2024,
-      abstract:
-        "A deep dive into how Linear rebuilt its realtime sync engine from scratch to handle larger workspaces, focusing on the tradeoffs between client-side caching, server-side reconciliation, and conflict resolution at scale.",
-      url: "https://linear.app/blog/scaling-the-linear-sync-engine",
-    },
-  ],
-  matchScore: 0.78,
+type Scenario = {
+  label: string
+  query: string
+  teamFocus: string
+}
+
+const SCENARIOS: Scenario[] = [
+  {
+    label: "Linear / Daniel Park (IC, talk author = Tuomas Artman)",
+    query: "Linear sync engine internship",
+    teamFocus: "Sync Engine",
+  },
+  {
+    label: "Vercel / Lydia Mendez (IC, post author = Lydia Hallie — name-similarity canary)",
+    query: "Vercel edge runtime",
+    teamFocus: "Edge Runtime",
+  },
+]
+
+function loadTarget(query: string): { company: Company; contact: CompanyContact } {
+  const result = findCompany(query)
+  const match = result.matches[0]
+  if (!match) {
+    throw new Error(
+      `findCompany("${query}") returned no matches. Check cold_email_workflow/companies.json.`,
+    )
+  }
+  const contact = match.company.contacts.find(c => c.id === match.suggestedContactId)
+  if (!contact) {
+    throw new Error(
+      `Suggested contact id "${match.suggestedContactId}" not found in ${match.company.name}'s contacts.`,
+    )
+  }
+  return { company: match.company, contact }
 }
 
 const WRITING_SAMPLE = `Built a thing this weekend that scrapes professor pages and dumps a CSV. Honestly thought it'd take 2 hours, ended up shipping at 4am. The gnarly part was OpenAlex rate limits — I ended up batching with backoff and that fixed it. Not perfect but it works on three universities.`
@@ -157,8 +173,8 @@ async function main(): Promise<void> {
     researchInterests: RESEARCH_INTERESTS,
   })
 
+  // Tone extraction is shared across scenarios (same writing sample, same user).
   const phrases = await extractTonePhrases(WRITING_SAMPLE)
-
   const tone: ToneProfile = {
     voice: "direct",
     length: "concise",
@@ -178,13 +194,36 @@ async function main(): Promise<void> {
     tone,
   }
 
-  const draft = await draftEmail({
-    user,
-    professor: COMPANY,
-    opportunity: "internship",
-  })
+  for (const scenario of SCENARIOS) {
+    console.log("=".repeat(72))
+    console.log(scenario.label)
+    console.log("=".repeat(72))
 
-  printDraft(draft)
+    const { company, contact } = loadTarget(scenario.query)
+    console.log(`recipient: ${contact.name} (${contact.role})`)
+    const authoredByRecipient = company.notableWork.find(w => w.author === contact.name)
+    const namedAuthors = company.notableWork
+      .filter(w => w.author !== null)
+      .map(w => `${w.title} -> ${w.author}`)
+    console.log(`recipient authored notableWork: ${authoredByRecipient ? authoredByRecipient.title : "(none)"}`)
+    if (namedAuthors.length > 0) {
+      console.log(`named-author works in this company: ${namedAuthors.join(" | ")}`)
+    }
+    console.log()
+
+    const draft = await draftEmail({
+      user,
+      target: {
+        kind: "internship",
+        company,
+        contact,
+        teamFocus: scenario.teamFocus,
+      },
+    })
+
+    printDraft(draft)
+    console.log()
+  }
 }
 
 main().catch(err => {

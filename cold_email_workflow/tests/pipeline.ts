@@ -60,7 +60,7 @@ async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases>
 async function draftEmail(input: DraftEmailInput): Promise<EmailDraft> {
   const response = await client.messages.create({
     model: "claude-sonnet-4-5",
-    max_tokens: maxTokensFor(input.opportunity),
+    max_tokens: maxTokensFor(input.target.kind),
     system: buildDraftEmailSystem(input),
     tools: [EMAIL_DRAFT_TOOL as unknown as Anthropic.Messages.Tool],
     tool_choice: { type: "tool", name: EMAIL_DRAFT_TOOL.name },
@@ -173,8 +173,7 @@ async function main(): Promise<void> {
 
   const draft = await draftEmail({
     user,
-    professor: PROFESSOR,
-    opportunity: "research",
+    target: { kind: "research", professor: PROFESSOR },
   })
 
   printDraft(draft)

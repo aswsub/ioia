@@ -1,4 +1,5 @@
 import type { ToneProfile } from "./tone"
+import type { Company, CompanyContact } from "../schemas"
 import { wrapAsData } from "../sanitize"
 
 // Local convenience: wrap a user-controlled string as untrusted data.
@@ -206,6 +207,173 @@ export function renderContextBlock(input: ContextInput): string {
     experienceReminder,
     labels.inventionAvoid,
     "- Do not invent dates, seasons, or relative timing for user experience. If an experience item has no dates, do not write 'last summer,' 'this semester,' or similar timing.",
+  )
+
+  return sections.join("\n")
+}
+
+// ============================================================================
+// Internship branch: company + recipient + notable work.
+//
+// Distinct from renderContextBlock because the data shape is different
+// (Company has notableWork with type/url/summary, no academic-paper fields)
+// and the framing is different (the writer is selling capability to a
+// recruiter or IC, not asking a professor about research).
+// ============================================================================
+
+const MAX_NOTABLE_WORK = 3
+
+function renderNotableWork(items: Company["notableWork"]): string {
+  return items
+    .slice(0, MAX_NOTABLE_WORK)
+    .map((w, i) => {
+      const head = `  ${i + 1}. ${ut(w.title)} (${w.type}) - ${ut(w.url)}`
+      const authorLine = w.author
+        ? `     Author: ${ut(w.author)}`
+        : `     Author: (company-level artifact, no individual byline)`
+      return `${head}\n${authorLine}\n     Summary: ${ut(w.summary)}`
+    })
+    .join("\n")
+}
+
+// Match a contact to their authored notableWork by exact-string name match.
+// Exact match is intentional: "Lydia Mendez" (recipient) and "Lydia Hallie"
+// (author) must NOT collide. Fuzzy matching here is a credibility-bug factory.
+function findAuthoredWork(
+  company: Company,
+  contact: CompanyContact,
+): Company["notableWork"][number] | undefined {
+  return company.notableWork.find(w => w.author === contact.name)
+}
+
+const RECRUITER_ROLE_TOKENS = ["recruit", "talent", "people"]
+const IC_ROLE_TOKENS = [
+  "engineer",
+  "mts",
+  "member of technical staff",
+  "staff",
+  "lead",
+  "architect",
+  "founding",
+]
+
+type RecipientKind = "recruiter" | "ic" | "unknown"
+
+function classifyRecipient(role: string): RecipientKind {
+  const r = role.toLowerCase()
+  if (RECRUITER_ROLE_TOKENS.some(t => r.includes(t))) return "recruiter"
+  if (IC_ROLE_TOKENS.some(t => r.includes(t))) return "ic"
+  return "unknown"
+}
+
+export type CompanyContextInput = {
+  user: UserProfile
+  company: Company
+  contact: CompanyContact
+  teamFocus?: string
+  userNotes?: string
+}
+
+export function renderCompanyBlock(input: CompanyContextInput): string {
+  const { user, company, contact, teamFocus, userNotes } = input
+
+  const works = company.notableWork.slice(0, MAX_NOTABLE_WORK)
+  const experience = user.experience.slice(0, MAX_EXPERIENCE)
+
+  const recipientKind = classifyRecipient(contact.role)
+  const recipientAuthored = findAuthoredWork(company, contact)
+  const namedAuthorWorks = works.filter(w => w.author !== null)
+
+  // Four-way branch on the hook strategy. Authorship matching is exact-string
+  // (see findAuthoredWork). The IC vs recruiter split lives in the etiquette
+  // block; this hint just picks the right shape for the writer to land on.
+  let recipientHint: string
+  if (recipientKind === "recruiter") {
+    recipientHint =
+      "- This person is a RECRUITER. Reference the company, product, or mission in the hook, NOT a specific engineering artifact. Recruiters do not own technical decisions and referencing internal technical work reads as misdirected. Lead with credential signals and a clear ask."
+  } else if (recipientAuthored) {
+    recipientHint = `- This person is an ENGINEER and authored the notableWork "${ut(recipientAuthored.title)}". Reference it as THEIRS ("Your post on...", "Your talk on..."). This is the strongest available hook, use it.`
+  } else if (namedAuthorWorks.length > 0) {
+    const examples = namedAuthorWorks
+      .map(w => `"${w.title}" by ${w.author}`)
+      .join("; ")
+    recipientHint = `- This person is an ENGINEER but did NOT author any of the listed notableWork. DEFAULT: reference artifacts as "your team's [post/talk] on [topic]" — the recipient knows their coworkers, so naming a peer reads as awkward. ONLY name the author if they are clearly senior leadership (cofounder, CTO, founding engineer, head of a major area). Named-author works here: ${examples}. DO NOT imply this person wrote work they did not author. Authorship match is exact-string, not fuzzy: a similar first name does not mean the same person.`
+  } else {
+    recipientHint =
+      "- This person is an ENGINEER. None of the listed notableWork has a named individual author (all are company-level artifacts). Reference an artifact neutrally as the company's work (e.g. \"Linear's API design...\"); do NOT use \"your post\" or \"your talk\" since you cannot attribute it to anyone specific."
+  }
+
+  const sections: string[] = [
+    "CONTEXT: DRAW THE EMAIL FROM THESE FACTS ONLY.",
+    "",
+    "Opportunity type: internship",
+    "",
+    "COMPANY:",
+    `- Name: ${ut(company.name)}`,
+    `- What they do: ${ut(company.blurb)}`,
+    `- Teams: ${company.teams.map(ut).join(", ")}`,
+  ]
+
+  if (teamFocus) {
+    sections.push(`- Team the writer is targeting: ${ut(teamFocus)}`)
+  }
+
+  sections.push(
+    "",
+    "Notable engineering work to potentially reference (pick at most ONE):",
+    works.length > 0
+      ? renderNotableWork(works)
+      : "  (no notable work available. Return EmailDraft with confidence: \"low\" and a warning)",
+    "",
+    "RECIPIENT:",
+    `- Name: ${ut(contact.name)}`,
+    `- Role: ${ut(contact.role)}`,
+    `- Email: ${ut(contact.email)}`,
+    recipientHint,
+    "",
+    "USER:",
+    `- Name: ${ut(user.fullName)}`,
+    `- University: ${ut(user.university)}`,
+    `- Major: ${ut(user.major)}`,
+  )
+
+  if (user.gpa !== null) {
+    sections.push(`- GPA: ${user.gpa}`)
+  }
+  if (user.researchInterests.length > 0) {
+    sections.push(`- Stated interests: ${user.researchInterests.map(ut).join(", ")}`)
+  }
+  if (user.shortBio.trim()) {
+    sections.push(`- Short bio: ${ut(user.shortBio.trim())}`)
+  }
+
+  sections.push(
+    "",
+    "Experience (pick the SINGLE most relevant project to the team being emailed; ignore the rest):",
+    experience.length > 0 ? renderExperience(experience) : "  (none provided)",
+  )
+
+  if (userNotes?.trim()) {
+    sections.push(
+      "",
+      "User notes (incorporate if directly relevant; otherwise ignore):",
+      ut(userNotes.trim()),
+    )
+  }
+
+  const workReminder =
+    works.length > 0
+      ? "- Reference exactly ONE notable work from the list above, by title, in the HOOK sentence. Show the research; do not compliment the company."
+      : "- No notable work is available. Return EmailDraft with confidence: \"low\" and add a 'no notable work available, hook is weak' warning."
+
+  sections.push(
+    "",
+    "Hard reminders for this context:",
+    workReminder,
+    "- Pick the experience item most relevant to the team being emailed, NOT the most impressive one. If a more impressive but less relevant experience exists, you may compress it to a 4-word credential phrase in the OPENING sentence and skip it from THE PROOF.",
+    "- Do not invent products, blog posts, team details, prior contact, or any biographical detail not present in CONTEXT.",
+    "- Do not invent dates, seasons, or relative timing for user experience. If an experience item has no dates, do not write 'last summer,' 'this semester,' or similar timing.",
+    "- Do not include an interest declaration paragraph. The internship etiquette explicitly forbids it. Capability is shown through the project, not stated through ambitions.",
   )
 
   return sections.join("\n")
