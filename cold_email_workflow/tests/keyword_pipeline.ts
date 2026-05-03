@@ -46,18 +46,26 @@ const client = new Anthropic()
 type Case = {
   name: string
   prompt: string
-  expectAreas: string[]      // acceptable variants — at least one must appear (case-insensitive substring)
+  // For all string-array fields: assertion is "at least one variant from each
+  // group must appear (case-insensitive substring)". Use [] to assert empty.
+  // Use undefined to skip the assertion entirely (not all cases care about
+  // every field).
+  expectAreas: string[]
   expectInstitutions: string[]
+  expectCompanies?: string[]
+  expectRoleHints?: string[]
   expectOpportunity: "research" | "internship"
 }
 
 const CASES: Case[] = [
+  // ── Baseline cases (must keep passing) ─────────────────────────────────────
   {
     name: "research / Berkeley / program synthesis",
     prompt:
       "Looking for professors at UC Berkeley working on program synthesis or formal verification. I want to do undergrad research this fall.",
     expectAreas: ["program synthesis", "formal verification"],
     expectInstitutions: ["berkeley", "uc berkeley"],
+    expectCompanies: [],
     expectOpportunity: "research",
   },
   {
@@ -65,6 +73,7 @@ const CASES: Case[] = [
     prompt: "Find ML professors at MIT and Stanford researching LLMs and RLHF.",
     expectAreas: ["llm", "rlhf"],
     expectInstitutions: ["mit", "stanford"],
+    expectCompanies: [],
     expectOpportunity: "research",
   },
   {
@@ -73,6 +82,7 @@ const CASES: Case[] = [
       "I'm a CS junior looking for a summer internship working on distributed systems or databases.",
     expectAreas: ["distributed systems", "database"],
     expectInstitutions: [],
+    expectCompanies: [],
     expectOpportunity: "internship",
   },
   {
@@ -80,6 +90,85 @@ const CASES: Case[] = [
     prompt: "Who works on reinforcement learning at CMU?",
     expectAreas: ["reinforcement learning"],
     expectInstitutions: ["cmu", "carnegie mellon"],
+    expectCompanies: [],
+    expectOpportunity: "research",
+  },
+
+  // ── Edge cases the v2 prompt explicitly targets ────────────────────────────
+  {
+    // Industry research: "research at <company>" should still be internship.
+    // Pre-v2 prompt got this wrong (defaulted to research because of the word).
+    name: "industry research / OpenAI",
+    prompt: "Looking for AI research opportunities at OpenAI.",
+    expectAreas: ["ai", "artificial intelligence"],
+    expectInstitutions: [],
+    expectCompanies: ["openai"],
+    expectOpportunity: "internship",
+  },
+  {
+    // Origin school must NOT bleed into institutions.
+    // Cal Poly is the student's school, not a target.
+    name: "internship / origin school / Cal Poly + FAANG",
+    prompt: "I'm at Cal Poly looking for SWE internships at any FAANG company.",
+    expectAreas: [],
+    expectInstitutions: [],
+    expectCompanies: [],
+    expectRoleHints: ["software engineer"],
+    expectOpportunity: "internship",
+  },
+  {
+    // "co-op" is a strong internship signal; previously missing from the rule.
+    name: "internship / co-op / infra",
+    prompt: "Looking for a co-op for spring 2026 working on infra at a startup.",
+    expectAreas: ["infra"],
+    expectInstitutions: [],
+    expectCompanies: [],
+    expectOpportunity: "internship",
+  },
+  {
+    // Conflict — company mentioned but the target is the professor.
+    // Stanford is the target; Google is incidental.
+    name: "research / Stanford profs who consult at Google",
+    prompt: "Find Stanford professors who consult at Google on RL.",
+    expectAreas: ["reinforcement learning"],
+    expectInstitutions: ["stanford"],
+    expectCompanies: [],
+    expectOpportunity: "research",
+  },
+  {
+    // Return-offer phrasing is internship.
+    name: "internship / return offer / Notion",
+    prompt: "I want to email someone at Notion about a return offer.",
+    expectAreas: [],
+    expectInstitutions: [],
+    expectCompanies: ["notion"],
+    expectOpportunity: "internship",
+  },
+  {
+    // PhD advisor is unambiguously research.
+    name: "research / PhD advisor / UCLA / NLP",
+    prompt: "Looking for a PhD advisor at UCLA in NLP.",
+    expectAreas: ["nlp"],
+    expectInstitutions: ["ucla"],
+    expectCompanies: [],
+    expectOpportunity: "research",
+  },
+  {
+    // Vague prompt — defaults to research per Rule 4.
+    name: "vague / topic only",
+    prompt: "Who works on reinforcement learning?",
+    expectAreas: ["reinforcement learning"],
+    expectInstitutions: [],
+    expectCompanies: [],
+    expectOpportunity: "research",
+  },
+  {
+    // Same school as both origin and target — should appear once.
+    name: "edge / origin == target / MIT",
+    prompt: "I'm an MIT undergrad looking for MIT labs working on robotics.",
+    expectAreas: ["robotics"],
+    expectInstitutions: ["mit"],
+    expectCompanies: [],
     expectOpportunity: "research",
   },
 ]
@@ -222,7 +311,12 @@ async function runCase(c: Case): Promise<ExtractedKeywords> {
   const out = await extractKeywordsFromPrompt(c.prompt)
   console.log(`  extracted: ${JSON.stringify(out)}`)
 
-  assertContainsAny(`${c.name} → researchAreas`, out.researchAreas, c.expectAreas)
+  if (c.expectAreas.length === 0) {
+    // Allow "any" — some prompts have no concrete topic.
+  } else {
+    assertContainsAny(`${c.name} → researchAreas`, out.researchAreas, c.expectAreas)
+  }
+
   if (c.expectInstitutions.length === 0) {
     assertEmpty(`${c.name} → institutions`, out.institutions)
   } else {
@@ -232,6 +326,19 @@ async function runCase(c: Case): Promise<ExtractedKeywords> {
       c.expectInstitutions,
     )
   }
+
+  if (c.expectCompanies !== undefined) {
+    if (c.expectCompanies.length === 0) {
+      assertEmpty(`${c.name} → companies`, out.companies)
+    } else {
+      assertContainsAny(`${c.name} → companies`, out.companies, c.expectCompanies)
+    }
+  }
+
+  if (c.expectRoleHints !== undefined && c.expectRoleHints.length > 0) {
+    assertContainsAny(`${c.name} → roleHints`, out.roleHints, c.expectRoleHints)
+  }
+
   if (out.opportunityType !== c.expectOpportunity) {
     throw new Error(
       `${c.name}: expected opportunityType=${c.expectOpportunity}, got ${out.opportunityType}`,
