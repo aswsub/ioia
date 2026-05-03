@@ -11,6 +11,9 @@ import {
   saveDraft,
   updateDraftStatus,
   deleteDraft,
+  loadConversations,
+  deleteConversation,
+  type DbConversation,
 } from "../lib/db";
 
 type View = "Overview" | "Outreach" | "Professors" | "Profile";
@@ -21,6 +24,11 @@ export default function App() {
   const [outreachDrafts, setOutreachDrafts] = useState<OutreachDraft[]>([]);
   const [draftStatuses, setDraftStatuses] = useState<Record<string, "draft" | "sent">>({});
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
+
+  // Conversation state — lifted out of AgentView so the Sidebar can render the
+  // chat list. AgentView still owns per-conversation messages.
+  const [conversations, setConversations] = useState<DbConversation[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
 
   // Load persisted drafts on mount
   useEffect(() => {
@@ -48,6 +56,14 @@ export default function App() {
       rows.forEach((r) => { statuses[r.id] = r.status; });
       setOutreachDrafts(drafts);
       setDraftStatuses(statuses);
+    });
+  }, []);
+
+  // Load conversation list on mount
+  useEffect(() => {
+    loadConversations().then((convs) => {
+      setConversations(convs);
+      if (convs.length > 0) setActiveConvId(convs[0].id);
     });
   }, []);
 
@@ -79,6 +95,27 @@ export default function App() {
     deleteDraft(id);
   };
 
+  // Conversation handlers — these are the ones the Sidebar invokes. AgentView
+  // also needs to mutate `conversations` directly (when send() creates a new
+  // conv on the fly), which is why we pass setConversations / setActiveConvId.
+  const handleNewConv = () => {
+    setActiveConvId(null);
+    setSelectedDraftId(null);
+    setActiveView("Overview");
+  };
+
+  const handleSelectConv = (id: string) => {
+    setActiveConvId(id);
+    setSelectedDraftId(null);
+    setActiveView("Overview");
+  };
+
+  const handleDeleteConv = async (id: string) => {
+    await deleteConversation(id);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (activeConvId === id) setActiveConvId(null);
+  };
+
   const draftsWithStatus: DraftWithStatus[] = outreachDrafts.map((d) => ({
     ...d,
     status: draftStatuses[d.id] ?? "draft",
@@ -104,6 +141,10 @@ export default function App() {
       case "Overview":
         return (
           <AgentView
+            conversations={conversations}
+            setConversations={setConversations}
+            activeConvId={activeConvId}
+            setActiveConvId={setActiveConvId}
             onDraftsReady={handleDraftsReady}
             onNavigateToOutreach={handleNavigateToOutreach}
           />
@@ -125,6 +166,10 @@ export default function App() {
       default:
         return (
           <AgentView
+            conversations={conversations}
+            setConversations={setConversations}
+            activeConvId={activeConvId}
+            setActiveConvId={setActiveConvId}
             onDraftsReady={handleDraftsReady}
             onNavigateToOutreach={handleNavigateToOutreach}
           />
@@ -140,6 +185,11 @@ export default function App() {
       <Sidebar
         activeView={activeView}
         onNavigate={(v) => { setSelectedDraftId(null); setActiveView(v as View); }}
+        conversations={conversations}
+        activeConvId={activeConvId}
+        onNewConv={handleNewConv}
+        onSelectConv={handleSelectConv}
+        onDeleteConv={handleDeleteConv}
       />
       {renderView()}
     </div>
