@@ -52,6 +52,14 @@ function normalizeEmailDashes<T extends { subject?: unknown; body?: unknown }>(d
   return { ...draft, subject, body };
 }
 
+function truncateWarnings<T extends { warnings?: unknown }>(draft: T): T {
+  if (!Array.isArray(draft.warnings)) return draft;
+  const truncated = draft.warnings.map((w: unknown) =>
+    typeof w === "string" ? w.slice(0, 200) : w
+  );
+  return { ...draft, warnings: truncated };
+}
+
 export async function draftEmail(input: DraftEmailInput): Promise<EmailDraft> {
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
@@ -64,7 +72,7 @@ export async function draftEmail(input: DraftEmailInput): Promise<EmailDraft> {
 
   for (const block of response.content) {
     if (block.type === "tool_use" && block.name === EMAIL_DRAFT_TOOL.name) {
-      return EmailDraftSchema.parse(normalizeEmailDashes(block.input as any));
+      return EmailDraftSchema.parse(truncateWarnings(normalizeEmailDashes(block.input as any)));
     }
   }
   throw new Error("Email draft tool call not found in response");
