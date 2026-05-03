@@ -147,6 +147,12 @@ export async function extractKeywordsFromPrompt(prompt: string): Promise<Extract
   try {
     return ExtractedKeywordsSchema.parse(JSON.parse(cleaned));
   } catch {
-    return { researchAreas: [], institutions: [], opportunityType: "research" };
+    return {
+      researchAreas: [],
+      institutions: [],
+      companies: [],
+      roleHints: [],
+      opportunityType: "research",
+    };
   }
 }

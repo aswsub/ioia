@@ -11,6 +11,9 @@ import { extractKeywordsFromPrompt, draftEmail } from "../../lib/claude";
 import { searchProfessors } from "../../lib/openalex";
 import { extractTextFromFile } from "../../lib/ocr";
 import { findCompanyForQuery } from "../../lib/find_company";
+import { findCompanyLive } from "../../lib/find_company_live";
+import { PeopleProxyError } from "../../lib/people";
+import type { FindCompanyMatch } from "../../../cold_email_workflow/find_company_core";
 import { useAuth } from "../../lib/auth";
 import type { Professor, UserProfile } from "../../../cold_email_workflow/prompts/context";
 import type { ToneProfile } from "../../../cold_email_workflow/prompts/tone";
@@ -310,7 +313,7 @@ export function AgentView({
     try {
       const tags = parseAtTags(value);
       const llmInput = tags.cleaned || value;
-      const { researchAreas, institutions, opportunityType } = await extractKeywordsFromPrompt(llmInput);
+      const { researchAreas, institutions, companies, roleHints, opportunityType } = await extractKeywordsFromPrompt(llmInput);
       // Heuristic fallback: if the LLM extractor misses an institution/count, infer from raw prompt.
       const inferredInstitutions = [...institutions];
       const hasBerkeley = /\b(uc\s*berkeley|u\.?\s*c\.?\s*berkeley|university of california[, ]+berkeley|berkeley)\b/i.test(value);
@@ -419,16 +422,72 @@ export function AgentView({
       let summaryWithNote = "";
 
       if (opportunityType === "internship") {
-        // Internship path: hit the seeded companies.json (no live network call)
-        // and pick a recruiter or IC per match. The email writer's internship
-        // branch consumes Company + CompanyContact.
-        console.log("Searching companies with:", { value, inferredCount });
-        const result = findCompanyForQuery(value, inferredCount);
+        // Internship path: prefer seed (curated companies.json with notableWork
+        // + verified emails). When the user names a company that isn't seeded,
+        // fall through to Apollo via the proxy at server/apollo.ts. The email
+        // writer's internship branch handles both cases — for live-discovered
+        // companies, notableWork is empty and the prompt grounds the hook in
+        // the company blurb instead (see prompts/context.ts).
+        console.log("Searching companies with:", { value, companies, roleHints, inferredCount });
+
+        const apolloErrors: string[] = [];
+        const liveCompanyNames: string[] = [];
+        const allMatches: FindCompanyMatch[] = [];
+
+        async function gatherMatchesFor(companyName: string, limit: number): Promise<void> {
+          // Seed first — exact-name query gives us only that company's matches.
+          const seedResult = findCompanyForQuery(companyName, limit);
+          if (seedResult.matches.length > 0) {
+            allMatches.push(...seedResult.matches);
+            return;
+          }
+          // Live fallback via Apollo proxy.
+          try {
+            const liveMatches = await findCompanyLive({
+              name: companyName,
+              roleHints,
+              perCompany: Math.min(limit, 3),
+            });
+            if (liveMatches.length > 0) {
+              liveCompanyNames.push(companyName);
+              allMatches.push(...liveMatches);
+            } else {
+              apolloErrors.push(`No people found at ${companyName}`);
+            }
+          } catch (e) {
+            const msg = e instanceof PeopleProxyError
+              ? e.message
+              : `Live lookup failed for ${companyName}`;
+            apolloErrors.push(msg);
+            console.error(`[live] ${companyName}:`, e);
+          }
+        }
+
+        if (companies.length > 0) {
+          // Per-company budget so a single named company doesn't crowd out
+          // the others. Round up so 5 across 2 companies → 3+3 (capped to
+          // inferredCount in total below).
+          const perCompany = Math.max(1, Math.ceil(inferredCount / companies.length));
+          for (const c of companies) {
+            await gatherMatchesFor(c, perCompany);
+            if (allMatches.length >= inferredCount) break;
+          }
+        } else {
+          // No company named — keep the existing fuzzy-seed search behavior.
+          // ("intern at a sync engine company" still surfaces Linear.)
+          const seedResult = findCompanyForQuery(value, inferredCount);
+          allMatches.push(...seedResult.matches);
+        }
+
+        const result = { matches: allMatches.slice(0, inferredCount) };
 
         if (result.matches.length === 0) {
+          const reason = apolloErrors.length > 0
+            ? ` (${apolloErrors.slice(0, 2).join("; ")})`
+            : "";
           const noMatchMsg: Message = {
             id: (Date.now() + 2).toString(), role: "agent",
-            content: "I searched the company seed list but couldn't find a match. Try naming a company directly (e.g. \"intern at Linear\") or describing the team you want to work on.",
+            content: `I couldn't find a match in the seed list and Hunter didn't return anyone either${reason}. Try naming a company directly (e.g. "intern at Linear") or check that the proxy is running with \`npm run proxy:dev\`.`,
             steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           };
@@ -462,13 +521,16 @@ export function AgentView({
         const uniqueCompanyNames = Array.from(new Set(result.matches.map((m) => m.company.name)));
         const companyList = uniqueCompanyNames.slice(0, 3).join(", ");
         const emailWord = `email${draftCount !== 1 ? "s" : ""}`;
+        const liveNote = liveCompanyNames.length > 0
+          ? ` (${liveCompanyNames.join(", ")} discovered via Hunter — verify emails before sending)`
+          : "";
         if (uniqueCompanyNames.length === 1) {
           const recipient = uniqueCompanyNames[0];
           summaryWithNote = draftCount > 1
-            ? `Drafted ${draftCount} ${emailWord} to people at ${recipient} (one per contact). Review them in Outreach.`
-            : `Drafted ${draftCount} ${emailWord} to ${recipient}. Review it in Outreach.`;
+            ? `Drafted ${draftCount} ${emailWord} to people at ${recipient} (one per contact)${liveNote}. Review them in Outreach.`
+            : `Drafted ${draftCount} ${emailWord} to ${recipient}${liveNote}. Review it in Outreach.`;
         } else {
-          summaryWithNote = `Drafted ${draftCount} ${emailWord} for your internship search across ${uniqueCompanyNames.length} companies (${companyList}). Review them in Outreach.`;
+          summaryWithNote = `Drafted ${draftCount} ${emailWord} for your internship search across ${uniqueCompanyNames.length} companies (${companyList})${liveNote}. Review them in Outreach.`;
         }
       } else {
         console.log("Searching OpenAlex with:", { allKeywords, institutions: inferredInstitutions, inferredCount });

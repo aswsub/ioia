@@ -372,7 +372,10 @@ export function renderCompanyBlock(input: CompanyContextInput): string {
     "RECIPIENT:",
     `- Name: ${ut(contact.name)}`,
     `- Role: ${ut(contact.role)}`,
-    `- Email: ${ut(contact.email)}`,
+    // Live-discovered contacts may not have an email. The writer never needs
+    // the address itself (it doesn't go in the body), so render a placeholder
+    // rather than the literal string "null".
+    `- Email: ${contact.email ? ut(contact.email) : "(not yet known)"}`,
     recipientHint,
     "",
     "USER:",
@@ -408,7 +411,7 @@ export function renderCompanyBlock(input: CompanyContextInput): string {
   const workReminder =
     works.length > 0
       ? "- Reference exactly ONE notable work from the list above, by title, in the HOOK sentence. Show the research; do not compliment the company."
-      : "- No notable work is available. Return EmailDraft with confidence: \"low\" and add a 'no notable work available, hook is weak' warning."
+      : "- No notable work is available. Build the HOOK from one specific technical aspect of what the company does (per the COMPANY 'What they do' line above) — e.g. mention a specific product capability, a primitive they've built, a constraint they're working under. Do NOT invent a blog post, talk, launch, or product feature that is not stated in CONTEXT. Set EmailDraft.confidence to at most \"medium\" and add a 'no curated notable work; hook grounded in company blurb' warning."
 
   sections.push(
     "",
