@@ -1,0 +1,462 @@
+[
+  {
+    "id": "A5060778165",
+    "name": "Sara Achour",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Computer science",
+        "score": 0.8367624282836914
+      },
+      {
+        "name": "Computation",
+        "score": 0.8201241493225098
+      },
+      {
+        "name": "Artificial intelligence",
+        "score": 0.6378999948501587
+      },
+      {
+        "name": "Algorithm",
+        "score": 0.4712579548358917
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "HyperCam: Low-Power Onboard Computer Vision for IoT Cameras",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4416466692"
+      },
+      {
+        "title": "NavHD: Low-Power Learning for Micro-Robotic Controls in the Wild",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4416751028"
+      },
+      {
+        "title": "A Probabilistic Perspective on Tiling Sparse Tensor Algebra",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4415285476"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5015355317",
+    "name": "Ehsan Adeli",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Computer science",
+        "score": 0.8944512605667114
+      },
+      {
+        "name": "Artificial intelligence",
+        "score": 0.8575836420059204
+      },
+      {
+        "name": "Pattern recognition (psychology)",
+        "score": 0.7955169677734375
+      },
+      {
+        "name": "Machine learning",
+        "score": 0.6849085688591003
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "Person-centered noninvasive brain stimulation for aging-related neurological and mental disorders: A multi-dimensional framework for designing protocols",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4417507135"
+      },
+      {
+        "title": "ViBES: A Conversational Agent with Behaviorally-Intelligent 3D Virtual Body",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4417467401"
+      },
+      {
+        "title": "Spherical Leech Quantization for Visual Tokenization and Generation",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4417474382"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5045835385",
+    "name": "Maneesh Agrawala",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Computer science",
+        "score": 0.8903968334197998
+      },
+      {
+        "name": "Computer vision",
+        "score": 0.7963621616363525
+      },
+      {
+        "name": "Artificial intelligence",
+        "score": 0.781670331954956
+      },
+      {
+        "name": "Computer graphics (images)",
+        "score": 0.7549954652786255
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "SimStep: Human-in-the-Loop Authoring of Interactive Educational Simulations Through Task-Level Abstractions",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W7153997482"
+      },
+      {
+        "title": "View-oriented Conversation Compiler for Agent Trace Analysis",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W7147644167"
+      },
+      {
+        "title": "View-oriented Conversation Compiler for Agent Trace Analysis",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W7149210751"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5087402475",
+    "name": "Alex Aiken",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Computer science",
+        "score": 0.9489948749542236
+      },
+      {
+        "name": "Programming language",
+        "score": 0.8056600093841553
+      },
+      {
+        "name": "Mathematics",
+        "score": 0.6808590888977051
+      },
+      {
+        "name": "Artificial intelligence",
+        "score": 0.6595959663391113
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "High-Performance Branch-Free Algorithms for Extended-Precision Floating-Point Arithmetic",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4416203788"
+      },
+      {
+        "title": "KDRSolvers: Scalable, Flexible, Task-Oriented Krylov Solvers",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4416004303"
+      },
+      {
+        "title": "On the Duality of Task and Actor Programming Models",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4417060278"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5040375566",
+    "name": "Nima Anari",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Mathematics",
+        "score": 0.8707209825515747
+      },
+      {
+        "name": "Combinatorics",
+        "score": 0.8193303346633911
+      },
+      {
+        "name": "Computer science",
+        "score": 0.7196999788284302
+      },
+      {
+        "name": "Discrete mathematics",
+        "score": 0.5359485745429993
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "Parallel Sampling via Autospeculation",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4416189886"
+      },
+      {
+        "title": "Diffusion Models are Secretly Exchangeable: Parallelizing DDPMs via Autospeculation",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4416011597"
+      },
+      {
+        "title": "Optimal Sublinear Sampling of Spanning Trees and Determinantal Point Processes via Average-Case Entropic Independence",
+        "year": 2024,
+        "abstract": null,
+        "url": "https://openalex.org/W4402376337"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5019197913",
+    "name": "Zain Asgar",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Computer science",
+        "score": 0.8352000117301941
+      },
+      {
+        "name": "Embedded system",
+        "score": 0.650249719619751
+      },
+      {
+        "name": "Computer architecture",
+        "score": 0.6150923371315002
+      },
+      {
+        "name": "Software",
+        "score": 0.5653864145278931
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "KForge: Program Synthesis for Diverse AI Hardware Accelerators",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4416361898"
+      },
+      {
+        "title": "Efficient and Scalable Agentic AI with Heterogeneous Systems",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4417266660"
+      },
+      {
+        "title": "Bringing source-level debugging frameworks to hardware generators",
+        "year": 2022,
+        "abstract": null,
+        "url": "https://openalex.org/W4221142662"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5025409424",
+    "name": "Stephen B. Montgomery",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Biology",
+        "score": 0.9461544752120972
+      },
+      {
+        "name": "Genetics",
+        "score": 0.757819414138794
+      },
+      {
+        "name": "Gene",
+        "score": 0.745679497718811
+      },
+      {
+        "name": "Computer science",
+        "score": 0.7205009460449219
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "Long-read genome sequencing and multi-omics in aging and neurodegeneration",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4415108765"
+      },
+      {
+        "title": "The Long Non-coding RNA Landscape of Endurance Exercise Training",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4415071213"
+      },
+      {
+        "title": "Mapping causal non-coding variants in coronary artery disease",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4414886595"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5002538469",
+    "name": "Peter Bailis",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Computer science",
+        "score": 0.9196126461029053
+      },
+      {
+        "name": "Artificial intelligence",
+        "score": 0.6803362369537354
+      },
+      {
+        "name": "Mathematics",
+        "score": 0.6737438440322876
+      },
+      {
+        "name": "Data mining",
+        "score": 0.5499038100242615
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "AI-Driven Research for Databases",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W7153671228"
+      },
+      {
+        "title": "AI-Driven Research for Databases",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W7152457262"
+      },
+      {
+        "title": "Fair Transaction Processing for Multi-Tenant Databases",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4413953524"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5026961968",
+    "name": "Clark Barrett",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Computer science",
+        "score": 0.9082376956939697
+      },
+      {
+        "name": "Programming language",
+        "score": 0.8398000001907349
+      },
+      {
+        "name": "Artificial intelligence",
+        "score": 0.7175556421279907
+      },
+      {
+        "name": "Mathematics",
+        "score": 0.6988000273704529
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "CAV'26 Artifact for Satisfiability Modulo Extensional Constant Arrays",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W7156328382"
+      },
+      {
+        "title": "CAV'26 Artifact for Satisfiability Modulo Extensional Constant Arrays",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W7156009303"
+      },
+      {
+        "title": "VeriStruct: AI-assisted Automated Verification of Data-Structure Modules in Verus",
+        "year": 2026,
+        "abstract": null,
+        "url": "https://openalex.org/W4415909449"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5085525898",
+    "name": "Gill Bejerano",
+    "affiliation": "Stanford University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Biology",
+        "score": 0.9502246379852295
+      },
+      {
+        "name": "Genome",
+        "score": 0.8021484017372131
+      },
+      {
+        "name": "Gene",
+        "score": 0.772954523563385
+      },
+      {
+        "name": "Genetics",
+        "score": 0.7718738317489624
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "Enriched phenotypes in rare variant carriers suggest pathogenic mechanisms in rare disease patients",
+        "year": 2025,
+        "abstract": null,
+        "url": "https://openalex.org/W4406485486"
+      },
+      {
+        "title": "Large-scale mutational analysis identifies UNC93B1 variants that drive TLR-mediated autoimmunity in mice and humans",
+        "year": 2024,
+        "abstract": null,
+        "url": "https://openalex.org/W4398256031"
+      },
+      {
+        "title": "De novo variants in DENND5B cause a neurodevelopmental disorder",
+        "year": 2024,
+        "abstract": null,
+        "url": "https://openalex.org/W4392017112"
+      }
+    ],
+    "matchScore": 0.5
+  }
+]

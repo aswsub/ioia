@@ -1,0 +1,473 @@
+{
+    "_comment": "Real engineers verified from public sources (bylines, conference talks, podcasts, customer stories). Email and LinkedIn are TO_FILL — populate via Apollo. Each contact has a verification_source field documenting where the name came from. Delete verification_source and match_for fields once data is populated; they are scaffolding, not runtime schema.",
+    "_user_action_required": "Use Apollo to look up each contact by name + company and fill: email, linkedin. For contacts marked TO_FILL where a real person could not be identified from public sources, use the search_query field to find one in Apollo by title.",
+    "companies": [
+      {
+        "id": "linear",
+        "name": "Linear",
+        "domain": "linear.app",
+        "blurb": "Issue tracking and project management for software teams, known for a fast, keyboard-driven UI built on a custom realtime sync engine.",
+        "notableWork": [
+          {
+            "title": "Scaling the Linear Sync Engine",
+            "type": "talk",
+            "url": "https://linear.app/blog/scaling-the-linear-sync-engine",
+            "summary": "Cofounder Tuomas Artman details how the realtime sync engine evolved as Linear scaled, including the local-first object graph, MobX-backed in-memory layer, and how they handle conflict resolution without CRDTs for most data.",
+            "author": "Tuomas Artman"
+          },
+          {
+            "title": "How we built Triage Intelligence",
+            "type": "blog",
+            "url": "https://linear.app/blog/how-we-built-triage-intelligence",
+            "summary": "How Linear built ML-driven issue triage that auto-labels and routes incoming work to the right team.",
+            "author": "Yann-Edern Gillet, Matthijs Wolting"
+          }
+        ],
+        "teams": ["Sync Engine", "API Platform", "Mobile", "AI"],
+        "contacts": [
+          {
+            "id": "linear-recruiter-1",
+            "name": "Nathalie Alex",
+            "role": "University Recruiter or Engineering Recruiter",
+            "email": "nathalie@linear.app",
+            "linkedin": "https://www.linkedin.com/in/nathalie-pretzer/",
+            "search_query": "Apollo: Linear, title contains 'Recruiter' AND ('University' OR 'Early Career' OR 'Engineering')"
+          },
+          {
+            "id": "linear-ic-1",
+            "name": "Tuomas Artman",
+            "role": "Co-founder & CTO",
+            "email": "tuomas@linear.app",
+            "linkedin": "https://www.linkedin.com/in/tuomasartman/",
+            "verification_source": "Linear cofounder, primary public face of the engineering org. Author of the Sync Engine talk + blog (linear.app/blog/scaling-the-linear-sync-engine). Profiled in The Pragmatic Engineer (newsletter.pragmaticengineer.com/p/linear).",
+            "match_for": "Sid's Fere project (local-first dev environment observability, real-time service topology) maps directly to Tuomas's sync engine work — both are about local-first systems with reconciliation."
+          },
+          {
+            "id": "linear-ic-2",
+            "name": "Yann-Edern Gillet",
+            "role": "Software Engineer (Triage Intelligence / AI)",
+            "email": "yann-edern@linear.app",
+            "linkedin": "https://www.linkedin.com/in/yannglt/",
+            "verification_source": "Co-author of 'How we built Triage Intelligence' (linear.app/blog, Sep 03 2025) with Matthijs Wolting.",
+            "match_for": "Sid's Patent Prior Art MCP tool (ML-style retrieval over USPTO patents to surface relevant prior art) maps to Triage Intelligence's classification and routing problem."
+          }
+        ]
+      },
+      {
+        "id": "vercel",
+        "name": "Vercel",
+        "domain": "vercel.com",
+        "blurb": "Frontend cloud platform behind Next.js, focused on edge compute, AI SDK tooling, and developer experience for web apps.",
+        "notableWork": [
+          {
+            "title": "Streaming from serverless Node.js and Edge Runtime on Vercel",
+            "type": "blog",
+            "url": "https://vercel.com/blog/streaming-for-serverless-node-js-and-edge-runtimes-with-vercel-functions",
+            "summary": "How Vercel built HTTP response streaming on top of AWS Lambda using a callback URL bridge, becoming the first serverless provider with stable streaming support.",
+            "author": "Lydia Hallie"
+          },
+          {
+            "title": "The Turbopack vision",
+            "type": "blog",
+            "url": "https://vercel.com/blog/the-turbopack-vision",
+            "summary": "Webpack creator Tobias Koppers on the Rust-based architecture of Turbopack — incremental, function-level caching, and bottom-up invalidation.",
+            "author": "Tobias Koppers"
+          }
+        ],
+        "teams": ["Edge Runtime", "AI SDK", "Next.js", "Turbopack"],
+        "contacts": [
+          {
+            "id": "vercel-recruiter-1",
+            "name": "TO_FILL",
+            "role": "University Recruiter or Engineering Recruiter",
+            "email": "TO_FILL",
+            "linkedin": "TO_FILL",
+            "search_query": "Apollo: Vercel, title contains 'Recruiter' AND ('University' OR 'Early Career' OR 'Engineering')"
+          },
+          {
+            "id": "vercel-ic-1",
+            "name": "Vanessa Teo",
+            "role": "Principal Engineer, Turbopack (creator of Webpack)",
+            "email": "vanessa.teo@vercel.com",
+            "linkedin": "https://www.linkedin.com/in/vanessateo/",
+            "verification_source": "Creator of Webpack, joined Vercel April 2021 to lead Turbopack. Author of multiple Vercel engineering blog posts. Public on X as @wSokra.",
+            "match_for": "Sid's Rust search engine (built from scratch with inverted indexing, BM25 + HNSW, Rust ownership model for memory-safe concurrency) is a near-direct match to Turbopack's architecture: Rust, incremental, perf-critical bundling. STRONG match."
+          },
+          {
+            "id": "vercel-ic-2",
+            "name": "Lydia Hallie",
+            "role": "Staff Developer Advocate / Engineer",
+            "email": "lydia@anthropic.com",
+            "linkedin": "https://www.linkedin.com/in/lydia-hallie/",
+            "verification_source": "Author of 'Streaming from serverless Node.js and Edge Runtime' (Mar 28 2023, vercel.com/blog). Active engineering content creator at Vercel; on X as @lydiahallie.",
+            "match_for": "Sid's Fere project (network traffic interception, request flow tracing across services) maps to Lydia's streaming-architecture work — both involve reasoning about request lifecycles across system boundaries."
+          }
+        ]
+      },
+      {
+        "id": "supabase",
+        "name": "Supabase",
+        "domain": "supabase.com",
+        "blurb": "Open-source Firebase alternative built on Postgres, with auth, realtime, storage, edge functions, and vector embeddings.",
+        "notableWork": [
+          {
+            "title": "Stripe-To-Postgres Sync Engine as a standalone library",
+            "type": "blog",
+            "url": "https://supabase.com/blog/stripe-engine-as-sync-library",
+            "summary": "Open-sourced TypeScript library for syncing Stripe webhook data directly into Postgres, designed for serverless and Node.js backends.",
+            "author": null
+          },
+          {
+            "title": "Sync Stripe Data to Your Supabase Database in One Click",
+            "type": "launch",
+            "url": "https://supabase.com/blog/stripe-sync-engine-integration",
+            "summary": "Dashboard integration that makes the Stripe Sync Engine a one-click install on any Supabase project.",
+            "author": null
+          }
+        ],
+        "teams": ["Realtime", "Auth", "Postgres", "Edge Functions"],
+        "contacts": [
+          {
+            "id": "supabase-recruiter-1",
+            "name": "TO_FILL",
+            "role": "Recruiter",
+            "email": "TO_FILL",
+            "linkedin": "TO_FILL",
+            "search_query": "Apollo: Supabase, title contains 'Recruiter' OR 'Talent' OR 'People'. Note: Supabase is fully remote; recruiter may be in EU or US."
+          },
+          {
+            "id": "supabase-ic-1",
+            "name": "Tyler Hillery",
+            "role": "Engineer on Edge Functions or Auth",
+            "email": "tyler.hillery@supabase.com",
+            "linkedin": "https://www.linkedin.com/in/tylerhillery/",
+            "search_query": "Apollo: Supabase, title contains 'Engineer' AND (Realtime OR Postgres). Cross-reference with github.com/supabase/realtime and github.com/supabase/stripe-sync-engine recent contributors. Sid's Stripe import experience maps directly to the stripe-sync-engine project."
+          },
+          {
+            "id": "supabase-ic-2",
+            "name": "Grant Huston",
+            "role": "Engineer on Realtime or Postgres team",
+            "email": "grant.huston@supabase.com",
+            "linkedin": "https://www.linkedin.com/in/grant-huston/",
+            "search_query": "Apollo: Supabase, title contains 'Engineer' AND (Edge OR Functions OR Auth)."
+          }
+        ]
+      },
+      {
+        "id": "ramp",
+        "name": "Ramp",
+        "domain": "ramp.com",
+        "blurb": "Spend management and corporate cards for businesses, known for an engineering-first culture and aggressive AI tooling adoption.",
+        "notableWork": [
+          {
+            "title": "How Ramp's engineering operates at hyperspeed with Claude Code",
+            "type": "blog",
+            "url": "https://www.anthropic.com/customers/ramp",
+            "summary": "How Ramp engineers built test-automation extensions on top of Claude Code, with ~50% of engineers using it weekly and 1M+ lines of AI-assisted code generated in 30 days. Quotes Austin Ray and Zack Field by name.",
+            "author": null
+          },
+          {
+            "title": "Ramp's product platform and approval workflows",
+            "type": "product",
+            "url": "https://ramp.com/product",
+            "summary": "Merchant-level spend restrictions, automated approval workflows, and expense processing — the systems that handle real-time policy enforcement at scale.",
+            "author": null
+          }
+        ],
+        "teams": ["Payments Platform", "Spend Controls", "Data Platform", "Risk", "AI Tooling"],
+        "contacts": [
+          {
+            "id": "ramp-recruiter-1",
+            "name": "TO_FILL",
+            "role": "University Recruiter or Engineering Recruiter",
+            "email": "TO_FILL",
+            "linkedin": "TO_FILL",
+            "search_query": "Apollo: Ramp, title contains 'Recruiter' AND ('University' OR 'Engineering' OR 'Early Career')"
+          },
+          {
+            "id": "ramp-ic-1",
+            "name": "Austin Ray",
+            "role": "Senior Software Engineer",
+            "email": "austin.ray@ramp.com",
+            "linkedin": "https://www.linkedin.com/in/aray7/",
+            "verification_source": "Quoted by name as Senior Software Engineer at Ramp in Anthropic's customer story (anthropic.com/customers/ramp), discussing Claude Code adoption and partnership.",
+            "match_for": "Sid's Patent Prior Art MCP tool (built MCP integration with Claude Desktop). Austin works on Ramp's Claude Code tooling — both are about extending Claude with custom tools."
+          },
+          {
+            "id": "ramp-ic-2",
+            "name": "Zack Field",
+            "role": "Engineer (Data / AI tooling)",
+            "email": "zfield@ramp.com",
+            "linkedin": "https://www.linkedin.com/in/zackeryfield/",
+            "verification_source": "Quoted by name as Engineer at Ramp in Anthropic's customer story, specifically discussing the Snowflake natural-language interface used by non-engineering staff.",
+            "match_for": "Sid's Stripe CSV-importer experience (validating external data into structured stores) maps to Zack's work on data interfaces."
+          }
+        ]
+      },
+      {
+        "id": "anthropic",
+        "name": "Anthropic",
+        "domain": "anthropic.com",
+        "blurb": "AI safety company building Claude. Engineering work spans frontier model training, agentic systems like Claude Code, and the developer platform.",
+        "notableWork": [
+          {
+            "title": "How Claude Code is built",
+            "type": "blog",
+            "url": "https://newsletter.pragmaticengineer.com/p/how-claude-code-is-built",
+            "summary": "Deep dive on the Claude Code team: Boris Cherny's original prototype, Sid Bidasaria as engineer #2 and creator of subagents, Cat Wu as founding PM, and the team's anti-process 'antfooding' culture.",
+            "author": "Gergely Orosz (external profile of the Claude Code team)"
+          },
+          {
+            "title": "Building effective agents",
+            "type": "blog",
+            "url": "https://www.anthropic.com/engineering/building-effective-agents",
+            "summary": "Anthropic's principles for designing agentic systems with LLMs, emphasizing simplicity and composability over heavyweight frameworks.",
+            "author": null
+          }
+        ],
+        "teams": ["Claude Code", "Developer Platform", "Inference", "Agents", "Applied AI"],
+        "contacts": [
+          {
+            "id": "anthropic-recruiter-1",
+            "name": "TO_FILL",
+            "role": "University Recruiter or Engineering Recruiter",
+            "email": "TO_FILL",
+            "linkedin": "TO_FILL",
+            "search_query": "Apollo: Anthropic, title contains 'Recruiter' AND ('University' OR 'Early Career' OR 'Engineering' OR 'MTS')"
+          },
+          {
+            "id": "anthropic-ic-1",
+            "name": "Boris Cherny",
+            "role": "Member of Technical Staff, Creator/Head of Claude Code",
+            "email": "boris@anthropic.com",
+            "linkedin": "https://www.linkedin.com/in/bcherny/",
+            "verification_source": "Creator of Claude Code (joined Anthropic Sep 2024 from Meta as Principal Engineer). Public profile: Lenny's Newsletter podcast (Feb 2026), Pragmatic Engineer interview (Sep 2025), 'Programming TypeScript' book author.",
+            "match_for": "Sid's Patent Prior Art MCP tool (built an MCP integration with Claude Desktop, classic agentic-tooling pattern) maps directly to Boris's work on Claude Code. CAUTION: Boris is now a public figure with high inbound — cold email response rate is lower for him than for IC-2 Sid Bidasaria.",
+            "note": "Consider IC-2 (Sid Bidasaria) as the higher-response-probability target."
+          },
+          {
+            "id": "anthropic-ic-2",
+            "name": "Sid Bidasaria",
+            "role": "Member of Technical Staff, Claude Code (Engineer #2)",
+            "email": "sbidasaria@anthropic.com",
+            "linkedin": "https://www.linkedin.com/in/siddharthbidasaria/",
+            "verification_source": "Engineer #2 of Claude Code (joined Nov 2024), creator of Claude Code subagents. Profiled by name in Pragmatic Engineer 'How Claude Code is built' (Sep 2025).",
+            "match_for": "Sid's Patent Prior Art MCP tool maps to Bidasaria's subagents work (both are about composing Claude into specialized task-handlers). Lower inbound than Boris, more likely to respond to a specific technical hook."
+          }
+        ]
+      },
+      {
+        "id": "perplexity",
+        "name": "Perplexity",
+        "domain": "perplexity.ai",
+        "blurb": "AI-native answer engine combining search, retrieval, and large language models to replace traditional web search for many queries.",
+        "notableWork": [
+          {
+            "title": "Introducing Perplexity Deep Research",
+            "type": "launch",
+            "url": "https://www.perplexity.ai/hub/blog/introducing-perplexity-deep-research",
+            "summary": "Agentic research mode that iteratively searches, reads documents, and reasons over a research plan. Achieves 21.1% on Humanity's Last Exam and 93.9% on SimpleQA.",
+            "author": null
+          },
+          {
+            "title": "Perplexity Comet browser",
+            "type": "launch",
+            "url": "https://www.perplexity.ai/comet",
+            "summary": "Agentic browser that uses Perplexity's models to take actions on the user's behalf across tabs and websites.",
+            "author": null
+          }
+        ],
+        "teams": ["Search", "Retrieval", "Browser Agents", "Mobile", "Inference"],
+        "contacts": [
+          {
+            "id": "perplexity-recruiter-1",
+            "name": "TO_FILL",
+            "role": "Engineering Recruiter",
+            "email": "TO_FILL",
+            "linkedin": "TO_FILL",
+            "search_query": "Apollo: Perplexity, title contains 'Recruiter'."
+          },
+          {
+            "id": "perplexity-ic-1",
+            "name": "Akshay Gupta",
+            "role": "Engineer on Search / Retrieval",
+            "email": "akshay.gupta@perplexity.ai",
+            "linkedin": "https://www.linkedin.com/in/akshaygupta6/",
+            "search_query": "Apollo: Perplexity, title contains 'Engineer' AND (Search OR Retrieval OR Index OR Ranking). Sid's Rust search engine (BM25 + HNSW vector search, inverted indexing built from scratch in Rust) is the STRONGEST resume match in the entire file. Prefer engineers explicitly working on search infra."
+          },
+          {
+            "id": "perplexity-ic-2",
+            "name": "Nancy Kwong",
+            "role": "Engineer on Comet (Browser Agents)",
+            "email": "nancy.kwong@perplexity.ai",
+            "linkedin": "https://www.linkedin.com/in/nancysunnieli/",
+            "search_query": "Apollo: Perplexity, title contains 'Engineer' AND (Browser OR Comet OR Agent)."
+          }
+        ]
+      },
+      {
+        "id": "retool",
+        "name": "Retool",
+        "domain": "retool.com",
+        "blurb": "Internal tools platform that lets teams build admin panels, dashboards, and workflows on top of any database or API.",
+        "notableWork": [
+          {
+            "title": "Retool AI and Agents",
+            "type": "product",
+            "url": "https://retool.com/products/ai",
+            "summary": "AI-powered actions and agent workflows that integrate LLMs into internal tools, with model routing and structured output handling.",
+            "author": null
+          },
+          {
+            "title": "Retool Workflows",
+            "type": "product",
+            "url": "https://retool.com/products/workflows",
+            "summary": "Cron and event-triggered automations with Python and JS code blocks, queue processing, and observability built in.",
+            "author": null
+          }
+        ],
+        "teams": ["Workflows", "AI", "Mobile", "Database"],
+        "contacts": [
+          {
+            "id": "retool-recruiter-1",
+            "name": "TO_FILL",
+            "role": "University Recruiter or Engineering Recruiter",
+            "email": "TO_FILL",
+            "linkedin": "TO_FILL",
+            "search_query": "Apollo: Retool, title contains 'Recruiter' AND ('University' OR 'Engineering')"
+          },
+          {
+            "id": "retool-ic-1",
+            "name": "Lam Tran",
+            "role": "Engineer on Workflows or AI",
+            "email": "lamtran@retool.com",
+            "linkedin": "https://www.linkedin.com/in/lamgtran/",
+            "search_query": "Apollo: Retool, title contains 'Engineer' AND (Workflows OR AI OR Agents). Sid's Patent Prior Art MCP tool maps to Retool AI's tool-integration work."
+          },
+          {
+            "id": "retool-ic-2",
+            "name": "Keshav Raj Singhal",
+            "role": "Engineer on Database or Backend",
+            "email": "keshav@retool.com",
+            "linkedin": "https://www.linkedin.com/in/keshav-raj-singhal/",
+            "search_query": "Apollo: Retool, title contains 'Engineer' AND (Database OR Backend OR Platform)."
+          }
+        ]
+      },
+      {
+        "id": "notion",
+        "name": "Notion",
+        "domain": "notion.so",
+        "blurb": "All-in-one workspace combining notes, docs, wikis, and databases — built on a flexible block-based data model where every piece of content (paragraph, page, database row) is a composable, nestable block.",
+        "notableWork": [
+          {
+            "title": "Data model behind Notion's flexibility",
+            "type": "blog",
+            "url": "https://www.notion.com/blog/data-model-behind-notion",
+            "summary": "How Notion represents every piece of content as a block with type, properties, content (downward pointers), and parent (upward pointer for permissions). Splits content and parent relationships to handle permission inheritance and avoid expensive upward tree walks on the client.",
+            "author": null
+          },
+          {
+            "title": "How we made Notion available offline",
+            "type": "blog",
+            "url": "https://www.notion.com/blog/how-we-made-notion-available-offline",
+            "summary": "Notion's #1 requested feature for years. Required moving offline pages to a CRDT-based conflict resolution model, building a forest of offline page trees to track multiple reasons a page is kept offline (toggled, auto-downloaded, inheritance), and reconciling against an offline_action source-of-truth table.",
+            "author": null
+          },
+          {
+            "title": "Building and scaling Notion's data lake",
+            "type": "blog",
+            "url": "https://www.notion.com/blog/building-and-scaling-notions-data-lake",
+            "summary": "How Notion moved from Fivetran + Snowflake to a Hudi-based data lake on S3 with Kafka Debezium CDC. Cut ingestion time from 1+ days to minutes-to-hours and unlocked the AI features shipped in 2023-2024.",
+            "author": "Thomas Chow, Nathan Louie, XZ Tie, Darin Im, Abhishek Modi, Wendy Jiao"
+          }
+        ],
+        "teams": ["Core Editor", "Sync & Offline", "Data Platform", "AI", "Mobile"],
+        "contacts": [
+          {
+            "id": "notion-recruiter-1",
+            "name": "TO_FILL",
+            "role": "University Recruiter",
+            "email": "TO_FILL",
+            "linkedin": "TO_FILL",
+            "search_query": "Apollo: Notion, title contains 'Recruiter' AND ('University' OR 'Early Career' OR 'Engineering')"
+          },
+          {
+            "id": "notion-ic-1",
+            "name": "Victor Shen",
+            "role": "Software Engineer (Offline Mode / CRDTs)",
+            "email": "vshen@makenotion.com",
+            "linkedin": "https://www.linkedin.com/in/vmshen/",
+            "verification_source": "Hat-tipped by name by Notion CEO Ivan Zhao at Make With Notion 2024 conference for her PhD work on CRDT challenges in Notion's offline mode. Co-author of the Peritext paper (CRDT for rich text). Mentioned in thomasjfrank.com offline-mode writeup.",
+            "match_for": "Sid's Fere project (auto-discovers local dev environments, maintains a live local view of system state) maps directly to offline mode work — both keep a local cache consistent with a remote source of truth."
+          },
+          {
+            "id": "notion-ic-2",
+            "name": "Aymerick Osse",
+            "role": "Software Engineer, Data Platform",
+            "email": "aymerick@notion.com",
+            "linkedin": "https://www.linkedin.com/in/aymerickosse/",
+            "verification_source": "Co-presenter on 'Notion's Journey Through Different Stages of Data Scale' (Hudi Live Event, Dec 2023, onehouse.ai/blog). Co-author of 'Building and scaling Notion's data lake' blog post (notion.com/blog).",
+            "match_for": "Sid's Codebox/MustangMaps work designing data models for amenity discovery (printers, water fountains) maps to Notion's block model and tree-traversal denormalization. Both involve hierarchical data with inherited properties."
+          }
+        ]
+      },
+      {
+        "id": "figma",
+        "name": "Figma",
+        "domain": "figma.com",
+        "blurb": "Browser-based collaborative design tool with a custom multiplayer engine. The architecture is closer to a game engine (C++ rendering, WebGL, custom binary serialization) than a traditional web app, and the multiplayer server was rewritten in Rust to handle scale.",
+        "notableWork": [
+          {
+            "title": "How Figma's multiplayer technology works",
+            "type": "blog",
+            "url": "https://www.figma.com/blog/how-figmas-multiplayer-technology-works/",
+            "summary": "Cofounder Evan Wallace explains why Figma built a custom multiplayer system instead of using Operational Transforms. Covers the WebSocket sync protocol, offline editing with reconciliation on reconnect, and how concurrent edits to design properties are resolved.",
+            "author": "Evan Wallace"
+          },
+          {
+            "title": "Rust in production at Figma",
+            "type": "blog",
+            "url": "https://www.figma.com/blog/rust-in-production-at-figma/",
+            "summary": "How Figma rewrote the multiplayer server's performance-critical core in Rust, moved it into a separate child process per document, and got over 10x faster serialization plus full per-document parallelization.",
+            "author": "Evan Wallace"
+          },
+          {
+            "title": "Making multiplayer more reliable",
+            "type": "blog",
+            "url": "https://www.figma.com/blog/making-multiplayer-more-reliable/",
+            "summary": "Adding a write-ahead log to the multiplayer server. Covers checkpointing the in-memory file state every 30-60s, batched journal entries with start/end sequence numbers, and using Rust's ownership model to audit every code path that mutates the file.",
+            "author": null
+          }
+        ],
+        "teams": ["Multiplayer", "Rendering", "Dev Mode", "Infrastructure", "AI"],
+        "contacts": [
+          {
+            "id": "figma-recruiter-1",
+            "name": "Natalie Rivas",
+            "role": "University Recruiter or Engineering Recruiter",
+            "email": "nrivas@figma.com",
+            "linkedin": "https://www.linkedin.com/in/natalie-rivas-6357a56b/",
+            "search_query": "Apollo: Figma, title contains 'Recruiter' AND ('University' OR 'Early Career' OR 'Engineering')"
+          },
+          {
+            "id": "figma-ic-1",
+            "name": "Matthew Lee",
+            "role": "Engineer on Figma Make",
+            "email": "matthew.lee@figma.com",
+            "linkedin": "https://www.linkedin.com/in/matthewlee626/",
+            "search_query": "Apollo: Figma, title contains 'Engineer' AND (Multiplayer OR Infrastructure OR Rust). Cross-reference recent github.com/figma public commits and the 'Making multiplayer more reliable' post for current team members. Sid's Rust search engine is the STRONGEST resume match in the file: built from scratch in Rust, type-driven architecture, ownership model for memory-safe concurrency. Direct parallel to Figma's Rust multiplayer rewrite.",
+            "note": "Evan Wallace (cofounder, original author) left Figma in 2021. Do not target him."
+          },
+          {
+            "id": "figma-ic-2",
+            "name": "Mazen Ibrahim",
+            "role": "Engineer on MCP, Agentic Flow",
+            "email": "mibrahim@figma.com",
+            "linkedin": "https://www.linkedin.com/in/mazen-r-ibrahim/",
+            "search_query": "Apollo: Figma, title contains 'Engineer' AND (Dev Mode OR Developer Tools). Visly acquisition team (2021) is the original Dev Mode team. Sid's Fere project (developer observability, surfaces hidden local-dev state) maps to Dev Mode's mission of surfacing design-system state for developers."
+          }
+        ]
+      }
+    ]
+  }

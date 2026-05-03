@@ -4,6 +4,8 @@
 // Docs: https://docs.openalex.org
 
 import type { Professor, RecentPaper } from "../../cold_email_workflow/prompts/context";
+import type { DirectoryHit, InstitutionKey } from "./directories";
+import { fetchDirectoryHits } from "./directories";
 
 const BASE = "https://api.openalex.org";
 const MAILTO = (import.meta.env.VITE_OPENALEX_EMAIL as string) || "ioia-app@example.com";
@@ -100,6 +102,10 @@ const INST_ALIASES: Record<string, string> = {
   "usc": "University of Southern California",
   "georgia tech": "Georgia Institute of Technology",
   "ut austin": "University of Texas at Austin",
+  "uci": "University of California, Irvine",
+  "uc irvine": "University of California, Irvine",
+  "uc, irvine": "University of California, Irvine",
+  "university of california irvine": "University of California, Irvine",
 };
 
 async function resolveInstitution(name: string): Promise<string | null> {
@@ -209,6 +215,113 @@ async function resolveConcepts(keywords: string[]): Promise<string[]> {
   return [...new Set(ids)];
 }
 
+// ── Seed data loader ─────────────────────────────────────────────────────────
+async function loadSeedData(school: string): Promise<Professor[]> {
+  const schoolLower = school.toLowerCase().trim();
+
+  let seedName: string | null = null;
+  if (schoolLower === "mit" || schoolLower.includes("massachusetts institute")) seedName = "mit";
+  else if (schoolLower.includes("stanford")) seedName = "stanford";
+  else if (schoolLower.includes("berkeley") || schoolLower.includes("uc berkeley")) seedName = "berkeley";
+  else if (schoolLower.includes("ucla") || schoolLower.includes("los angeles")) seedName = "ucla";
+  else if (schoolLower.includes("cal poly") || schoolLower.includes("calpoly")) seedName = "cal-poly";
+  else if (schoolLower.includes("cmu") || schoolLower.includes("carnegie")) seedName = "cmu";
+
+  if (!seedName) return [];
+
+  try {
+    const response = await fetch(`/data/seed/${seedName}.json`);
+    if (!response.ok) return [];
+    const data = await response.json() as Professor[];
+    console.log(`Loaded ${data.length} professors from seed data for ${seedName}`);
+    return data;
+  } catch (e) {
+    console.warn(`Failed to load seed data for ${seedName}:`, e);
+    return [];
+  }
+}
+
+// ── Web scraper fallback ──────────────────────────────────────────────────────
+// Scrapes university faculty directories when OpenAlex doesn't find enough results
+async function scrapeFacultyDirectory(school: string, keywords: string[], limit = 5): Promise<Professor[]> {
+  const schoolLower = school.toLowerCase().trim();
+
+  const urls: Record<string, string[]> = {
+    stanford: ["https://www.cs.stanford.edu/people/faculty"],
+    cmu: ["https://www.cs.cmu.edu/directory/faculty"],
+    "cal-poly": ["https://csc.calpoly.edu/people/faculty/"],
+  };
+
+  const schoolKey = Object.keys(urls).find(k => schoolLower.includes(k));
+  if (!schoolKey) return [];
+
+  console.log(`🔍 Scraping ${school} faculty directory as fallback...`);
+
+  for (const url of urls[schoolKey]) {
+    try {
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(5000),
+        headers: { "User-Agent": "ioia-app" }
+      });
+      if (!response.ok) continue;
+
+      const html = await response.text();
+      // Extract emails and names via regex
+      const emailPattern = /([a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+      const emails = new Set<string>();
+      let match;
+      while ((match = emailPattern.exec(html)) !== null) {
+        emails.add(match[1]);
+      }
+
+      // Extract potential names (3-5 word strings that look like names)
+      const namePattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b/g;
+      const names: string[] = [];
+      const seenNames = new Set<string>();
+      while ((match = namePattern.exec(html)) !== null && names.length < limit * 2) {
+        const name = match[1];
+        if (!seenNames.has(name.toLowerCase())) {
+          names.push(name);
+          seenNames.add(name.toLowerCase());
+        }
+      }
+
+      if (names.length === 0) continue;
+
+      // Enrich with OpenAlex (try to match names)
+      const professors: Professor[] = [];
+      for (const name of names.slice(0, limit)) {
+        try {
+          const query = encodeURIComponent(name);
+          const res = await fetch(
+            `https://api.openalex.org/authors?search=${query}&per_page=1`,
+            { signal: AbortSignal.timeout(3000) }
+          );
+          if (!res.ok) continue;
+
+          const data = await res.json() as { results: OAAuthor[] };
+          const author = data.results?.[0];
+          if (!author) continue;
+
+          const prof = await enrichAuthor(author, keywords);
+          professors.push(prof);
+        } catch {
+          // Skip this author
+        }
+      }
+
+      if (professors.length > 0) {
+        console.log(`  Found ${professors.length} professors via scraper`);
+        return professors;
+      }
+    } catch (e) {
+      console.log(`  Scraper failed for ${url}: ${String(e).slice(0, 50)}`);
+    }
+  }
+
+  return [];
+}
+
 // ── Main search: works-first approach ────────────────────────────────────────
 // Search /works by concept + institution, collect unique authors, fetch profiles
 
@@ -219,6 +332,21 @@ export async function searchProfessors(
 ): Promise<Professor[]> {
   if (keywords.length === 0) return [];
   console.log("OpenAlex client:", OA_CLIENT_VERSION);
+
+  // Try seed data first for supported schools
+  if (institutions.length > 0) {
+    const seedData = await loadSeedData(institutions[0]);
+    if (seedData.length > 0) {
+      // Score seed data by keyword match
+      const scored = seedData.map(prof => ({
+        ...prof,
+        matchScore: computeMatchScore(prof.concepts, keywords)
+      }))
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, limit);
+      if (scored.length > 0) return scored;
+    }
+  }
 
   const [instId, conceptIds] = await Promise.all([
     institutions.length > 0 ? resolveInstitution(institutions[0]) : Promise.resolve(null),
@@ -240,7 +368,7 @@ export async function searchProfessors(
       const data = await get<OAList<OAWork>>("/works", {
         filter,
         sort: "cited_by_count:desc",
-        per_page: "25",
+        per_page: "50",
       });
       console.log("OpenAlex works count:", data.meta?.count ?? 0);
       const seen = new Set<string>();
@@ -250,9 +378,9 @@ export async function searchProfessors(
         for (const a of authorships) {
           const id = a.author?.id;
           if (id && !seen.has(id)) { seen.add(id); ids.push(fullId(id)); }
-          if (ids.length >= limit * 3) break;
+          if (ids.length >= Math.max(limit * 10, 30)) break;
         }
-        if (ids.length >= limit * 3) break;
+        if (ids.length >= Math.max(limit * 10, 30)) break;
       }
       console.log("OpenAlex authorIds collected:", ids.length);
       return ids;
@@ -264,11 +392,21 @@ export async function searchProfessors(
   };
 
   let authorIds: string[] = [];
-  const conceptsFilter = conceptIds.length > 0 ? conceptIds.slice(0, 2).join("|") : "";
+  const conceptsFilter = conceptIds.length > 0 ? conceptIds.slice(0, 4).join("|") : "";
 
   if (conceptIds.length > 0 && instId) {
     authorIds = await collectAuthorsFromWorks(
       `concepts.id:${conceptsFilter},institutions.id:${instId},publication_year:>2017`
+    );
+  }
+  if (authorIds.length === 0 && conceptIds.length > 0 && instId) {
+    authorIds = await collectAuthorsFromWorks(
+      `concepts.id:${conceptsFilter},institutions.id:${instId},publication_year:>2010`
+    );
+  }
+  if (authorIds.length === 0 && conceptIds.length > 0 && instId) {
+    authorIds = await collectAuthorsFromWorks(
+      `concepts.id:${conceptsFilter},institutions.id:${instId}`
     );
   }
   if (authorIds.length === 0 && conceptIds.length > 0) {
@@ -276,17 +414,36 @@ export async function searchProfessors(
       `concepts.id:${conceptsFilter},publication_year:>2017`
     );
   }
-  if (authorIds.length === 0 && instId) {
+  if (authorIds.length === 0 && conceptIds.length > 0) {
+    // Broaden to all years if still no results
     authorIds = await collectAuthorsFromWorks(
-      `institutions.id:${instId},publication_year:>2020`
+      `concepts.id:${conceptsFilter}`
     );
   }
-  // Last resort: keyword title search
+  // Last resort: keyword title search (only if concepts didn't work)
   if (authorIds.length === 0) {
     const titleFilter = instId
       ? `title.search:${keywords.slice(0, 3).join(" ")},institutions.id:${instId}`
       : `title.search:${keywords.slice(0, 3).join(" ")}`;
     authorIds = await collectAuthorsFromWorks(titleFilter);
+  }
+
+  // If the user asked for more than we could collect via concept filters, broaden:
+  // pull additional authors from related concepts (not just institution-only)
+  if (instId && authorIds.length < limit && conceptIds.length > 0) {
+    // Try searching for related concepts at the same institution
+    const relatedFilter = conceptIds.length > 4
+      ? conceptIds.slice(4, 8).join("|")
+      : conceptIds.slice(0, 2).join("|");
+    if (relatedFilter) {
+      const extra = await collectAuthorsFromWorks(
+        `concepts.id:${relatedFilter},institutions.id:${instId},publication_year:>2015`
+      );
+      const merged = new Map<string, true>();
+      for (const id of authorIds) merged.set(id, true);
+      for (const id of extra) merged.set(id, true);
+      authorIds = Array.from(merged.keys());
+    }
   }
 
   if (authorIds.length === 0) {
@@ -297,13 +454,15 @@ export async function searchProfessors(
   }
 
   // Fetch author profiles in one batch
-  const batchFilter = `id:${authorIds.slice(0, 20).join("|")}`;
+  // Fetch more authors than requested so post-filters don't shrink below limit.
+  const batchIds = authorIds.slice(0, Math.min(Math.max(limit * 8, 40), 200));
+  const batchFilter = `id:${batchIds.join("|")}`;
   console.log("OpenAlex authors filter:", batchFilter);
   let authors: OAAuthor[] = [];
   try {
     const data = await get<OAList<OAAuthor>>("/authors", {
       filter: batchFilter,
-      per_page: "20",
+      per_page: String(batchIds.length),
       select: "id,display_name,orcid,last_known_institutions,x_concepts,works_count",
     });
     authors = data.results;
@@ -322,13 +481,58 @@ export async function searchProfessors(
   }
 
   const professors = await Promise.all(
-    authors.slice(0, limit).map((a) => enrichAuthor(a, keywords))
+    authors.map((a) => enrichAuthor(a, keywords))
   );
 
-  return professors
-    .filter((p) => p.concepts.length > 0)
-    .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, limit);
+  let ranked = professors.sort((a, b) => b.matchScore - a.matchScore);
+
+  // Filter out low-confidence matches (< 0.35 match score) to avoid returning irrelevant professors
+  // This prevents returning psychology professors when searching for reinforcement learning
+  const strongMatches = ranked.filter((p) => p.matchScore >= 0.35);
+
+  // If we have strong matches, use only those. Otherwise, keep all matches but mark them as weak.
+  if (strongMatches.length > 0) {
+    ranked = strongMatches;
+  } else if (ranked.length > 0) {
+    // Log that we're returning weak matches
+    console.warn(
+      `No strong matches found (threshold: 0.35). Returning ${ranked.length} weak matches with scores: ${ranked.map((p) => `${p.name}:${p.matchScore.toFixed(2)}`).join(", ")}`
+    );
+  }
+
+  // Scraper fallback: if OpenAlex can't fill quota, try web scraper
+  if (instId && institutions.length > 0 && ranked.length < limit) {
+    const scrapedProfs = await scrapeFacultyDirectory(institutions[0], keywords, limit - ranked.length);
+    if (scrapedProfs.length > 0) {
+      const existingNames = new Set(ranked.map((p) => p.name.toLowerCase()));
+      const newProfs = scrapedProfs.filter((p) => !existingNames.has(p.name.toLowerCase()));
+      ranked = [...ranked, ...newProfs];
+    }
+  }
+
+  // Directory fallback: if still need more, use official directories
+  if (instId && institutions.length > 0 && ranked.length < limit) {
+    const instName = institutions[0] as InstitutionKey;
+    const dirHits: DirectoryHit[] = await fetchDirectoryHits(instName, Math.max(40, limit * 4));
+    const existingNames = new Set(ranked.map((p) => p.name.toLowerCase()));
+    const fillers = dirHits
+      .filter((h) => !existingNames.has(h.name.toLowerCase()))
+      .slice(0, Math.max(0, limit - ranked.length))
+      .map((h) => ({
+        id: `dir_${h.institution}_${h.name}`.replace(/\s+/g, "_"),
+        name: h.name,
+        affiliation: h.institution,
+        email: null,
+        homepage: h.profileUrl,
+        concepts: [],
+        recentPapers: [],
+        matchScore: 0.05,
+      })) satisfies Professor[];
+
+    ranked = [...ranked, ...fillers];
+  }
+
+  return ranked.slice(0, limit);
 }
 
 export async function getProfessorByOrcid(orcid: string): Promise<Professor | null> {
@@ -343,6 +547,102 @@ export async function getProfessorByOrcid(orcid: string): Promise<Professor | nu
   } catch {
     return null;
   }
+}
+
+export async function getRecentWorksByAuthor(
+  authorId: string,
+  limit = 8
+): Promise<RecentPaper[]> {
+  try {
+    const cleanId = authorId.startsWith("https://openalex.org/") ? authorId : `https://openalex.org/${authorId}`;
+    const data = await get<OAList<OAWork>>("/works", {
+      filter: `authorships.author.id:${cleanId},publication_year:>2018`,
+      sort: "publication_year:desc",
+      per_page: String(Math.min(limit, 25)),
+      select: "id,title,publication_year,primary_location",
+    });
+    return (data.results ?? [])
+      .filter((w) => w.title)
+      .slice(0, limit)
+      .map((w) => ({
+        title: w.title,
+        year: w.publication_year,
+        abstract: null,
+        url: w.primary_location?.landing_page_url ?? `https://openalex.org/${shortId(w.id)}`,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function findAuthorIdByNameAndInstitution(
+  name: string,
+  institutionName: string
+): Promise<string | null> {
+  const qName = name.trim();
+  const qInst = institutionName.trim();
+  if (!qName || !qInst) return null;
+
+  const instId = await resolveInstitution(qInst);
+  if (!instId) return null;
+
+  try {
+    const data = await get<OAList<OAAuthor>>("/authors", {
+      filter: `display_name.search:${qName},last_known_institutions.id:${instId}`,
+      per_page: "5",
+      select: "id,display_name,last_known_institutions,works_count",
+    });
+    const best = (data.results ?? [])[0];
+    return best?.id ? fullId(best.id) : null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Email extraction via pattern guessing ────────────────────────────────────
+
+function guessEmailByPattern(name: string, institution: string): string | null {
+  const parts = name.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return null;
+
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+
+  // Map institution names to common email domains
+  const domainMap: Record<string, string> = {
+    "stanford": "stanford.edu",
+    "mit": "mit.edu",
+    "massachusetts institute": "mit.edu",
+    "berkeley": "eecs.berkeley.edu",
+    "uc berkeley": "eecs.berkeley.edu",
+    "ucla": "cs.ucla.edu",
+    "los angeles": "cs.ucla.edu",
+    "cal poly": "calpoly.edu",
+    "calpoly": "calpoly.edu",
+    "cmu": "cs.cmu.edu",
+    "carnegie mellon": "cs.cmu.edu",
+    "harvard": "harvard.edu",
+    "yale": "yale.edu",
+    "princeton": "princeton.edu",
+    "caltech": "caltech.edu",
+    "uchicago": "uchicago.edu",
+    "university of chicago": "uchicago.edu",
+  };
+
+  // Find matching domain
+  let domain: string | null = null;
+  const instLower = institution.toLowerCase();
+  for (const [key, val] of Object.entries(domainMap)) {
+    if (instLower.includes(key)) {
+      domain = val;
+      break;
+    }
+  }
+
+  if (!domain) return null;
+
+  // Most common pattern is firstname.lastname@domain
+  return `${first}.${last}@${domain}`;
 }
 
 async function enrichAuthor(author: OAAuthor, keywords: string[]): Promise<Professor> {
@@ -368,6 +668,9 @@ async function enrichAuthor(author: OAAuthor, keywords: string[]): Promise<Profe
       }));
   } catch { /* continue */ }
 
+  // Extract email via pattern guessing
+  let email = guessEmailByPattern(author.display_name, institution);
+
   const kw = keywords.map((k) => k.toLowerCase());
   const concepts = (author.x_concepts ?? [])
     .map((c) => {
@@ -388,7 +691,7 @@ async function enrichAuthor(author: OAAuthor, keywords: string[]): Promise<Profe
     id: authorId,
     name: author.display_name,
     affiliation: institution,
-    email: null,
+    email,
     homepage: null,
     concepts,
     recentPapers,
@@ -402,7 +705,18 @@ function computeMatchScore(concepts: { name: string; score: number }[], keywords
   let total = 0, hits = 0;
   for (const c of concepts.slice(0, 5)) {
     const name = c.name.toLowerCase();
-    if (kw.some((k) => name.includes(k) || k.includes(name))) { total += c.score; hits++; }
+    // Require more substantial keyword matches, not just substring inclusion
+    // This prevents "making" from matching "reinforcement learning"
+    if (kw.some((k) => {
+      const kwLower = k.toLowerCase();
+      // Exact match or significant substring (at least 4 chars)
+      return name === kwLower ||
+             (name.includes(kwLower) && kwLower.length >= 4) ||
+             (kwLower.includes(name) && name.length >= 4);
+    })) {
+      total += c.score;
+      hits++;
+    }
   }
   return hits > 0 ? Math.min(total / hits, 1) : 0.2;
 }

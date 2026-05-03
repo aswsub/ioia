@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Send, Check, Trash2, ArrowUpRight,
   FileText, User, Building2, BookOpen, Mail,
 } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
+import { findAuthorIdByNameAndInstitution, getRecentWorksByAuthor } from "../../lib/openalex";
+import fileLogo from "../../assets/file.png";
+import linkedinLogo from "../../assets/linkedin.png";
+import googleLogo from "../../assets/google.png";
+import openalexLogo from "../../assets/openalex.svg.png";
 
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
@@ -53,8 +58,49 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
   const [subject, setSubject] = useState(draft.subject);
   const [editing, setEditing] = useState(false);
   const [justSent, setJustSent] = useState(false);
+  const [papers, setPapers] = useState(draft.professor.recentPapers ?? []);
+  const [resolvedOpenAlexId, setResolvedOpenAlexId] = useState<string | null>(null);
   const isSent = draft.status === "sent";
   const citations = CITATIONS[draft.id] ?? [];
+  const bodyWordCount = useMemo(() => body.trim().split(/\s+/).filter(Boolean).length, [body]);
+  const openAlexProfileUrl = useMemo(() => {
+    const id = (resolvedOpenAlexId ?? draft.professor.openAlexId)?.trim();
+    if (!id) return null;
+    if (id.startsWith("https://openalex.org/")) return id;
+    const withoutHost = id.startsWith("openalex.org/") ? id.slice("openalex.org/".length) : id;
+    return `https://openalex.org/${withoutHost}`;
+  }, [draft.professor.openAlexId, resolvedOpenAlexId]);
+
+  const peopleSearchLinks = useMemo(() => {
+    const name = draft.professor.name.trim();
+    const inst = (draft.professor.university || draft.professor.affiliation || "").trim();
+    const q = encodeURIComponent(`${name} ${inst}`);
+    const qName = encodeURIComponent(name);
+    return {
+      google: `https://www.google.com/search?q=${q}`,
+      linkedin: `https://www.linkedin.com/search/results/people/?keywords=${qName}`,
+      scholar: `https://scholar.google.com/scholar?q=${q}`,
+    };
+  }, [draft.professor.name, draft.professor.university || draft.professor.affiliation]);
+
+  useEffect(() => {
+    setPapers(draft.professor.recentPapers ?? []);
+    setResolvedOpenAlexId(null);
+    if ((draft.professor.recentPapers?.length ?? 0) > 0) return;
+    const run = async () => {
+      const directId = draft.professor.openAlexId?.trim();
+      const inst = draft.professor.university || draft.professor.affiliation || "Unknown";
+      const id = directId
+        ? directId
+        : await findAuthorIdByNameAndInstitution(draft.professor.name, inst);
+      if (!id) return;
+      if (!directId) setResolvedOpenAlexId(id);
+      const ws = await getRecentWorksByAuthor(id, 8);
+      if (ws.length === 0) return;
+      setPapers(ws.map((w) => ({ title: w.title, year: w.year, url: w.url })));
+    };
+    run().catch(() => {});
+  }, [draft.id]);
 
   const handleSend = () => {
     setJustSent(true);
@@ -211,14 +257,85 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 className="px-6 py-3 border-t flex items-center justify-between"
                 style={{ borderColor: isSent ? "#d1fae5" : "#f0f0f0", background: isSent ? "#f0fdf4" : "#fafafa" }}
               >
-                <span style={{ fontSize: 11.5, color: "#d4d4d4", fontWeight: 300 }}>
-                  ✦ Personalized to {draft.professor.research.length} research areas
-                </span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>
+                    {bodyWordCount} words
+                  </span>
+                  <span style={{ fontSize: 11.5, color: "#d4d4d4", fontWeight: 300 }}>
+                    {draft.professor.university}
+                  </span>
+                  {draft.professor.homepage && (
+                    <a
+                      href={draft.professor.homepage}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5"
+                      style={{ fontSize: 11.5, color: "#0a0a0a", fontWeight: 300 }}
+                    >
+                      <ArrowUpRight size={12} /> homepage
+                    </a>
+                  )}
+                  {papers?.[0]?.url && (
+                    <a
+                      href={papers[0].url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 min-w-0"
+                      style={{ fontSize: 11.5, color: "#0a0a0a", fontWeight: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={papers[0].title}
+                    >
+                      <img src={fileLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {papers[0].title}
+                      </span>
+                    </a>
+                  )}
+                  {openAlexProfileUrl && (
+                    <a
+                      href={openAlexProfileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5"
+                      style={{ fontSize: 11.5, color: "#0a0a0a", fontWeight: 300 }}
+                    >
+                      <ArrowUpRight size={12} /> OpenAlex
+                    </a>
+                  )}
+                </div>
                 <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>
                   {(draft.matchScore * 100).toFixed(0)}% match score
                 </span>
               </div>
             </div>
+
+            {/* Papers card (kept under the draft; avoids duplicating in the right column) */}
+            {(openAlexProfileUrl || (papers?.length ?? 0) > 0) && (
+              <div className="rounded-xl border overflow-hidden" style={{ borderColor: "#e5e5e5", background: "#fff" }}>
+                <div className="px-6 py-4 border-b" style={{ borderColor: "#f0f0f0" }}>
+                  <p style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 400, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    Published work
+                  </p>
+                </div>
+                <div className="px-6 py-4 flex flex-col gap-2">
+                  {openAlexProfileUrl && (
+                    <a href={openAlexProfileUrl} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-2"
+                      style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 300 }}>
+                      <ArrowUpRight size={12} /> OpenAlex profile
+                    </a>
+                  )}
+                  {(papers ?? []).slice(0, 8).map((p) => (
+                    <a key={p.url} href={p.url} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-2"
+                      style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 300 }}>
+                      <img src={fileLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      <span style={{ color: "#525252" }}>{p.year}</span>
+                      <span>{p.title}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Citations card */}
             {citations.length > 0 && (
@@ -283,9 +400,11 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 <span style={{ fontSize: 15, fontWeight: 400, color: "#0a0a0a", marginBottom: 2 }}>
                   {draft.professor.name}
                 </span>
-                <span style={{ fontSize: 12.5, color: "#737373", fontWeight: 300 }}>
-                  {draft.professor.title}
-                </span>
+                {(draft.professor.title) && (
+                  <span style={{ fontSize: 12.5, color: "#737373", fontWeight: 300 }}>
+                    {draft.professor.title}
+                  </span>
+                )}
               </div>
 
               {/* Details */}
@@ -293,21 +412,72 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 <div className="flex items-center gap-2.5">
                   <Building2 size={13} style={{ color: "#a3a3a3", flexShrink: 0 }} />
                   <div className="flex flex-col">
-                    <span style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 400 }}>{draft.professor.university}</span>
-                    <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>{draft.professor.department}</span>
+                    <span style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 400 }}>
+                      {draft.professor.university || draft.professor.affiliation || "Unknown"}
+                    </span>
+                    {(draft.professor.department) && (
+                      <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>
+                        {draft.professor.department}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5">
                   <Mail size={13} style={{ color: "#a3a3a3", flexShrink: 0 }} />
-                  <a
-                    href={`mailto:${draft.professor.email}`}
-                    className="flex items-center gap-1 hover:text-gray-700 transition-colors"
-                    style={{ fontSize: 12.5, color: "#525252", fontWeight: 300 }}
-                  >
-                    {draft.professor.email}
-                    <ArrowUpRight size={11} />
-                  </a>
+                  {draft.professor.email ? (
+                    <a
+                      href={`mailto:${draft.professor.email}`}
+                      className="flex items-center gap-1 hover:text-gray-700 transition-colors"
+                      style={{ fontSize: 12.5, color: "#525252", fontWeight: 300 }}
+                    >
+                      {draft.professor.email}
+                      <ArrowUpRight size={11} />
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: 12.5, color: "#d1d5db", fontWeight: 300 }}>
+                      Email not found — search manually
+                    </span>
+                  )}
+                </div>
+
+                {/* Online presence */}
+                <div className="flex items-start gap-2.5">
+                  <User size={13} style={{ color: "#a3a3a3", flexShrink: 0, marginTop: 2 }} />
+                  <div className="flex flex-wrap gap-2">
+                    {draft.professor.homepage && (
+                      <a href={draft.professor.homepage} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                        style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                        <ArrowUpRight size={11} /> homepage
+                      </a>
+                    )}
+                    {openAlexProfileUrl && (
+                      <a href={openAlexProfileUrl} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                        style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                        <img src={openalexLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                        OpenAlex
+                      </a>
+                    )}
+                    <a href={peopleSearchLinks.linkedin} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                      style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                      <img src={linkedinLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      LinkedIn
+                    </a>
+                    <a href={peopleSearchLinks.scholar} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                      style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                      <ArrowUpRight size={11} /> Scholar search
+                    </a>
+                    <a href={peopleSearchLinks.google} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                      style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                      <img src={googleLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      Google
+                    </a>
+                  </div>
                 </div>
 
                 <div className="flex items-start gap-2.5">
@@ -343,7 +513,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                   className="h-full rounded-full"
                   style={{
                     width: `${draft.matchScore * 100}%`,
-                    background: draft.matchScore >= 0.9 ? "#16a34a" : draft.matchScore >= 0.8 ? "#0a0a0a" : "#f59e0b",
+                    background: draft.matchScore >= 0.9 ? "#16a34a" : "#0a0a0a",
                     transition: "width 0.6s ease",
                   }}
                 />
@@ -359,16 +529,23 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
 
             {/* AI notes card */}
             <div className="rounded-xl border px-5 py-4" style={{ borderColor: "#e5e5e5", background: "#fff" }}>
-              <p style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 400, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 10 }}>
-                Why this professor
-              </p>
-              <p style={{ fontSize: 12.5, color: "#525252", fontWeight: 300, lineHeight: 1.7 }}>
-                Their work on{" "}
+              <p style={{ fontSize: 12.5, color: "#525252", fontWeight: 300, lineHeight: 1.7, marginBottom: 10 }}>
+                Picked for overlap on{" "}
                 <span style={{ color: "#0a0a0a", fontWeight: 400 }}>
-                  {draft.professor.research.slice(0, 2).join(" and ")}
-                </span>{" "}
-                directly overlaps with your stated research interests. The email references their most recent published work and connects it to a specific project from your profile.
+                  {draft.professor.research.slice(0, 2).join(" and ") || "your keywords"}
+                </span>
+                {papers?.[0]?.title ? (
+                  <>
+                    {" "}and a recent paper:{" "}
+                    <span style={{ color: "#0a0a0a", fontWeight: 400 }}>
+                      {papers[0].title}
+                    </span>.
+                  </>
+                ) : (
+                  "."
+                )}
               </p>
+
             </div>
           </div>
         </div>

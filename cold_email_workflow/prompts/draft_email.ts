@@ -1,11 +1,10 @@
 import { RESEARCH_ETIQUETTE, INTERNSHIP_ETIQUETTE } from "./etiquette"
 import { renderToneBlock } from "./tone"
-import { renderContextBlock, type ContextInput } from "./context"
+import { renderContextBlock, renderCompanyBlock, type ContextInput } from "./context"
 import { VOICE_REALISM } from "./voice_realism"
+import type { DraftEmailInput } from "../schemas"
 
-// The writer's input is exactly the context block's input.
-// Aliasing keeps consumer call sites readable.
-export type DraftEmailInput = ContextInput
+export type { DraftEmailInput, DraftEmailTarget } from "../schemas"
 
 export type Citation = {
   claim: string
@@ -70,17 +69,43 @@ If neither paper nor user experience is a strong match, the right move is still 
 `.trim()
 
 export function buildDraftEmailSystem(input: DraftEmailInput): string {
-  const etiquette =
-    input.opportunity === "research" ? RESEARCH_ETIQUETTE : INTERNSHIP_ETIQUETTE
+  if (input.target.kind === "internship") {
+    return [
+      EMAIL_WRITER_ROLE,
+      "",
+      INTERNSHIP_ETIQUETTE,
+      "",
+      renderToneBlock(input.user.tone),
+      "",
+      renderCompanyBlock({
+        user: input.user,
+        company: input.target.company,
+        contact: input.target.contact,
+        teamFocus: input.target.teamFocus,
+        userNotes: input.userNotes,
+      }),
+      "",
+      VOICE_REALISM,
+      "",
+      OUTPUT_FIELDS,
+    ].join("\n")
+  }
+
+  const contextInput: ContextInput = {
+    user: input.user,
+    professor: input.target.professor,
+    opportunity: "research",
+    userNotes: input.userNotes,
+  }
 
   return [
     EMAIL_WRITER_ROLE,
     "",
-    etiquette,
+    RESEARCH_ETIQUETTE,
     "",
     renderToneBlock(input.user.tone),
     "",
-    renderContextBlock(input),
+    renderContextBlock(contextInput),
     "",
     VOICE_REALISM,
     "",
@@ -88,8 +113,39 @@ export function buildDraftEmailSystem(input: DraftEmailInput): string {
   ].join("\n")
 }
 
+// Body word cap by opportunity type. Internship is shorter on purpose:
+// recruiters/engineers read these in 10 seconds. INTERNSHIP_ETIQUETTE targets
+// 90-110 words with a hard cap of 140 (cap was raised from 130 to make room
+// for the optional THE FOCUS sentence). Research stays at 150.
+export const BODY_WORD_CAP_BY_OPPORTUNITY = {
+  research: 150,
+  internship: 140,
+} as const
+
+// Recommended max_tokens for the email writer call, by opportunity. The total
+// budget covers: subject (~15 tokens) + body (body_words * ~1.4) + 1-3 citation
+// objects (~80 tokens each, including claim/source/ref) + confidence (~5) +
+// warnings (~30) + JSON tool-call wrapper (~50). For a 130-word internship body
+// with 2 citations that lands near ~600 tokens; 500 was too tight in practice
+// and truncated. 700 leaves headroom; research keeps 800 for the longer cap.
+export const EMAIL_WRITER_MAX_TOKENS = {
+  research: 800,
+  internship: 700,
+} as const
+
+export function maxTokensFor(opportunity: keyof typeof EMAIL_WRITER_MAX_TOKENS): number {
+  return EMAIL_WRITER_MAX_TOKENS[opportunity]
+}
+
 export function buildDraftEmailUserMessage(input: DraftEmailInput): string {
-  const cap = input.opportunity === "research" ? 150 : 180
+  if (input.target.kind === "internship") {
+    return buildInternshipUserMessage()
+  }
+  return buildResearchUserMessage(input)
+}
+
+function buildResearchUserMessage(input: DraftEmailInput): string {
+  const cap = BODY_WORD_CAP_BY_OPPORTUNITY[input.target.kind]
   return `Draft the cold email now. Body must be under ${cap} words. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written. Hard constraints, all from the VOICE REALISM block:
 
 - OPENER: exactly TWO sentences. Sentence 1 = name + year + school. Sentence 2 = ONE specific reason for reaching out NOW (a class, a current project, a discovery chain, or a small-admission fallback), grounded in CONTEXT, that topically leads into the paper paragraph. No list of interests in either sentence.
@@ -119,6 +175,35 @@ export function buildDraftEmailUserMessage(input: DraftEmailInput): string {
 - ASK: process-oriented, not self-promotional. Ask about the lab's intake state and the next concrete step (e.g. "Is your group taking undergrads for fall 2026, and if so what's the right way to apply?"), NOT "would you consider me for a spot."
 
 - CLOSING: pick "Best," vs "Thanks," based on tone.voice per the etiquette closing rule.
+
+Return only the report_email_draft tool call.`
+}
+
+function buildInternshipUserMessage(): string {
+  // Internship etiquette is structurally tighter than research (one-sentence
+  // opener, four-to-five sentences total, no interest declaration, no question
+  // paragraph). Reminders here are the minimum needed to override research-
+  // shaped impulses from VOICE REALISM and to enforce the internship-specific
+  // rules from INTERNSHIP_ETIQUETTE.
+  return `Draft the cold email now. Body target 75-110 words, hard cap 130. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written. Hard constraints:
+
+- STRUCTURE: 4 to 6 short sentences total. Opening (one or two sentences: name + year + school + strongest credential, then optionally a short clause stating what the writer is trying to learn or build this term, framed to set up the hook). Hook (one sentence citing one specific notableWork). Proof (one to two sentences: one project, numbers, inline link). FOCUS (one sentence, optional but preferred for IC recipients: name a SPECIFIC sub-area of the team's work the writer would want to dig into, derived from notableWork or teams data, framed as a stance not a wish; OMIT for recruiters or when no honest specific area can be named). Ask (one sentence, specific season + year). Closing (Thanks/Best per tone, full name, one link below).
+
+- LOGICAL THREAD: the email must make ONE argument, not list facts. Opener declares intent -> Hook proves the company is the right place for that intent -> Proof shows the writer has shipped something on the same shape of problem -> Ask. The PROOF paragraph must end on the SPECIFIC SHARED TECHNICAL CONCEPT that ties it back to the hook (e.g. "same shape of problem," "the state-reconciliation step is what overlaps"), without ANNOUNCING the connection. If no real shared concept exists, end on a concrete detail about what was hard or surprising. No two consecutive sentences should be reorderable without changing the meaning.
+
+- NO INTEREST DECLARATION. The internship etiquette explicitly forbids it. Do NOT write "I want to spend the next two years on X" or any sentence whose grammatical job is to declare ambition. Capability is shown through the project, not stated through ambitions. This OVERRIDES the interest-declaration rule that VOICE REALISM mentions for the research path. The opener's optional second sentence ("been trying to figure out X this term") is NOT an interest declaration — it's an intent clause that sets up the hook.
+
+- HOOK: must reference one specific notableWork from CONTEXT by title (a blog post, launch, product decision, talk, or repo). Do NOT compliment the company. No "I love what you're doing," "your company is impressive," "I'm a huge fan." Authorship attribution is critical: default to "your team's [post/talk]" when the recipient did not author it; only name the actual author when they are clearly senior leadership (cofounder, CTO, founding engineer). Never use "your post/talk" unless the Author field exactly matches the recipient's name.
+
+- PROOF: pick the SINGLE most relevant project to the team being emailed, not the most impressive one. Compress a more impressive but less relevant experience to a 4-word credential phrase in the OPENING ("ex-Stripe payments intern") and skip it from the PROOF sentence. Numbers required (users, stars, latency, throughput, dollars saved, time saved). Inline link. Do NOT write a standalone "Stack: TypeScript, Postgres, ..." sentence — stack details belong inline in the project description ("a TypeScript importer that...") or omitted entirely.
+
+- NO EVALUATIVE ADJECTIVES on the company or its work ("compelling," "fascinating," "interesting," "impressive," "novel," "elegant," "innovative," "groundbreaking," "exciting," etc., in any grammatical form). Same rule as research; convey significance through what the writer did with the artifact, not labels on it.
+
+- ASK: specific season + year. Pick one shape: "Are you taking summer 2026 SWE interns? Happy to send a resume." / "Could I get 15 minutes about the [specific team] internship?" / "Would a referral to your university recruiting team be possible?" Never "an internship" without season+year. Never "any opportunities."
+
+- VOICE: verbs over nouns. Numbers over adjectives. Concrete over abstract. Slight choppiness is correct. Strip every word that does not change meaning.
+
+- CLOSING: pick "Best," vs "Thanks," per the etiquette closing rule based on tone.voice. One link below the name (GitHub OR portfolio OR LinkedIn). Pick one.
 
 Return only the report_email_draft tool call.`
 }
@@ -162,7 +247,7 @@ export const EMAIL_DRAFT_TOOL = {
 //
 //   client.messages.stream({
 //     model: "claude-sonnet-4-5",
-//     max_tokens: 800,
+//     max_tokens: maxTokensFor(input.opportunity), // 800 for research, 700 for internship
 //     system: buildDraftEmailSystem(input),
 //     tools: [EMAIL_DRAFT_TOOL],
 //     tool_choice: { type: "tool", name: EMAIL_DRAFT_TOOL.name },

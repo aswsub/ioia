@@ -1,0 +1,115 @@
+[
+  {
+    "id": "A5124670301",
+    "name": "Cornell University, Office of the Dean of the University Faculty; Gleed, Robin; Clark, Janet Dobson; Drost, Cor; Schwark, Wayne; Wootton, John",
+    "affiliation": "Carnegie Mellon University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Honor",
+        "score": 0.7937999963760376
+      },
+      {
+        "name": "Statement (logic)",
+        "score": 0.5914000272750854
+      },
+      {
+        "name": "Library science",
+        "score": 0.5562999844551086
+      },
+      {
+        "name": "Management",
+        "score": 0.5390999913215637
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "Beer, Steve",
+        "year": 2022,
+        "abstract": null,
+        "url": "https://openalex.org/W7126961892"
+      },
+      {
+        "title": "Tang, Chung Liang",
+        "year": 2022,
+        "abstract": null,
+        "url": "https://openalex.org/W7126579107"
+      },
+      {
+        "title": "Halpern, Bruce",
+        "year": 2022,
+        "abstract": null,
+        "url": "https://openalex.org/W7126806326"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5036783420",
+    "name": "Graduate Education",
+    "affiliation": "Carnegie Mellon University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Economics",
+        "score": 0.6424214839935303
+      },
+      {
+        "name": "Political science",
+        "score": 0.4819938540458679
+      },
+      {
+        "name": "Business",
+        "score": 0.45186832547187805
+      },
+      {
+        "name": "Linguistics",
+        "score": 0
+      }
+    ],
+    "recentPapers": [
+      {
+        "title": "A Research Agenda",
+        "year": 2021,
+        "abstract": null,
+        "url": "https://openalex.org/W3163813024"
+      },
+      {
+        "title": "The Rate of Student Death from Suicide from the Big Ten Counseling Centers: 2009-2018",
+        "year": 2021,
+        "abstract": null,
+        "url": "https://openalex.org/W3170382066"
+      }
+    ],
+    "matchScore": 0.5
+  },
+  {
+    "id": "A5086988019",
+    "name": "Asa section on undergraduate education",
+    "affiliation": "Carnegie Mellon University",
+    "email": null,
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Resource (disambiguation)",
+        "score": 0.5142924189567566
+      },
+      {
+        "name": "Sociology",
+        "score": 0.4897921085357666
+      },
+      {
+        "name": "Mathematics education",
+        "score": 0.46233507990837097
+      },
+      {
+        "name": "Psychology",
+        "score": 0.23424172401428223
+      }
+    ],
+    "recentPapers": [],
+    "matchScore": 0.5
+  }
+]

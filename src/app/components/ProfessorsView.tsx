@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, ExternalLink, FileText, ChevronDown, ChevronRight, X, Loader2 } from "lucide-react";
-import { searchProfessors, getProfessorByOrcid } from "../../lib/openalex";
+import { useState, useMemo, useEffect } from "react";
+import { ExternalLink, FileText, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import type { Professor } from "../../../cold_email_workflow/prompts/context";
 
 // Institution color palette — grows dynamically
@@ -19,7 +18,7 @@ const DEFAULT_COLOR = { bg: "#f5f5f5", text: "#525252", border: "#e5e5e5" };
 type GroupBy = "institution" | "none";
 
 function MatchBar({ score }: { score: number }) {
-  const color = score >= 0.9 ? "#16a34a" : score >= 0.8 ? "#0a0a0a" : "#f59e0b";
+  const color = score >= 0.9 ? "#16a34a" : "#0a0a0a";
   return (
     <div className="flex items-center gap-2">
       <div className="rounded-full overflow-hidden" style={{ width: 40, height: 3, background: "#f0f0f0" }}>
@@ -33,65 +32,123 @@ function MatchBar({ score }: { score: number }) {
 }
 
 function ProfRow({
-  prof, isLast, instColor,
+  prof, isLast, instColor, expanded, onToggle,
 }: {
   prof: Professor;
   isLast: boolean;
   instColor: { bg: string; text: string; border: string };
+  expanded: boolean;
+  onToggle: () => void;
 }) {
   const recentPaper = prof.recentPapers[0];
   return (
-    <div
-      className="grid group hover:bg-gray-50 transition-colors cursor-pointer"
-      style={{ gridTemplateColumns: "200px 110px 1fr 200px 110px", borderBottom: isLast ? "none" : "1px solid #f0f0f0" }}
-    >
-      <div className="px-5 py-3 flex flex-col justify-center gap-0.5">
-        <span style={{ fontSize: 12.5, fontWeight: 400, color: "#0a0a0a" }}>{prof.name}</span>
-        {prof.homepage && (
-          <a href={prof.homepage} target="_blank" rel="noreferrer"
-            style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 300 }}
-            onClick={(e) => e.stopPropagation()}>
-            homepage ↗
-          </a>
-        )}
-      </div>
-      <div className="px-4 py-3 flex items-center">
-        <span style={{ fontSize: 12, color: "#525252", fontWeight: 300 }}>{prof.affiliation}</span>
-      </div>
-      <div className="px-4 py-3 flex items-center gap-1.5 flex-wrap">
-        {prof.concepts.slice(0, 3).map((c) => (
-          <span key={c.name} className="rounded-full px-2 py-0.5"
-            style={{ fontSize: 10.5, background: instColor.bg, color: instColor.text, border: `1px solid ${instColor.border}`, fontWeight: 300 }}>
-            {c.name}
-          </span>
-        ))}
-      </div>
-      <div className="px-4 py-3 flex items-center gap-1.5 min-w-0">
-        {recentPaper ? (
-          <>
-            <FileText size={11} color="#a3a3a3" style={{ flexShrink: 0 }} />
-            <a href={recentPaper.url} target="_blank" rel="noreferrer"
-              style={{ fontSize: 11.5, color: "#525252", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 300 }}
-              onClick={(e) => e.stopPropagation()}>
-              {recentPaper.title} ({recentPaper.year})
+    <div style={{ borderBottom: isLast ? "none" : "1px solid #f0f0f0" }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full grid group hover:bg-gray-50 transition-colors cursor-pointer text-left"
+        style={{ gridTemplateColumns: "200px 110px 1fr 200px 110px" }}
+      >
+        <div className="px-5 py-3 flex flex-col justify-center gap-0.5">
+          <span style={{ fontSize: 12.5, fontWeight: 400, color: "#0a0a0a" }}>{prof.name}</span>
+          {prof.homepage && (
+            <a
+              href={prof.homepage}
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              homepage ↗
             </a>
-          </>
-        ) : (
-          <span style={{ fontSize: 11.5, color: "#d4d4d4", fontWeight: 300 }}>No recent papers</span>
-        )}
-      </div>
-      <div className="px-4 py-3 flex items-center gap-2 pr-6">
-        <MatchBar score={prof.matchScore} />
-        <ExternalLink size={11} color="#d4d4d4" className="opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
+          )}
+        </div>
+        <div className="px-4 py-3 flex items-center">
+          <span style={{ fontSize: 12, color: "#525252", fontWeight: 300 }}>{prof.affiliation}</span>
+        </div>
+        <div className="px-4 py-3 flex items-center gap-1.5 flex-wrap">
+          {prof.concepts.slice(0, 3).map((c) => (
+            <span
+              key={c.name}
+              className="rounded-full px-2 py-0.5"
+              style={{ fontSize: 10.5, background: instColor.bg, color: instColor.text, border: `1px solid ${instColor.border}`, fontWeight: 300 }}
+            >
+              {c.name}
+            </span>
+          ))}
+        </div>
+        <div className="px-4 py-3 flex items-center gap-1.5 min-w-0">
+          {recentPaper ? (
+            <>
+              <FileText size={11} color="#a3a3a3" style={{ flexShrink: 0 }} />
+              <a
+                href={recentPaper.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: 11.5, color: "#525252", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 300 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {recentPaper.title} ({recentPaper.year})
+              </a>
+            </>
+          ) : (
+            <span style={{ fontSize: 11.5, color: "#d4d4d4", fontWeight: 300 }}>No recent papers</span>
+          )}
+        </div>
+        <div className="px-4 py-3 flex items-center gap-2 pr-6">
+          <MatchBar score={prof.matchScore} />
+          <ExternalLink size={11} color="#d4d4d4" className="opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="px-5 py-4" style={{ background: "#fff" }}>
+          <div className="rounded-lg border" style={{ borderColor: "#f0f0f0", background: "#fafafa" }}>
+            <div className="px-4 py-2 border-b" style={{ borderColor: "#f0f0f0" }}>
+              <span style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                Published Work
+              </span>
+              <span style={{ marginLeft: 8, fontSize: 11, color: "#d4d4d4", fontWeight: 300 }}>
+                (recent)
+              </span>
+            </div>
+            <div className="px-4 py-3 flex flex-col gap-2">
+              {(prof.recentPapers ?? []).length === 0 && (
+                <span style={{ fontSize: 12, color: "#a3a3a3", fontWeight: 300 }}>No papers available from OpenAlex.</span>
+              )}
+              {(prof.recentPapers ?? [])
+                .slice()
+                .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+                .slice(0, 8)
+                .map((p) => (
+                  <a
+                    key={p.url}
+                    href={p.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2"
+                    style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 300, lineHeight: 1.5 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FileText size={12} color="#a3a3a3" />
+                    <span style={{ color: "#525252" }}>{p.year}</span>
+                    <span style={{ color: "#0a0a0a" }}>{p.title}</span>
+                  </a>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function ProfGroup({
-  label, professors, colorIndex, defaultOpen = true,
+  label, professors, colorIndex, expandedId, onToggleProf, defaultOpen = true,
 }: {
   label: string; professors: Professor[]; colorIndex: number; defaultOpen?: boolean;
+  expandedId: string | null;
+  onToggleProf: (id: string) => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const c = INST_COLORS[colorIndex % INST_COLORS.length];
@@ -116,7 +173,14 @@ function ProfGroup({
             ))}
           </div>
           {professors.map((prof, i) => (
-            <ProfRow key={prof.id} prof={prof} isLast={i === professors.length - 1} instColor={c} />
+            <ProfRow
+              key={prof.id}
+              prof={prof}
+              isLast={i === professors.length - 1}
+              instColor={c}
+              expanded={expandedId === prof.id}
+              onToggle={() => onToggleProf(prof.id)}
+            />
           ))}
         </>
       )}
@@ -125,54 +189,30 @@ function ProfGroup({
 }
 
 export function ProfessorsView() {
-  const [query, setQuery] = useState("");
-  const [orcid, setOrcid] = useState("");
   const [professors, setProfessors] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [groupBy, setGroupBy] = useState<GroupBy>("institution");
   const [institutionFilter, setInstitutionFilter] = useState<string | null>(null);
+  const [expandedProfId, setExpandedProfId] = useState<string | null>(null);
+  const [source, setSource] = useState<"latest" | "all">("latest");
 
-  const handleSearch = async () => {
-    const q = query.trim();
-    if (!q) return;
-    setLoading(true);
-    setError(null);
-    setSearched(true);
-    setInstitutionFilter(null);
+  useEffect(() => {
+    // Load professor matches from the Agent tab (if any).
+    // This view is intentionally read-only: no manual OpenAlex searching here.
     try {
-      // Parse "keywords at institution" pattern
-      const atMatch = q.match(/^(.+?)\s+at\s+(.+)$/i);
-      const keywords = atMatch ? atMatch[1].split(/[,\s]+/).filter(Boolean) : q.split(/[,\s]+/).filter(Boolean);
-      const institutions = atMatch ? [atMatch[2]] : [];
-      const results = await searchProfessors(keywords, institutions, 10);
-      setProfessors(results);
-    } catch (e) {
-      setError("Failed to reach OpenAlex. Check your connection and try again.");
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOrcidLookup = async () => {
-    const o = orcid.trim();
-    if (!o) return;
-    setLoading(true);
-    setError(null);
-    setSearched(true);
-    try {
-      const result = await getProfessorByOrcid(o);
-      if (result) setProfessors([result]);
-      else setError(`No author found for ORCID: ${o}`);
-    } catch (e) {
-      setError("ORCID lookup failed.");
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const rawLatest = localStorage.getItem("ioia:last_professors_batch");
+      const rawAll = localStorage.getItem("ioia:last_professors");
+      const raw = (source === "latest" ? rawLatest : rawAll) ?? rawAll ?? rawLatest;
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Professor[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setProfessors(parsed);
+        setSearched(true);
+      }
+    } catch { /* ignore */ }
+  }, [source]);
 
   const institutions = useMemo(() =>
     Array.from(new Set(professors.map((p) => p.affiliation))).sort(),
@@ -188,6 +228,12 @@ export function ProfessorsView() {
   const filtered = useMemo(() => {
     return professors.filter((p) => !institutionFilter || p.affiliation === institutionFilter);
   }, [professors, institutionFilter]);
+
+  useEffect(() => {
+    // Collapse expanded detail if it's not in the filtered list anymore.
+    if (!expandedProfId) return;
+    if (!filtered.some((p) => p.id === expandedProfId)) setExpandedProfId(null);
+  }, [expandedProfId, filtered]);
 
   const groups = useMemo(() => {
     if (groupBy === "none") return [{ label: "All professors", professors: filtered, colorIndex: 0 }];
@@ -250,40 +296,39 @@ export function ProfessorsView() {
         {professors.length === 0 && <div className="flex-1" />}
       </div>
 
-      {/* Search bar */}
-      <div className="bg-white border-b px-6 py-3 flex items-center gap-3" style={{ borderColor: "#e5e5e5" }}>
-        {/* Keyword search */}
-        <div className="flex items-center gap-2 rounded-lg border px-3 py-2 flex-1" style={{ borderColor: "#e5e5e5", background: "#fafafa", maxWidth: 480 }}>
-          <Search size={13} color="#a3a3a3" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Search by topic, e.g. 'LLMs at MIT' or 'formal verification'"
-            className="flex-1 outline-none bg-transparent"
-            style={{ fontSize: 13, color: "#0a0a0a", fontFamily: "var(--font-sans)", fontWeight: 300 }} />
-          {query && <button onClick={() => setQuery("")}><X size={11} color="#a3a3a3" /></button>}
+      {/* Read-only notice */}
+      <div className="bg-white border-b px-6 py-3 flex items-center justify-between" style={{ borderColor: "#e5e5e5" }}>
+        <span style={{ fontSize: 12.5, color: "#737373", fontWeight: 300 }}>
+          Showing professors found by the agent.
+        </span>
+        <div className="flex items-center gap-1 rounded-lg border p-0.5" style={{ borderColor: "#e5e5e5", background: "#fafafa" }}>
+          <button
+            onClick={() => setSource("latest")}
+            className="rounded-md px-3 py-1 transition-all"
+            style={{
+              fontSize: 12,
+              fontWeight: source === "latest" ? 400 : 300,
+              color: source === "latest" ? "#0a0a0a" : "#737373",
+              background: source === "latest" ? "#fff" : "transparent",
+              boxShadow: source === "latest" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+            }}
+          >
+            Latest chat
+          </button>
+          <button
+            onClick={() => setSource("all")}
+            className="rounded-md px-3 py-1 transition-all"
+            style={{
+              fontSize: 12,
+              fontWeight: source === "all" ? 400 : 300,
+              color: source === "all" ? "#0a0a0a" : "#737373",
+              background: source === "all" ? "#fff" : "transparent",
+              boxShadow: source === "all" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+            }}
+          >
+            All results
+          </button>
         </div>
-        <button onClick={handleSearch} disabled={!query.trim() || loading}
-          className="rounded-lg px-4 py-2 transition-colors"
-          style={{ fontSize: 12.5, fontWeight: 400, color: "#fff", background: !query.trim() || loading ? "#d4d4d4" : "#0a0a0a", cursor: !query.trim() || loading ? "default" : "pointer" }}>
-          {loading ? "Searching…" : "Search"}
-        </button>
-
-        <div style={{ width: 1, height: 20, background: "#e5e5e5" }} />
-
-        {/* ORCID lookup */}
-        <div className="flex items-center gap-2 rounded-lg border px-3 py-2" style={{ borderColor: "#e5e5e5", background: "#fafafa", width: 260 }}>
-          <span style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 400, flexShrink: 0 }}>ORCID</span>
-          <input value={orcid} onChange={(e) => setOrcid(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleOrcidLookup()}
-            placeholder="0000-0000-0000-0000"
-            className="flex-1 outline-none bg-transparent"
-            style={{ fontSize: 12, color: "#0a0a0a", fontFamily: "var(--font-display)", fontWeight: 300 }} />
-        </div>
-        <button onClick={handleOrcidLookup} disabled={!orcid.trim() || loading}
-          className="rounded-lg px-3 py-2 border transition-colors"
-          style={{ fontSize: 12, fontWeight: 300, color: "#525252", borderColor: "#e5e5e5", background: "#fff", cursor: !orcid.trim() || loading ? "default" : "pointer", opacity: !orcid.trim() ? 0.5 : 1 }}>
-          Look up
-        </button>
       </div>
 
       {/* Content */}
@@ -303,7 +348,7 @@ export function ProfessorsView() {
 
         {!loading && !error && !searched && (
           <div className="flex flex-col items-center justify-center h-48 gap-2">
-            <span style={{ fontSize: 13, color: "#a3a3a3", fontWeight: 300 }}>Search for professors by research topic or look up by ORCID.</span>
+            <span style={{ fontSize: 13, color: "#a3a3a3", fontWeight: 300 }}>Ask the agent to find professors to populate this list.</span>
           </div>
         )}
 
@@ -317,7 +362,15 @@ export function ProfessorsView() {
           <>
             <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
             {groups.map((g, i) => (
-              <ProfGroup key={g.label} label={g.label} professors={g.professors} colorIndex={g.colorIndex} defaultOpen={i < 3} />
+              <ProfGroup
+                key={g.label}
+                label={g.label}
+                professors={g.professors}
+                colorIndex={g.colorIndex}
+                expandedId={expandedProfId}
+                onToggleProf={(id) => setExpandedProfId((cur) => (cur === id ? null : id))}
+                defaultOpen={i < 3}
+              />
             ))}
           </>
         )}

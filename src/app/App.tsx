@@ -11,6 +11,9 @@ import {
   saveDraft,
   updateDraftStatus,
   deleteDraft,
+  loadConversations,
+  deleteConversation,
+  type DbConversation,
 } from "../lib/db";
 
 type View = "Overview" | "Outreach" | "Professors" | "Profile";
@@ -28,6 +31,11 @@ export default function App() {
   const [draftStatuses, setDraftStatuses] = useState<Record<string, "draft" | "sent">>({});
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
 
+  // Conversation state — lifted out of AgentView so the Sidebar can render the
+  // chat list. AgentView still owns per-conversation messages.
+  const [conversations, setConversations] = useState<DbConversation[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+
   // Load persisted drafts on mount
   useEffect(() => {
     loadOutreachDrafts().then((rows) => {
@@ -42,6 +50,9 @@ export default function App() {
           research: r.professor.research,
           email: r.professor.email ?? "",
           color: r.professor.color ?? "#f5f5f5",
+          openAlexId: r.professor.id?.startsWith("https://openalex.org/A") ? r.professor.id : null,
+          homepage: null,
+          recentPapers: [],
         },
         subject: r.subject,
         body: r.body,
@@ -54,8 +65,22 @@ export default function App() {
     });
   }, []);
 
+  // Load conversation list on mount
+  useEffect(() => {
+    loadConversations().then((convs) => {
+      setConversations(convs);
+      if (convs.length > 0) setActiveConvId(convs[0].id);
+    });
+  }, []);
+
   const handleDraftsReady = (drafts: OutreachDraft[]) => {
-    setOutreachDrafts(drafts);
+    // Merge in new drafts instead of replacing (so older drafts don't "disappear" until refresh).
+    setOutreachDrafts((prev) => {
+      const byId = new Map<string, OutreachDraft>();
+      prev.forEach((d) => byId.set(d.id, d));
+      drafts.forEach((d) => byId.set(d.id, d));
+      return Array.from(byId.values());
+    });
     // Persist each new draft
     drafts.forEach((d) => saveDraft(d, "draft"));
   };
@@ -74,6 +99,27 @@ export default function App() {
     setOutreachDrafts((prev) => prev.filter((d) => d.id !== id));
     setDraftStatuses((prev) => { const next = { ...prev }; delete next[id]; return next; });
     deleteDraft(id);
+  };
+
+  // Conversation handlers — these are the ones the Sidebar invokes. AgentView
+  // also needs to mutate `conversations` directly (when send() creates a new
+  // conv on the fly), which is why we pass setConversations / setActiveConvId.
+  const handleNewConv = () => {
+    setActiveConvId(null);
+    setSelectedDraftId(null);
+    setActiveView("Overview");
+  };
+
+  const handleSelectConv = (id: string) => {
+    setActiveConvId(id);
+    setSelectedDraftId(null);
+    setActiveView("Overview");
+  };
+
+  const handleDeleteConv = async (id: string) => {
+    await deleteConversation(id);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (activeConvId === id) setActiveConvId(null);
   };
 
   const draftsWithStatus: DraftWithStatus[] = outreachDrafts.map((d) => ({
@@ -101,6 +147,10 @@ export default function App() {
       case "Overview":
         return (
           <AgentView
+            conversations={conversations}
+            setConversations={setConversations}
+            activeConvId={activeConvId}
+            setActiveConvId={setActiveConvId}
             onDraftsReady={handleDraftsReady}
             onNavigateToOutreach={handleNavigateToOutreach}
           />
@@ -122,6 +172,10 @@ export default function App() {
       default:
         return (
           <AgentView
+            conversations={conversations}
+            setConversations={setConversations}
+            activeConvId={activeConvId}
+            setActiveConvId={setActiveConvId}
             onDraftsReady={handleDraftsReady}
             onNavigateToOutreach={handleNavigateToOutreach}
           />
@@ -137,6 +191,11 @@ export default function App() {
       <Sidebar
         activeView={activeView}
         onNavigate={(v) => { setSelectedDraftId(null); setActiveView(v as View); }}
+        conversations={conversations}
+        activeConvId={activeConvId}
+        onNewConv={handleNewConv}
+        onSelectConv={handleSelectConv}
+        onDeleteConv={handleDeleteConv}
       />
       {renderView()}
     </div>

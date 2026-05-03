@@ -1,0 +1,138 @@
+[
+  {
+    "id": "E1234567890",
+    "name": "Song-Chun Zhu",
+    "affiliation": "University of California, Los Angeles",
+    "email": "sczhu@cs.ucla.edu",
+    "homepage": "https://www.stat.ucla.edu/~sczhu/",
+    "concepts": [
+      { "name": "Computer Vision", "score": 0.94 },
+      { "name": "Machine Learning", "score": 0.91 },
+      { "name": "Generative Models", "score": 0.89 },
+      { "name": "Statistical Learning", "score": 0.87 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Generative Modeling with Energy-Based Models",
+        "year": 2023,
+        "abstract": "Advances in energy-based models for generative modeling and their applications to vision and language tasks.",
+        "url": "https://arxiv.org/abs/2305.02318"
+      },
+      {
+        "title": "Compositional Object Representations",
+        "year": 2022,
+        "abstract": "Learning compositional representations of objects for improved scene understanding and generation.",
+        "url": "https://arxiv.org/abs/2212.07456"
+      },
+      {
+        "title": "Active Learning with Deep Generative Models",
+        "year": 2021,
+        "abstract": "Using deep generative models to guide active learning and reduce labeling requirements.",
+        "url": "https://arxiv.org/abs/2109.02189"
+      }
+    ],
+    "matchScore": 0.87
+  },
+  {
+    "id": "E1234567891",
+    "name": "Dario Amodei",
+    "affiliation": "University of California, Los Angeles",
+    "email": "damodei@cs.ucla.edu",
+    "homepage": "https://www.cs.ucla.edu/~damodei/",
+    "concepts": [
+      { "name": "Deep Learning", "score": 0.96 },
+      { "name": "Machine Learning", "score": 0.94 },
+      { "name": "Natural Language Processing", "score": 0.91 },
+      { "name": "Reinforcement Learning", "score": 0.88 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Scaling Laws for Neural Language Models",
+        "year": 2023,
+        "abstract": "Empirical and theoretical analysis of scaling laws for neural language models and their implications.",
+        "url": "https://arxiv.org/abs/2302.04305"
+      },
+      {
+        "title": "Training Language Models to Follow Instructions",
+        "year": 2022,
+        "abstract": "Methods for fine-tuning large language models to follow human instructions with improved alignment.",
+        "url": "https://arxiv.org/abs/2203.02155"
+      },
+      {
+        "title": "Emergent Abilities of Large Language Models",
+        "year": 2022,
+        "abstract": "Analysis of emergent capabilities that arise in large language models as they scale.",
+        "url": "https://arxiv.org/abs/2206.07682"
+      }
+    ],
+    "matchScore": 0.90
+  },
+  {
+    "id": "E1234567892",
+    "name": "Lieven Vandenberghe",
+    "affiliation": "University of California, Los Angeles",
+    "email": "vandenbe@ee.ucla.edu",
+    "homepage": "https://www.ee.ucla.edu/~vandenbe/",
+    "concepts": [
+      { "name": "Optimization", "score": 0.92 },
+      { "name": "Convex Optimization", "score": 0.90 },
+      { "name": "Machine Learning", "score": 0.87 },
+      { "name": "Control Theory", "score": 0.84 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Distributed Optimization for Machine Learning",
+        "year": 2023,
+        "abstract": "Distributed algorithms for large-scale machine learning optimization with communication efficiency.",
+        "url": "https://arxiv.org/abs/2301.03742"
+      },
+      {
+        "title": "First-Order Methods for Convex Optimization",
+        "year": 2022,
+        "abstract": "Analysis and improvements of first-order optimization methods for convex and non-convex problems.",
+        "url": "https://arxiv.org/abs/2210.01834"
+      },
+      {
+        "title": "Interior Point Methods and Applications",
+        "year": 2021,
+        "abstract": "Advanced interior point methods for solving large-scale optimization problems in machine learning.",
+        "url": "https://arxiv.org/abs/2108.07654"
+      }
+    ],
+    "matchScore": 0.84
+  },
+  {
+    "id": "E1234567893",
+    "name": "Judea Pearl",
+    "affiliation": "University of California, Los Angeles",
+    "email": "judea@cs.ucla.edu",
+    "homepage": "https://www.cs.ucla.edu/~judea/",
+    "concepts": [
+      { "name": "Causal Inference", "score": 0.97 },
+      { "name": "Probabilistic Reasoning", "score": 0.94 },
+      { "name": "Machine Learning", "score": 0.90 },
+      { "name": "Graphical Models", "score": 0.88 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Causal Inference in Machine Learning",
+        "year": 2023,
+        "abstract": "Methods for incorporating causal reasoning into machine learning for improved model interpretability.",
+        "url": "https://arxiv.org/abs/2304.01245"
+      },
+      {
+        "title": "Do-Calculus and Causal Discovery",
+        "year": 2022,
+        "abstract": "Algorithms for causal discovery from observational data using do-calculus framework.",
+        "url": "https://arxiv.org/abs/2209.08721"
+      },
+      {
+        "title": "The Book of Why: Causal Reasoning in Science",
+        "year": 2018,
+        "abstract": "Foundational principles of causal reasoning and their applications to scientific discovery.",
+        "url": "https://arxiv.org/abs/1806.02404"
+      }
+    ],
+    "matchScore": 0.88
+  }
+]

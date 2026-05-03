@@ -68,6 +68,10 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
   const [gmailStatus, setGmailStatus] = useState<GmailConnectionStatus | null>(null);
   const [gmailLoading, setGmailLoading] = useState(true);
   const [gmailError, setGmailError] = useState<string | null>(null);
+  const [scope, setScope] = useState<"latest" | "all">("latest");
+  const [latestBatchIds, setLatestBatchIds] = useState<Set<string> | null>(null);
+  const [latestLabel, setLatestLabel] = useState<string | null>(null);
+  const [latestAt, setLatestAt] = useState<string | null>(null);
 
   const refreshGmailStatus = async () => {
     setGmailLoading(true);
@@ -98,13 +102,58 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
     }
   };
 
+  useEffect(() => {
+    try {
+      const rawIds = localStorage.getItem("ioia:last_draft_batch_ids");
+      const rawPrompt = localStorage.getItem("ioia:last_draft_batch_prompt");
+      const rawAt = localStorage.getItem("ioia:last_draft_batch_at");
+      const ids = rawIds ? (JSON.parse(rawIds) as string[]) : [];
+      setLatestBatchIds(new Set(ids));
+      setLatestLabel(rawPrompt ?? null);
+      setLatestAt(rawAt ?? null);
+      // Only reset scope to "all" on initial mount if there's no batch info.
+      // Don't reset it every time drafts change, as that would prevent viewing the latest batch.
+    } catch {
+      setLatestBatchIds(null);
+      setLatestLabel(null);
+      setLatestAt(null);
+    }
+  }, []);
+
+  // Refresh latest batch info when drafts change (new drafts from agent)
+  useEffect(() => {
+    try {
+      const rawIds = localStorage.getItem("ioia:last_draft_batch_ids");
+      const rawPrompt = localStorage.getItem("ioia:last_draft_batch_prompt");
+      const rawAt = localStorage.getItem("ioia:last_draft_batch_at");
+      const ids = rawIds ? (JSON.parse(rawIds) as string[]) : [];
+      // Only update if there are new IDs (agent just generated drafts)
+      if (ids.length > 0) {
+        setLatestBatchIds(new Set(ids));
+        setLatestLabel(rawPrompt ?? null);
+        setLatestAt(rawAt ?? null);
+        // Auto-switch to "latest" scope when new drafts arrive
+        setScope("latest");
+      }
+    } catch {
+      // ignore
+    }
+  }, [drafts]);
+
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("desc"); }
   };
 
+  const scopedDrafts = useMemo(() => {
+    if (scope === "latest" && latestBatchIds && latestBatchIds.size > 0) {
+      return drafts.filter((d) => latestBatchIds.has(d.id));
+    }
+    return drafts;
+  }, [drafts, scope, latestBatchIds]);
+
   const filtered = useMemo(() => {
-    const base = statusFilter === "all" ? drafts : drafts.filter((d) => d.status === statusFilter);
+    const base = statusFilter === "all" ? scopedDrafts : scopedDrafts.filter((d) => d.status === statusFilter);
     return [...base].sort((a, b) => {
       let av: string | number, bv: string | number;
       if (sortKey === "professor")    { av = a.professor.name;       bv = b.professor.name; }
@@ -115,10 +164,10 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [drafts, sortKey, sortDir, statusFilter]);
+  }, [scopedDrafts, sortKey, sortDir, statusFilter]);
 
-  const draftCount = drafts.filter((d) => d.status === "draft").length;
-  const sentCount  = drafts.filter((d) => d.status === "sent").length;
+  const draftCount = scopedDrafts.filter((d) => d.status === "draft").length;
+  const sentCount  = scopedDrafts.filter((d) => d.status === "sent").length;
 
   if (drafts.length === 0) {
     return (
@@ -171,24 +220,57 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
           )}
         </div>
 
-        {/* Status filter tabs */}
-        <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: "#f5f5f5" }}>
-          {(["all", "draft", "sent"] as const).map((f) => (
+        <div className="flex items-center gap-2">
+          {/* Batch scope */}
+          <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: "#f5f5f5" }}>
             <button
-              key={f}
-              onClick={() => setStatusFilter(f)}
-              className="rounded-md px-3 py-1 transition-all capitalize"
+              onClick={() => setScope("latest")}
+              className="rounded-md px-3 py-1 transition-all"
               style={{
                 fontSize: 12,
-                fontWeight: statusFilter === f ? 400 : 300,
-                color: statusFilter === f ? "#0a0a0a" : "#737373",
-                background: statusFilter === f ? "#fff" : "transparent",
-                boxShadow: statusFilter === f ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                fontWeight: scope === "latest" ? 400 : 300,
+                color: scope === "latest" ? "#0a0a0a" : "#737373",
+                background: scope === "latest" ? "#fff" : "transparent",
+                boxShadow: scope === "latest" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+              }}
+              title={latestLabel ? `Latest: ${latestLabel}${latestAt ? ` (${latestAt})` : ""}` : "Latest chat results"}
+            >
+              Latest chat
+            </button>
+            <button
+              onClick={() => setScope("all")}
+              className="rounded-md px-3 py-1 transition-all"
+              style={{
+                fontSize: 12,
+                fontWeight: scope === "all" ? 400 : 300,
+                color: scope === "all" ? "#0a0a0a" : "#737373",
+                background: scope === "all" ? "#fff" : "transparent",
+                boxShadow: scope === "all" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
               }}
             >
-              {f}
+              All
             </button>
-          ))}
+          </div>
+
+          {/* Status filter tabs */}
+          <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: "#f5f5f5" }}>
+            {(["all", "draft", "sent"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className="rounded-md px-3 py-1 transition-all capitalize"
+                style={{
+                  fontSize: 12,
+                  fontWeight: statusFilter === f ? 400 : 300,
+                  color: statusFilter === f ? "#0a0a0a" : "#737373",
+                  background: statusFilter === f ? "#fff" : "transparent",
+                  boxShadow: statusFilter === f ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -282,9 +364,37 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
                     >
                       {initials(draft.professor.name)}
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col min-w-0">
                       <span style={{ fontSize: 12.5, fontWeight: 400, color: "#0a0a0a" }}>{draft.professor.name}</span>
                       <span style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 300 }}>{draft.professor.title}</span>
+                      {(draft.professor.homepage || (draft.professor.recentPapers?.length ?? 0) > 0) && (
+                        <div className="flex items-center gap-2 mt-1" style={{ fontSize: 11, fontWeight: 300 }}>
+                          {draft.professor.homepage && (
+                            <a
+                              href={draft.professor.homepage}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: "#a3a3a3" }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              homepage ↗
+                            </a>
+                          )}
+                          {(draft.professor.recentPapers ?? []).slice(0, 1).map((p) => (
+                            <a
+                              key={p.url}
+                              href={p.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: "#a3a3a3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 240 }}
+                              onClick={(e) => e.stopPropagation()}
+                              title={p.title}
+                            >
+                              {p.title} ({p.year})
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </td>
@@ -320,7 +430,7 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
                         className="h-full rounded-full"
                         style={{
                           width: `${draft.matchScore * 100}%`,
-                          background: draft.matchScore >= 0.9 ? "#16a34a" : draft.matchScore >= 0.8 ? "#0a0a0a" : "#f59e0b",
+                          background: draft.matchScore >= 0.9 ? "#16a34a" : "#0a0a0a",
                         }}
                       />
                     </div>

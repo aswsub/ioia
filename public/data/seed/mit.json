@@ -1,0 +1,29 @@
+[
+  {
+    "id": "A5046248729",
+    "name": "MIT-CSAIL",
+    "affiliation": "Massachusetts Institute of Technology",
+    "email": "news@csail.mit.edu?subject=CSAIL%20Media%20Inquiry",
+    "homepage": null,
+    "concepts": [
+      {
+        "name": "Series (stratigraphy)",
+        "score": 0.4124601483345032
+      },
+      {
+        "name": "Artificial intelligence",
+        "score": 0.3995235562324524
+      },
+      {
+        "name": "Business",
+        "score": 0.06373021006584167
+      },
+      {
+        "name": "Paleontology",
+        "score": 0.05041143298149109
+      }
+    ],
+    "recentPapers": [],
+    "matchScore": 0.5
+  }
+]

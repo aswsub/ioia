@@ -111,15 +111,20 @@ export async function saveDraft(
   draft: OutreachDraft,
   status: "draft" | "sent" = "draft"
 ): Promise<void> {
+  const profId =
+    draft.professor.openAlexId?.trim()
+      ? draft.professor.openAlexId.trim()
+      : `prof_${draft.professor.name.replace(/\s+/g, "_").toLowerCase()}`;
+
   // Upsert the professor first
   await upsertProfessor({
-    id: `prof_${draft.professor.name.replace(/\s+/g, "_").toLowerCase()}`,
+    id: profId,
     name: draft.professor.name,
     title: draft.professor.title,
     institution: draft.professor.university,
     department: draft.professor.department,
     research: draft.professor.research,
-    recent_paper: null,
+    recent_paper: draft.professor.recentPapers?.[0]?.title ?? null,
     match_score: draft.matchScore,
     email: draft.professor.email,
     color: draft.professor.color,
@@ -127,7 +132,7 @@ export async function saveDraft(
 
   const { error } = await supabase.from("outreach_drafts").upsert({
     id: draft.id,
-    professor_id: `prof_${draft.professor.name.replace(/\s+/g, "_").toLowerCase()}`,
+    professor_id: profId,
     subject: draft.subject,
     body: draft.body,
     match_score: draft.matchScore,

@@ -7,12 +7,17 @@
     "build": "vite build",
     "dev": "vite",
     "dev:api": "tsx server/api-dev.ts",
+    "scrape:faculty": "node scripts/scrape-faculty.js",
     "smoke:tone": "tsx --env-file=.env cold_email_workflow/tests/smoke.ts",
     "extract:tone": "tsx --env-file=.env cold_email_workflow/extract_tone_runner.ts",
     "test:e2e": "tsx --env-file=.env cold_email_workflow/tests/end_to_end.ts",
     "test:pipeline": "tsx --env-file=.env cold_email_workflow/tests/pipeline.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:pipeline:internship": "tsx --env-file=.env cold_email_workflow/tests/pipeline_internship.ts",
+    "test:keywords": "tsx --env-file=.env cold_email_workflow/tests/keyword_pipeline.ts",
+    "find:company": "tsx cold_email_workflow/find_company_runner.ts",
+    "proxy:dev": "tsx --env-file=.env --watch server/people.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -79,6 +84,7 @@
     "@tailwindcss/vite": "4.1.12",
     "@types/node": "^25.6.0",
     "@vitejs/plugin-react": "4.7.0",
+    "cheerio": "^1.2.0",
     "tailwindcss": "4.1.12",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
