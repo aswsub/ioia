@@ -11,6 +11,7 @@
     "test:e2e": "tsx --env-file=.env cold_email_workflow/tests/end_to_end.ts",
     "test:pipeline": "tsx --env-file=.env cold_email_workflow/tests/pipeline.ts",
     "test:pipeline:internship": "tsx --env-file=.env cold_email_workflow/tests/pipeline_internship.ts",
+    "test:keywords": "tsx --env-file=.env cold_email_workflow/tests/keyword_pipeline.ts",
     "find:company": "tsx cold_email_workflow/find_company_runner.ts"
   },
   "dependencies": {
