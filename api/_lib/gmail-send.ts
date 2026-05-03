@@ -6,6 +6,7 @@ export type SendDraftEmailPayload = {
   draftId: string;
   subject: string;
   body: string;
+  recipientEmail?: string;
 };
 
 type GoogleRefreshTokenResponse = {
@@ -63,7 +64,7 @@ export function parseSendDraftEmailPayload(
     return { ok: false, error: "Expected a JSON object payload" };
   }
 
-  const { draftId, subject, body: emailBody } = parsed;
+  const { draftId, subject, body: emailBody, recipientEmail } = parsed;
 
   if (typeof draftId !== "string" || draftId.length === 0) {
     return { ok: false, error: "draftId is required" };
@@ -87,6 +88,7 @@ export function parseSendDraftEmailPayload(
       draftId,
       subject,
       body: emailBody,
+      recipientEmail: typeof recipientEmail === "string" ? recipientEmail.trim() : undefined,
     },
   };
 }

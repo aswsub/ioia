@@ -129,6 +129,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
         draftId: draft.id,
         subject,
         body,
+        recipientEmail: draftRecipientEmail || undefined,
       });
       setSentRecipient(result.to);
       onSend(draft.id);

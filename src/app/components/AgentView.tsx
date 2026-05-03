@@ -313,7 +313,7 @@ export function AgentView({
     const thinkingId = (Date.now() + 1).toString();
     const thinkingMsg: Message = {
       id: thinkingId, role: "agent", content: "",
-      steps: PIPELINE_STEPS,
+      steps: getPipelineSteps("parsing"),
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
     setMessages((prev) => [...prev, thinkingMsg]);

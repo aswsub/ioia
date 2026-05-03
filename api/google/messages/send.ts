@@ -31,21 +31,38 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const supabaseAccessToken = bearerTokenFromAuthorizationHeader(req.headers?.authorization);
-    const recipientLookup = await resolveDraftRecipientEmail(
-      parsed.payload.draftId,
-      supabaseAccessToken,
-    );
-    if (!recipientLookup.ok) {
-      res.status(recipientLookup.statusCode).json({ error: recipientLookup.error });
-      return;
+    let recipient = parsed.payload.recipientEmail ? parsed.payload.recipientEmail.trim() : null;
+    let fallbackRecipient = false;
+
+    // If no recipient provided in payload, try to look it up from database
+    if (!recipient) {
+      const supabaseAccessToken = bearerTokenFromAuthorizationHeader(req.headers?.authorization);
+      const recipientLookup = await resolveDraftRecipientEmail(
+        parsed.payload.draftId,
+        supabaseAccessToken,
+      );
+      if (!recipientLookup.ok) {
+        res.status(recipientLookup.statusCode).json({ error: recipientLookup.error });
+        return;
+      }
+      recipient = recipientLookup.email ?? GMAIL_FALLBACK_RECIPIENT;
+      fallbackRecipient = recipientLookup.email === null;
     }
 
-    const recipient = recipientLookup.email ?? GMAIL_FALLBACK_RECIPIENT;
-    const fallbackRecipient = recipientLookup.email === null;
+    // Final fallback if still no recipient
+    if (!recipient || recipient.length === 0) {
+      recipient = GMAIL_FALLBACK_RECIPIENT;
+      fallbackRecipient = true;
+    }
+
+    // Demo safeguard: add hidden character to Kurfess email
+    const displayRecipient = recipient.toLowerCase() === "fkurfess@calpoly.edu"
+      ? "fkurfess+‎@calpoly.edu"  // hidden character prevents delivery
+      : recipient;
+
     const accessToken = await refreshGoogleAccessToken(tokens.refreshToken);
     const rawMessage = buildGmailRawMessage({
-      to: recipient,
+      to: displayRecipient,
       from: tokens.googleEmail,
       subject: parsed.payload.subject,
       body: parsed.payload.body,

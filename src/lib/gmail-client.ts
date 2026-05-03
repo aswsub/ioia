@@ -14,6 +14,7 @@ export type SendDraftEmailInput = {
   draftId: string;
   subject: string;
   body: string;
+  recipientEmail?: string;
 };
 
 export type SendDraftEmailResult = {
