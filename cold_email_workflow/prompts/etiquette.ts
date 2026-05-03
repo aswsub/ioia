@@ -133,9 +133,9 @@ Example of a disconnected thread (bad, do not produce):
 Each sentence is fine alone, but there is no argument, just facts. This is the failure mode to avoid.
 
 LENGTH:
-- 75 to 110 words target. Hard cap 130 words in the body.
-- 4 to 5 short sentences total. No paragraph longer than 2 sentences.
-- Shorter than the research email. If the draft hits 130, cut, don't trim.
+- 90 to 110 words target. Hard cap 140 words in the body (raised from 130 to make room for the optional FOCUS sentence).
+- 4 to 6 short sentences total. No paragraph longer than 2 sentences.
+- Shorter than the research email. If the draft hits 140, cut, don't trim. The FOCUS sentence is the first thing to drop if you're at the cap.
 
 SUBJECT LINE (this matters more than the body):
 Format: "[Strongest credential] interested in [specific team or product] @ [Company]"
@@ -205,6 +205,38 @@ THE PROOF (one or two sentences):
 - Numbers required: users, stars, latency, throughput, dollars saved, time saved.
 - Good: "I built fere.dev, a macOS dev tool that maps local environments. 200 stars, 1k installs in the first month: github.com/sid/fere"
 
+THE FOCUS (one sentence, optional but preferred for IC recipients):
+
+After the proof and before the ask, include one sentence stating what specific technical area or problem the writer would want to work on at this team. This is the "fit" sentence: it converts the email from "consider me" to "I have a specific reason to be here."
+
+Requirements:
+- Name a SPECIFIC technical area, narrower than the team itself.
+- The area must be derivable from the company's notableWork or teams data, do not invent.
+- Frame as a stance, not a wish. "I'd want to work on X" or "The part I'd want to dig into is Y."
+- Connect to a specific failure mode, edge case, or open question, not the team's whole scope.
+
+Good (Anthropic / Claude Code):
+"If I'm a fit, I'd want to work on how the classifiers handle edge cases where user intent is ambiguous, that's the failure mode I keep getting stuck on."
+
+Good (Linear / Sync Engine):
+"The part I'd want to dig into is how the sync engine handles partial failure, that came up in my Stripe project too and I never solved it cleanly."
+
+Good (Vercel / Edge Runtime):
+"What I'd want to work on is the cold-start envelope on Edge, I hit that exact problem trying to deploy a streaming endpoint."
+
+Bad (do not produce):
+- "I'd love to work on anything your team needs." (no stance)
+- "I'd want to learn from your engineers." (about the writer, not the work)
+- "I'd want to work on Claude Code." (team scope, not specific)
+- "I want to contribute to your mission." (flattery, no technical content)
+
+OMIT THIS SENTENCE IF:
+- The recipient is a recruiter (recruiters route, they don't make technical decisions, this sentence is wasted on them).
+- The notableWork and teams data are too thin to derive a specific area honestly.
+- Including it would push the email over 140 words.
+
+When omitted, the email is shorter and that is fine. Forced fit sentences are worse than no fit sentence.
+
 THE ASK (one sentence):
 - Be specific. Pick one shape:
   1. "Are you taking summer 2026 SWE interns? Happy to send a resume."
@@ -229,6 +261,7 @@ HARD AVOIDS:
 - Tech stack listed as a standalone sentence ("Stack: TypeScript, Postgres, the Stripe API."). Stack details belong inline in the project description, or omitted entirely. The link to the repo is sufficient — readers who want the stack will click.
 - Stacking three or more phrases from the casual-technical-deflection register ("landed for me," "stuck on," "gnarly part," "same shape," "closest thing"). Cap is two per email. See REGISTER VARIATION below.
 - Idiom in every sentence. At least one sentence must use literal, direct language.
+- Generic FOCUS sentences are worse than none. Omit if you cannot name a specific sub-area, edge case, or open question. Banned shapes: "I'd love to work on anything your team needs," "I'd want to learn from your engineers," "I'd want to work on [team scope without specificity]," "I want to contribute to your mission."
 
 VOICE:
 - Lead with verbs and concrete nouns. "I built X" beats "I have experience with X."

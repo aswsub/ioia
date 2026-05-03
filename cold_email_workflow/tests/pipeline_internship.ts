@@ -113,8 +113,13 @@ const SCENARIOS: Scenario[] = [
     teamFocus: "Edge Runtime",
   },
   {
-    label: "Anthropic / Marcus Chen (IC, both notableWork have author=null)",
+    label: "Anthropic / Marcus Chen (IC, both notableWork have author=null) — should INCLUDE FOCUS sentence",
     query: "Anthropic Claude Code internship",
+    teamFocus: "Claude Code",
+  },
+  {
+    label: "Anthropic / Elena Park (RECRUITER) — should OMIT FOCUS sentence",
+    query: "Anthropic internship",
     teamFocus: "Claude Code",
   },
 ]

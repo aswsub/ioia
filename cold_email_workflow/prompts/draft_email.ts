@@ -114,11 +114,12 @@ export function buildDraftEmailSystem(input: DraftEmailInput): string {
 }
 
 // Body word cap by opportunity type. Internship is shorter on purpose:
-// recruiters/engineers read these in 10 seconds and the new INTERNSHIP_ETIQUETTE
-// targets 75-110 words with a hard cap of 130. Research stays at 150.
+// recruiters/engineers read these in 10 seconds. INTERNSHIP_ETIQUETTE targets
+// 90-110 words with a hard cap of 140 (cap was raised from 130 to make room
+// for the optional THE FOCUS sentence). Research stays at 150.
 export const BODY_WORD_CAP_BY_OPPORTUNITY = {
   research: 150,
-  internship: 130,
+  internship: 140,
 } as const
 
 // Recommended max_tokens for the email writer call, by opportunity. The total
@@ -186,7 +187,7 @@ function buildInternshipUserMessage(): string {
   // rules from INTERNSHIP_ETIQUETTE.
   return `Draft the cold email now. Body target 75-110 words, hard cap 130. Subject and body must contain no em dash or en dash characters. The body must not read as AI-written. Hard constraints:
 
-- STRUCTURE: 4 to 5 short sentences total. Opening (one or two sentences: name + year + school + strongest credential, then optionally a short clause stating what the writer is trying to learn or build this term, framed to set up the hook). Hook (one sentence citing one specific notableWork). Proof (one to two sentences: one project, numbers, inline link). Ask (one sentence, specific season + year). Closing (Thanks/Best per tone, full name, one link below).
+- STRUCTURE: 4 to 6 short sentences total. Opening (one or two sentences: name + year + school + strongest credential, then optionally a short clause stating what the writer is trying to learn or build this term, framed to set up the hook). Hook (one sentence citing one specific notableWork). Proof (one to two sentences: one project, numbers, inline link). FOCUS (one sentence, optional but preferred for IC recipients: name a SPECIFIC sub-area of the team's work the writer would want to dig into, derived from notableWork or teams data, framed as a stance not a wish; OMIT for recruiters or when no honest specific area can be named). Ask (one sentence, specific season + year). Closing (Thanks/Best per tone, full name, one link below).
 
 - LOGICAL THREAD: the email must make ONE argument, not list facts. Opener declares intent -> Hook proves the company is the right place for that intent -> Proof shows the writer has shipped something on the same shape of problem -> Ask. The PROOF paragraph must end on the SPECIFIC SHARED TECHNICAL CONCEPT that ties it back to the hook (e.g. "same shape of problem," "the state-reconciliation step is what overlaps"), without ANNOUNCING the connection. If no real shared concept exists, end on a concrete detail about what was hard or surprising. No two consecutive sentences should be reorderable without changing the meaning.
 

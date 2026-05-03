@@ -287,20 +287,33 @@ export function renderCompanyBlock(input: CompanyContextInput): string {
   // Four-way branch on the hook strategy. Authorship matching is exact-string
   // (see findAuthoredWork). The IC vs recruiter split lives in the etiquette
   // block; this hint just picks the right shape for the writer to land on.
+  // FOCUS-sentence guidance per recipient type. Spelled out in
+  // INTERNSHIP_ETIQUETTE's THE FOCUS section; this is the per-recipient nudge.
+  const focusHintForIC =
+    " If you can derive a SPECIFIC technical sub-area from notableWork or teams that the writer's experience naturally maps to, include a one-sentence FOCUS statement before the ask (per the THE FOCUS rule in ETIQUETTE). If you can't derive it honestly, omit the FOCUS sentence — a forced fit reads worse than no fit."
+  const focusHintForRecruiter =
+    " OMIT the FOCUS sentence — recruiters route, they don't make technical decisions, and a sub-area pitch is wasted on them."
+
   let recipientHint: string
   if (recipientKind === "recruiter") {
     recipientHint =
-      "- This person is a RECRUITER. Reference the company, product, or mission in the hook, NOT a specific engineering artifact. Recruiters do not own technical decisions and referencing internal technical work reads as misdirected. Lead with credential signals and a clear ask."
+      "- This person is a RECRUITER. Reference the company, product, or mission in the hook, NOT a specific engineering artifact. Recruiters do not own technical decisions and referencing internal technical work reads as misdirected. Lead with credential signals and a clear ask." +
+      focusHintForRecruiter
   } else if (recipientAuthored) {
-    recipientHint = `- This person is an ENGINEER and authored the notableWork "${ut(recipientAuthored.title)}". Reference it as THEIRS ("Your post on...", "Your talk on..."). This is the strongest available hook, use it.`
+    recipientHint =
+      `- This person is an ENGINEER and authored the notableWork "${ut(recipientAuthored.title)}". Reference it as THEIRS ("Your post on...", "Your talk on..."). This is the strongest available hook, use it.` +
+      focusHintForIC
   } else if (namedAuthorWorks.length > 0) {
     const examples = namedAuthorWorks
       .map(w => `"${w.title}" by ${w.author}`)
       .join("; ")
-    recipientHint = `- This person is an ENGINEER but did NOT author any of the listed notableWork. DEFAULT: reference artifacts as "your team's [post/talk] on [topic]" — the recipient knows their coworkers, so naming a peer reads as awkward. ONLY name the author if they are clearly senior leadership (cofounder, CTO, founding engineer, head of a major area). Named-author works here: ${examples}. DO NOT imply this person wrote work they did not author. Authorship match is exact-string, not fuzzy: a similar first name does not mean the same person.`
+    recipientHint =
+      `- This person is an ENGINEER but did NOT author any of the listed notableWork. DEFAULT: reference artifacts as "your team's [post/talk] on [topic]" — the recipient knows their coworkers, so naming a peer reads as awkward. ONLY name the author if they are clearly senior leadership (cofounder, CTO, founding engineer, head of a major area). Named-author works here: ${examples}. DO NOT imply this person wrote work they did not author. Authorship match is exact-string, not fuzzy: a similar first name does not mean the same person.` +
+      focusHintForIC
   } else {
     recipientHint =
-      "- This person is an ENGINEER. None of the listed notableWork has a named individual author (all are company-level artifacts). Reference an artifact neutrally as the company's work (e.g. \"Linear's API design...\"); do NOT use \"your post\" or \"your talk\" since you cannot attribute it to anyone specific."
+      "- This person is an ENGINEER. None of the listed notableWork has a named individual author (all are company-level artifacts). Reference an artifact neutrally as the company's work (e.g. \"Linear's API design...\"); do NOT use \"your post\" or \"your talk\" since you cannot attribute it to anyone specific." +
+      focusHintForIC
   }
 
   const sections: string[] = [
