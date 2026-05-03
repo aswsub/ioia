@@ -118,4 +118,3 @@ export async function fetchDirectoryHits(
 
   return uniqBy(hits, (h) => `${h.institution}::${h.name.toLowerCase()}`).slice(0, limit);
 }
-

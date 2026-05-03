@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Send, Check, Trash2, ArrowUpRight,
-  FileText, User, Building2, BookOpen, Mail,
+  User, Building2, BookOpen, Mail, Loader2,
 } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
 import { findAuthorIdByNameAndInstitution, getRecentWorksByAuthor } from "../../lib/openalex";
@@ -11,6 +11,7 @@ import fileLogo from "../../assets/file.png";
 import linkedinLogo from "../../assets/linkedin.png";
 import googleLogo from "../../assets/google.png";
 import openalexLogo from "../../assets/openalex.svg.png";
+import { GMAIL_TEST_RECIPIENT, sendDraftEmail } from "../../lib/gmail-client";
 
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
@@ -57,9 +58,10 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
   const [body, setBody] = useState(draft.body);
   const [subject, setSubject] = useState(draft.subject);
   const [editing, setEditing] = useState(false);
-  const [justSent, setJustSent] = useState(false);
   const [papers, setPapers] = useState(draft.professor.recentPapers ?? []);
   const [resolvedOpenAlexId, setResolvedOpenAlexId] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const isSent = draft.status === "sent";
   const citations = CITATIONS[draft.id] ?? [];
   const bodyWordCount = useMemo(() => body.trim().split(/\s+/).filter(Boolean).length, [body]);
@@ -102,12 +104,33 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
     run().catch(() => {});
   }, [draft.id]);
 
-  const handleSend = () => {
-    setJustSent(true);
-    setTimeout(() => {
+  const handleSend = async () => {
+    if (sending) return;
+    setSendError(null);
+
+    if (!subject) {
+      setSendError("Add a subject before sending.");
+      return;
+    }
+
+    if (!body) {
+      setSendError("Add an email body before sending.");
+      return;
+    }
+
+    setSending(true);
+    try {
+      await sendDraftEmail({
+        draftId: draft.id,
+        subject,
+        body,
+      });
       onSend(draft.id);
-      setJustSent(false);
-    }, 600);
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : "Unable to send email through Gmail.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleDiscard = () => {
@@ -170,18 +193,19 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
             </button>
             <button
               onClick={handleSend}
-              disabled={justSent}
+              disabled={sending}
               className="flex items-center gap-1.5 rounded-lg px-4 py-1.5"
               style={{
                 fontSize: 12,
                 fontWeight: 400,
                 color: "#fff",
-                background: justSent ? "#16a34a" : "#0a0a0a",
+                background: sending ? "#525252" : "#0a0a0a",
                 transition: "background 0.3s",
+                opacity: sending ? 0.82 : 1,
               }}
             >
-              {justSent ? <Check size={11} /> : <Send size={11} />}
-              {justSent ? "Sending…" : "Send email"}
+              {sending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+              {sending ? "Sending..." : "Send email"}
             </button>
           </div>
         )}
@@ -189,7 +213,20 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
         {isSent && (
           <div className="flex items-center gap-1.5">
             <Check size={12} style={{ color: "#16a34a" }} />
-            <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 300 }}>Sent to {draft.professor.email}</span>
+            <span
+              title={GMAIL_TEST_RECIPIENT}
+              style={{
+                fontSize: 12,
+                color: "#16a34a",
+                fontWeight: 300,
+                maxWidth: 420,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Sent to test inbox: {GMAIL_TEST_RECIPIENT}
+            </span>
           </div>
         )}
       </div>
@@ -200,6 +237,14 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
 
           {/* ── Left column: email ── */}
           <div className="flex flex-col gap-5">
+            {sendError && (
+              <div
+                className="rounded-lg border px-4 py-3"
+                style={{ borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c", fontSize: 12.5, fontWeight: 300 }}
+              >
+                {sendError}
+              </div>
+            )}
 
             {/* Email card */}
             <div

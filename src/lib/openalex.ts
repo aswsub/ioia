@@ -424,7 +424,7 @@ export async function searchProfessors(
   // pull additional authors from related concepts (not just institution-only)
   if (instId && authorIds.length < limit && conceptIds.length > 0) {
     // Try searching for related concepts at the same institution
-    const relatedFilter = conceptIds.length > 4 
+    const relatedFilter = conceptIds.length > 4
       ? conceptIds.slice(4, 8).join("|")
       : conceptIds.slice(0, 2).join("|");
     if (relatedFilter) {
@@ -496,7 +496,7 @@ export async function searchProfessors(
   // Filter out low-confidence matches (< 0.35 match score) to avoid returning irrelevant professors
   // This prevents returning psychology professors when searching for reinforcement learning
   const strongMatches = ranked.filter((p) => p.matchScore >= 0.35);
-  
+
   // If we have strong matches, use only those. Otherwise, keep all matches but mark them as weak.
   if (strongMatches.length > 0) {
     ranked = strongMatches;
@@ -717,12 +717,12 @@ function computeMatchScore(concepts: { name: string; score: number }[], keywords
     if (kw.some((k) => {
       const kwLower = k.toLowerCase();
       // Exact match or significant substring (at least 4 chars)
-      return name === kwLower || 
+      return name === kwLower ||
              (name.includes(kwLower) && kwLower.length >= 4) ||
              (kwLower.includes(name) && name.length >= 4);
-    })) { 
-      total += c.score; 
-      hits++; 
+    })) {
+      total += c.score;
+      hits++;
     }
   }
   return hits > 0 ? Math.min(total / hits, 1) : 0.2;
