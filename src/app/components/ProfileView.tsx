@@ -197,7 +197,7 @@ export function ProfileView({ onBack }: ProfileViewProps) {
     confidence: "low",
   });
 
-  // Load saved profile on mount
+  // Load saved profile on mount (and reload when activeTab changes back to profile)
   useEffect(() => {
     if (!user) return;
     loadUserProfile(user.id).then((p) => {
@@ -211,14 +211,22 @@ export function ProfileView({ onBack }: ProfileViewProps) {
         researchInterests: p.research_interests.join(", "),
         bio: p.short_bio,
       });
+
+      // Try to load from localStorage first (most recent), fall back to database
+      let styleData = null;
+      try {
+        const cached = localStorage.getItem(`profile_style_${user.id}`);
+        if (cached) styleData = JSON.parse(cached);
+      } catch (e) { /* ignore */ }
+
       setStyle((s) => ({
         ...s,
-        tone: p.tone_voice || s.tone,
-        length: p.tone_length || s.length,
-        traits: p.tone_traits.length ? p.tone_traits : s.traits,
-        signaturePhrases: p.tone_signature_phrases,
-        avoidPhrases: p.tone_avoid_phrases,
-        confidence: p.tone_confidence,
+        tone: styleData?.tone || p.tone_voice || s.tone,
+        length: styleData?.length || p.tone_length || s.length,
+        traits: styleData?.traits?.length ? styleData.traits : (p.tone_traits.length ? p.tone_traits : s.traits),
+        signaturePhrases: styleData?.signaturePhrases || p.tone_signature_phrases,
+        avoidPhrases: styleData?.avoidPhrases || p.tone_avoid_phrases,
+        confidence: styleData?.confidence || p.tone_confidence,
       }));
       // Restore file placeholders so the user sees what was previously saved
       if (p.resume_text) {
@@ -237,7 +245,7 @@ export function ProfileView({ onBack }: ProfileViewProps) {
         }
       }
     });
-  }, [user]);
+  }, [user, activeTab]);
 
   // Helper: persist current state to Supabase immediately
   const autosave = async (overrides: {
@@ -355,7 +363,11 @@ export function ProfileView({ onBack }: ProfileViewProps) {
     if (!user) return;
     const timer = setTimeout(() => {
       autosave({ style: styleRef.current });
-    }, 800);
+    }, 300); // Faster autosave (300ms instead of 800ms)
+    // Also save to localStorage as backup
+    try {
+      localStorage.setItem(`profile_style_${user.id}`, JSON.stringify(styleRef.current));
+    } catch (e) { /* ignore */ }
     return () => clearTimeout(timer);
   }, [style.tone, style.length, style.traits.join(","), user]);
 
