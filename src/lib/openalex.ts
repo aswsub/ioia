@@ -417,6 +417,30 @@ export async function getRecentWorksByAuthor(
   }
 }
 
+export async function findAuthorIdByNameAndInstitution(
+  name: string,
+  institutionName: string
+): Promise<string | null> {
+  const qName = name.trim();
+  const qInst = institutionName.trim();
+  if (!qName || !qInst) return null;
+
+  const instId = await resolveInstitution(qInst);
+  if (!instId) return null;
+
+  try {
+    const data = await get<OAList<OAAuthor>>("/authors", {
+      filter: `display_name.search:${qName},last_known_institutions.id:${instId}`,
+      per_page: "5",
+      select: "id,display_name,last_known_institutions,works_count",
+    });
+    const best = (data.results ?? [])[0];
+    return best?.id ? fullId(best.id) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function enrichAuthor(author: OAAuthor, keywords: string[]): Promise<Professor> {
   const authorId = shortId(author.id);
   const institution = author.last_known_institutions?.[0]?.display_name ?? "Unknown";
