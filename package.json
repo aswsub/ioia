@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "dev:api": "tsx server/api-dev.ts",
     "smoke:tone": "tsx --env-file=.env cold_email_workflow/tests/smoke.ts",
     "extract:tone": "tsx --env-file=.env cold_email_workflow/extract_tone_runner.ts",
     "test:e2e": "tsx --env-file=.env cold_email_workflow/tests/end_to_end.ts",
