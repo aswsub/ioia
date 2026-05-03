@@ -1,67 +1,57 @@
-# Requirements: Make Dashboard Functional Locally
+# Requirements: Make ioia Dashboard Functional Locally
 
 ## Overview
 
-The "Create minimalist dashboard" project was exported from Figma Make as a Vite + React + TypeScript app. The goal is to make it run correctly in a local development environment without changing any existing UI or logic — only fixing structural issues that prevent it from running.
+ioia is a Vite + React + TypeScript research outreach dashboard. The local development goal is to make the app run as a polished demo with the sidebar, agent workflow, professor search, outreach drafts, profile state, Supabase-backed persistence, and optional Gmail OAuth backend all working from the repository root.
 
 ## Requirements
 
-### 1. Asset resolution
+### 1. App boots from the repository root
 
-**User story:** As a developer, I want the `figma:asset/` import scheme to resolve correctly so the ioia logo renders in the sidebar.
-
-**Acceptance criteria:**
-- `import ioiaLogo from "figma:asset/ioia.png"` in `Sidebar.tsx` resolves without a build error.
-- The logo file `ioia.png` exists at `src/assets/ioia.png` (the path the custom Vite plugin resolves to).
-- The app renders the logo in the sidebar header without a broken image.
-
-### 2. Dependencies installed
-
-**User story:** As a developer, I want all npm dependencies installed so the dev server starts without module-not-found errors.
+**User story:** As a developer, I want to start the frontend with one command so I can quickly verify UI changes.
 
 **Acceptance criteria:**
-- Running `npm install` inside `Create minimalist dashboard/` completes without errors.
-- `react` and `react-dom` at version `18.3.1` are installed (they are listed as optional peerDependencies and may need explicit installation).
-- Running `npm run dev` starts the Vite dev server at `http://localhost:5173`.
+- `npm install` completes without module resolution errors.
+- `npm run dev` starts Vite and serves the app on the configured dev port.
+- `src/main.tsx` mounts `src/app/App.tsx` without runtime crashes.
+- The `figma:asset/ioia.png` import resolves to `src/assets/ioia.png` and the logo renders in the sidebar and agent avatar.
 
-### 3. App renders without runtime errors
+### 2. Environment-dependent features fail gracefully
 
-**User story:** As a developer, I want the app to load in the browser without console errors so I can verify the UI matches the Figma design.
-
-**Acceptance criteria:**
-- The root `App.tsx` renders the `Sidebar` and the default `AgentView` without crashing.
-- No "Cannot find module" or "Failed to resolve import" errors appear in the Vite terminal output.
-- No uncaught React errors appear in the browser console on initial load.
-
-### 4. All views are navigable
-
-**User story:** As a developer, I want to click through every sidebar nav item and have each view render correctly.
+**User story:** As a developer, I want missing local credentials to produce understandable messages instead of a blank screen.
 
 **Acceptance criteria:**
-- Clicking "Overview" renders `AgentView` (the chat/agent interface).
-- Clicking "Outreach" renders `OutreachView` (empty state with "No drafts yet" message).
-- Clicking "Professors" renders `ProfessorsView` (table of 6 professors).
-- Clicking "Compose" renders `ComposeView` (email compose card with Dr. Robert Kim draft).
-- Clicking the user row at the bottom of the sidebar renders `ProfileView`.
-- The "Back" button in `ProfileView` returns to `AgentView`.
+- Supabase auth checks use `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` only in browser code.
+- Claude-backed draft generation reports a useful error if `ANTHROPIC_API_KEY` is missing from the runtime used by the workflow.
+- Gmail OAuth API routes use server-only variables documented in `docs/google-oauth.md` and never expose secret values to the browser.
+- Kiro's environment hook can guide the developer without printing secrets.
 
-### 5. Agent interaction works
+### 3. Core navigation works
 
-**User story:** As a developer, I want the mock agent flow to work end-to-end so I can demo the core feature.
+**User story:** As a demo presenter, I want every sidebar destination to render correctly.
 
 **Acceptance criteria:**
-- Typing a message and pressing Enter (or clicking the send button) in `AgentView` adds a user message bubble.
-- The agent shows a thinking state (spinner + tool steps) before responding.
-- After the mock delay, the agent response appears with the "Review drafts in Outreach" button.
-- Clicking that button navigates to `OutreachView` and shows the 5 mock draft cards.
-- Each draft card can be edited (click body to edit) and sent (click Send button).
+- Overview renders `AgentView` with prompt suggestions and conversation history.
+- Outreach renders saved draft cards and can open `OutreachDetailView`.
+- Professors renders the searchable professor directory.
+- Profile renders user profile controls and can return to Overview.
+- Active view state remains legible when navigating from generated drafts to Outreach.
 
-### 6. No regressions to existing code
+### 4. Agent workflow creates drafts
 
-**User story:** As a developer, I want the existing Figma-exported code to remain unchanged so the UI stays pixel-perfect.
+**User story:** As a student, I want to ask for professors and receive usable personalized draft emails.
 
 **Acceptance criteria:**
-- No component files in `src/app/components/` are modified.
-- No style files in `src/styles/` are modified.
-- `App.tsx`, `main.tsx`, `vite.config.ts`, and `package.json` are only modified if strictly required to fix a blocking issue (e.g., adding `react`/`react-dom` as direct dependencies).
-- The visual output matches the original Figma design.
+- The agent accepts natural language plus optional `@school`, `@topic`, and `@n` tags.
+- The workflow parses the request, searches OpenAlex or local data, drafts emails through the Claude wrapper, and returns draft cards.
+- Drafts include professor/contact identity, subject, body, match score, and source context when available.
+- Generated drafts are persisted through `src/lib/db.ts` and appear in Outreach.
+
+### 5. Local verification is lightweight
+
+**User story:** As a hackathon team member, I want confidence checks that are quick enough to run before a recording.
+
+**Acceptance criteria:**
+- `npm run build` passes before declaring the demo ready.
+- Focused tests such as `npm test`, `npm run smoke:tone`, or `npm run test:pipeline` can be run through Kiro hooks when relevant.
+- No database migrations, new auth provider, or production deployment work is required to satisfy this spec.

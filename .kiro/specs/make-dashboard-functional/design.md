@@ -1,57 +1,56 @@
-# Design: Make Dashboard Functional Locally
+# Design: Make ioia Dashboard Functional Locally
 
-## Problem
+## Runtime shape
 
-The project was exported from Figma Make. It has all the UI code in place but two structural issues prevent it from running locally:
+The current app is a Vite React SPA rooted at `src/main.tsx` and `src/app/App.tsx`. `App.tsx` owns high-level view state and passes callbacks into sidebar and feature views. Persistence helpers live in `src/lib/db.ts`; auth helpers live in `src/lib/auth.tsx`; generation and discovery code live in `src/lib/claude.ts`, `src/lib/openalex.ts`, and `cold_email_workflow/`.
 
-1. **Missing asset file** — `Sidebar.tsx` imports `figma:asset/ioia.png`. The custom Vite plugin in `vite.config.ts` resolves this to `src/assets/ioia.png`, but that file doesn't exist yet (the source image is at `src/imports/ioia.png`).
+Local development has two processes when API-backed Google routes are needed:
 
-2. **React not installed as a direct dependency** — `react` and `react-dom` are listed as `peerDependencies` with `optional: true`, which is a Figma Make convention. When running `npm install` in a standalone project (not inside a host app), these won't be installed automatically. The app will fail to start with a "Cannot find module 'react'" error.
-
-## Solution
-
-Both fixes are minimal and non-destructive:
-
-### Fix 1 — Copy the logo to the assets directory
-
-The Vite plugin resolves `figma:asset/<filename>` to `src/assets/<filename>`. The logo already exists at `src/imports/ioia.png`. We just need to copy it (or create a symlink) to `src/assets/ioia.png`.
-
-```
-src/
-  assets/
-    ioia.png   ← copy from src/imports/ioia.png
-  imports/
-    ioia.png   ← original, leave untouched
+```bash
+npm run dev      # frontend
+npm run dev:api  # local API backend for /api/google/*
 ```
 
-No code changes needed — the existing import in `Sidebar.tsx` will resolve correctly once the file is in place.
+For UI-only work, the frontend process is enough.
 
-### Fix 2 — Install React as a direct dependency
+## Asset resolution
 
-Add `react` and `react-dom` as direct `dependencies` in `package.json` so they are installed when running `npm install` standalone:
+The Figma asset import scheme is still used in exported components:
 
-```json
-"dependencies": {
-  "react": "18.3.1",
-  "react-dom": "18.3.1",
-  ...
-}
+```ts
+import ioiaLogo from "figma:asset/ioia.png";
 ```
 
-They can remain in `peerDependencies` as well — that's fine and won't cause conflicts.
+`vite.config.ts` resolves this to `src/assets/ioia.png`. The asset already exists and should remain there. Avoid replacing the import in component code unless the Vite plugin is removed intentionally.
 
-## What we are NOT changing
+## State and data flow
 
-- No component files
-- No style files  
-- No Vite config (the figma asset resolver plugin is already correct)
-- No Tailwind config
-- No routing or state logic
+- `App.tsx` owns `activeView`, generated outreach drafts, draft status, selected draft, and conversation list.
+- `AgentView` owns message composition and the tool-step animation for the generated outreach workflow.
+- Drafts are normalized to `OutreachDraft` so professor and company outreach can share the same dashboard cards.
+- `saveDraft`, `loadOutreachDrafts`, `updateDraftStatus`, and conversation helpers persist local state.
 
-## Verification steps
+## Kiro usage
 
-1. `npm install` completes with exit code 0
-2. `npm run dev` starts without errors
-3. Browser opens `http://localhost:5173` — sidebar renders with ioia logo
-4. All 5 nav items render their respective views
-5. Agent chat flow works: type → thinking → response → navigate to Outreach → 5 draft cards visible
+Kiro is not part of the shipped browser bundle. It supports development through:
+
+1. Specs that describe expected demo behavior and acceptance criteria.
+2. Hooks that run local commands after edits or on manual trigger.
+3. Steering documents that keep future agent sessions aligned with the app's visual and code conventions.
+
+## Error strategy
+
+Keep errors demo-legible:
+
+- Show clear UI copy for missing credentials or failed network calls.
+- Avoid logging secrets or full OAuth tokens.
+- Let generated draft failures degrade to an actionable message in the agent conversation.
+- Prefer local mock or cached data if live OpenAlex or company discovery is slow during recording.
+
+## Verification
+
+1. `npm install`
+2. `npm run build`
+3. `npm run dev`
+4. Optional API path: `npm run dev:api`
+5. Browser smoke test: Overview → send prompt → Outreach draft → open detail → mark sent → Profile → back

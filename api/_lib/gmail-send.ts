@@ -1,6 +1,6 @@
 import { requiredEnv } from "./env";
 
-export const GMAIL_TEST_RECIPIENT = "Z1npsI6zOgqvhrHXNLRnwG9r@gmail.com";
+export const GMAIL_FALLBACK_RECIPIENT = "Z1npsI6zOgqvhrHXNLRnwG9r@gmail.com";
 
 export type SendDraftEmailPayload = {
   draftId: string;

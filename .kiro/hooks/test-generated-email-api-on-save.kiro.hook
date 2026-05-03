@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Test Generated Email API Client",
+  "description": "Runs focused Vitest coverage when the sidecar generated-email client or its config changes.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/lib/generatedEmailApi.ts",
+      "src/lib/generated-email-api.sidecar.json",
+      "src/lib/generatedEmailApi.test.ts"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx vitest run src/lib/generatedEmailApi.test.ts",
+    "timeout": 60
+  }
+}

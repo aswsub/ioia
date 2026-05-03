@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Run Email Pipeline Smoke Test",
+  "description": "Manually exercises the cold email pipeline against local schemas and prompt code. Use before recording the outreach generation demo.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm run smoke:tone && npm run test:pipeline",
+    "timeout": 180
+  }
+}

@@ -1,29 +1,37 @@
-# Tasks: Make Dashboard Functional Locally
+# Tasks: Make ioia Dashboard Functional Locally
 
-## Task 1 — Create the assets directory and copy the logo
+## Task 1 — Verify install and asset resolution
 
-- [ ] Create `Create minimalist dashboard/src/assets/` directory
-- [ ] Copy `src/imports/ioia.png` to `src/assets/ioia.png`
-- [ ] Verify the Vite plugin in `vite.config.ts` resolves `figma:asset/ioia.png` → `src/assets/ioia.png` ✓ (already correct, no change needed)
+- [x] Keep `src/assets/ioia.png` present for the `figma:asset/ioia.png` resolver.
+- [ ] Run `npm install` from the repository root.
+- [ ] Confirm `react` and `react-dom` resolve for the Vite app.
+- [ ] Run `npm run build` and confirm there are no unresolved imports.
 
-## Task 2 — Fix React dependency
+## Task 2 — Verify frontend boot
 
-- [ ] Open `Create minimalist dashboard/package.json`
-- [ ] Add `"react": "18.3.1"` and `"react-dom": "18.3.1"` to the `dependencies` object (not peerDependencies — those can stay as-is)
-- [ ] Run `npm install` inside `Create minimalist dashboard/` to install all dependencies
+- [ ] Run `npm run dev`.
+- [ ] Open the local Vite URL.
+- [ ] Confirm the sidebar logo and Overview/Agent view render without console errors.
+- [ ] Confirm Supabase auth state does not blank the screen when env values are present.
 
-## Task 3 — Verify the dev server starts
+## Task 3 — Smoke-test navigation
 
-- [ ] Run `npm run dev` inside `Create minimalist dashboard/`
-- [ ] Confirm Vite starts at `http://localhost:5173` with no errors in terminal
-- [ ] Open the browser and confirm the sidebar renders with the ioia logo
+- [ ] Overview renders prompt suggestions and chat input.
+- [ ] Outreach renders generated or persisted drafts.
+- [ ] Opening a draft renders `OutreachDetailView`.
+- [ ] Professors renders the professor directory.
+- [ ] Profile renders and returns to Overview.
 
-## Task 4 — Smoke-test all views
+## Task 4 — Smoke-test generation
 
-- [ ] Overview (AgentView) — hero state with suggestions renders
-- [ ] Send a message — agent thinking state and response appear
-- [ ] "Review drafts in Outreach" button navigates to OutreachView with 5 draft cards
-- [ ] Outreach — draft cards render, edit and send work
-- [ ] Professors — table of 6 professors renders
-- [ ] Compose — email compose card renders with Dr. Robert Kim draft
-- [ ] Profile — clicking user row opens ProfileView; Back button returns to Overview
+- [ ] Send a prompt such as `Find ML professors at MIT @topic:LLMs @n:3`.
+- [ ] Confirm tag highlighting works in the user bubble.
+- [ ] Confirm tool steps appear: parsing, searching, drafting, done.
+- [ ] Confirm generated drafts persist and appear in Outreach.
+- [ ] Confirm failures produce a readable agent message.
+
+## Task 5 — Optional backend checks
+
+- [ ] Run `npm run dev:api` when testing `/api/google/*` routes.
+- [ ] Verify Google OAuth environment values listed in `docs/google-oauth.md` are present locally.
+- [ ] Run focused tests for touched code: `npm test`, `npm run smoke:tone`, or `npm run test:pipeline`.

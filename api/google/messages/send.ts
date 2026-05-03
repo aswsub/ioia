@@ -1,11 +1,15 @@
 import {
   buildGmailRawMessage,
   GmailSendError,
-  GMAIL_TEST_RECIPIENT,
+  GMAIL_FALLBACK_RECIPIENT,
   parseSendDraftEmailPayload,
   refreshGoogleAccessToken,
   sendGmailRawMessage,
 } from "../../_lib/gmail-send";
+import {
+  bearerTokenFromAuthorizationHeader,
+  resolveDraftRecipientEmail,
+} from "../../_lib/supabase-drafts";
 import { getStoredGoogleTokens } from "../../_lib/token-store";
 
 export default async function handler(req: any, res: any) {
@@ -27,9 +31,21 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    const supabaseAccessToken = bearerTokenFromAuthorizationHeader(req.headers?.authorization);
+    const recipientLookup = await resolveDraftRecipientEmail(
+      parsed.payload.draftId,
+      supabaseAccessToken,
+    );
+    if (!recipientLookup.ok) {
+      res.status(recipientLookup.statusCode).json({ error: recipientLookup.error });
+      return;
+    }
+
+    const recipient = recipientLookup.email ?? GMAIL_FALLBACK_RECIPIENT;
+    const fallbackRecipient = recipientLookup.email === null;
     const accessToken = await refreshGoogleAccessToken(tokens.refreshToken);
     const rawMessage = buildGmailRawMessage({
-      to: GMAIL_TEST_RECIPIENT,
+      to: recipient,
       from: tokens.googleEmail,
       subject: parsed.payload.subject,
       body: parsed.payload.body,
@@ -40,8 +56,8 @@ export default async function handler(req: any, res: any) {
       id: message.id ?? null,
       threadId: message.threadId ?? null,
       labelIds: message.labelIds ?? [],
-      to: GMAIL_TEST_RECIPIENT,
-      testRecipient: true,
+      to: recipient,
+      fallbackRecipient,
     });
   } catch (error) {
     if (error instanceof GmailSendError) {

@@ -1,3 +1,5 @@
+import { supabase } from "./supabase";
+
 export type GmailConnectionStatus = {
   configured: boolean;
   connected: boolean;
@@ -6,7 +8,7 @@ export type GmailConnectionStatus = {
   connectedAt: string | null;
 };
 
-export const GMAIL_TEST_RECIPIENT = "Z1npsI6zOgqvhrHXNLRnwG9r@gmail.com";
+export const GMAIL_FALLBACK_RECIPIENT = "Z1npsI6zOgqvhrHXNLRnwG9r@gmail.com";
 
 export type SendDraftEmailInput = {
   draftId: string;
@@ -19,7 +21,7 @@ export type SendDraftEmailResult = {
   threadId: string | null;
   labelIds: string[];
   to: string;
-  testRecipient: boolean;
+  fallbackRecipient: boolean;
 };
 
 export async function getGmailConnectionStatus(): Promise<GmailConnectionStatus> {
@@ -46,10 +48,17 @@ export async function disconnectGoogleOAuth() {
 export async function sendDraftEmail(
   input: SendDraftEmailInput,
 ): Promise<SendDraftEmailResult> {
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) {
+    throw new Error("Supabase session is required to resolve the draft recipient.");
+  }
+
   const response = await fetch("/api/google/messages/send", {
     method: "POST",
     credentials: "include",
     headers: {
+      Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(input),

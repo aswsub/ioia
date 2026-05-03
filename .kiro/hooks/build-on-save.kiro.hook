@@ -1,18 +1,22 @@
 {
   "enabled": true,
   "name": "Build on Save",
-  "description": "Runs a Vite production build of the dashboard after any source file is saved, so build errors are caught immediately during development.",
+  "description": "Runs a fast Vite production build whenever core TypeScript or React source files change, catching broken imports and type-level regressions before the demo path is exercised.",
   "version": "1",
   "when": {
     "type": "fileEdited",
     "patterns": [
       "src/**/*.tsx",
-      "src/**/*.ts"
+      "src/**/*.ts",
+      "api/**/*.ts",
+      "server/**/*.ts",
+      "cold_email_workflow/**/*.ts",
+      "vite.config.ts"
     ]
   },
   "then": {
     "type": "runCommand",
-    "command": "npm run build 2>&1 | tail -20",
-    "timeout": 60
+    "command": "npm run build 2>&1 | tail -40",
+    "timeout": 90
   }
 }

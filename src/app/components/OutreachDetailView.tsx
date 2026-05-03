@@ -11,7 +11,7 @@ import fileLogo from "../../assets/file.png";
 import linkedinLogo from "../../assets/linkedin.png";
 import googleLogo from "../../assets/google.png";
 import openalexLogo from "../../assets/openalex.svg.png";
-import { GMAIL_TEST_RECIPIENT, sendDraftEmail } from "../../lib/gmail-client";
+import { GMAIL_FALLBACK_RECIPIENT, sendDraftEmail } from "../../lib/gmail-client";
 
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
@@ -62,8 +62,12 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
   const [resolvedOpenAlexId, setResolvedOpenAlexId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [sentRecipient, setSentRecipient] = useState<string | null>(null);
   const isSent = draft.status === "sent";
   const citations = CITATIONS[draft.id] ?? [];
+  const draftRecipientEmail = draft.professor.email.trim();
+  const displayedSentRecipient =
+    sentRecipient ?? (draftRecipientEmail || GMAIL_FALLBACK_RECIPIENT);
   const bodyWordCount = useMemo(() => body.trim().split(/\s+/).filter(Boolean).length, [body]);
   const openAlexProfileUrl = useMemo(() => {
     const id = (resolvedOpenAlexId ?? draft.professor.openAlexId)?.trim();
@@ -88,6 +92,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
   useEffect(() => {
     setPapers(draft.professor.recentPapers ?? []);
     setResolvedOpenAlexId(null);
+    setSentRecipient(null);
     if ((draft.professor.recentPapers?.length ?? 0) > 0) return;
     const run = async () => {
       const directId = draft.professor.openAlexId?.trim();
@@ -120,11 +125,12 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
 
     setSending(true);
     try {
-      await sendDraftEmail({
+      const result = await sendDraftEmail({
         draftId: draft.id,
         subject,
         body,
       });
+      setSentRecipient(result.to);
       onSend(draft.id);
     } catch (error) {
       setSendError(error instanceof Error ? error.message : "Unable to send email through Gmail.");
@@ -214,7 +220,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
           <div className="flex items-center gap-1.5">
             <Check size={12} style={{ color: "#16a34a" }} />
             <span
-              title={GMAIL_TEST_RECIPIENT}
+              title={displayedSentRecipient}
               style={{
                 fontSize: 12,
                 color: "#16a34a",
@@ -225,7 +231,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 whiteSpace: "nowrap",
               }}
             >
-              Sent to test inbox: {GMAIL_TEST_RECIPIENT}
+              Sent to: {displayedSentRecipient}
             </span>
           </div>
         )}

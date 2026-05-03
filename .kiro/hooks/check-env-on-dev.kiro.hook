@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "name": "Check Environment on Dev Start",
-  "description": "Automatically checks if required environment variables are set when the dev server starts, and provides guidance if they're missing",
+  "name": "Check Demo Environment",
+  "description": "When a developer asks about running the app locally, Kiro checks for the environment variables that commonly cause blank auth screens, failed Claude calls, or broken Gmail OAuth redirects.",
   "version": "1",
   "when": {
     "type": "promptSubmit"
   },
   "then": {
     "type": "askAgent",
-    "prompt": "The user reported a blank screen when running npm run dev. This is likely due to missing Supabase environment variables. Please check if VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are configured in the .env file. If they're missing, guide the user on how to set them up. The app needs these credentials to initialize authentication properly."
+    "prompt": "If the user is trying to run ioia locally or reports a blank screen, failed draft generation, failed login, or Gmail OAuth errors, inspect .env without printing secrets. Verify the presence of VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, ANTHROPIC_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, GOOGLE_TOKEN_ENCRYPTION_KEY, and APP_BASE_URL as relevant. Explain which values are browser-exposed VITE values and which must remain server-only. For local development, remind the user to run npm run dev for Vite and npm run dev:api for the API backend when testing /api/google routes. Never echo secret values."
   }
 }

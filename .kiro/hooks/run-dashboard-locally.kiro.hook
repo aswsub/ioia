@@ -1,14 +1,14 @@
 {
   "enabled": true,
-  "name": "Run Dashboard Locally",
-  "description": "When triggered, installs npm dependencies for the \"Create minimalist dashboard\" project and starts the Vite dev server so the app runs locally.",
+  "name": "Run ioia Locally",
+  "description": "Installs dependencies and starts the Vite dashboard for local demo testing. API-backed Gmail routes require a second terminal running npm run dev:api.",
   "version": "1",
   "when": {
     "type": "userTriggered"
   },
   "then": {
     "type": "runCommand",
-    "command": "npm install && npm run dev",
+    "command": "npm install && npm run dev -- --host 0.0.0.0",
     "timeout": 0
   }
 }
