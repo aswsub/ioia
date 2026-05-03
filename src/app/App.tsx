@@ -16,8 +16,14 @@ import {
 type View = "Overview" | "Outreach" | "Professors" | "Profile";
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
+function initialView(): View {
+  if (typeof window === "undefined") return "Overview";
+  const view = new URLSearchParams(window.location.search).get("view");
+  return view === "Outreach" || view === "Professors" || view === "Profile" ? view : "Overview";
+}
+
 export default function App() {
-  const [activeView, setActiveView] = useState<View>("Overview");
+  const [activeView, setActiveView] = useState<View>(initialView);
   const [outreachDrafts, setOutreachDrafts] = useState<OutreachDraft[]>([]);
   const [draftStatuses, setDraftStatuses] = useState<Record<string, "draft" | "sent">>({});
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);

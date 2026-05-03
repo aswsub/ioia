@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Send, Check, Trash2, LayoutGrid,
-  ChevronUp, ChevronDown, ArrowUpDown, ArrowRight,
+  ChevronUp, ChevronDown, ArrowUpDown, ArrowRight, Mail, Loader2,
 } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
+import {
+  disconnectGoogleOAuth,
+  getGmailConnectionStatus,
+  startGoogleOAuth,
+  type GmailConnectionStatus,
+} from "../../lib/gmail-client";
 
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
@@ -59,6 +65,38 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
   const [sortKey, setSortKey] = useState<SortKey>("matchScore");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "sent">("all");
+  const [gmailStatus, setGmailStatus] = useState<GmailConnectionStatus | null>(null);
+  const [gmailLoading, setGmailLoading] = useState(true);
+  const [gmailError, setGmailError] = useState<string | null>(null);
+
+  const refreshGmailStatus = async () => {
+    setGmailLoading(true);
+    setGmailError(null);
+    try {
+      setGmailStatus(await getGmailConnectionStatus());
+    } catch {
+      setGmailError("Google auth backend is not available yet.");
+      setGmailStatus(null);
+    } finally {
+      setGmailLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshGmailStatus();
+  }, []);
+
+  const handleDisconnectGmail = async () => {
+    setGmailLoading(true);
+    setGmailError(null);
+    try {
+      await disconnectGoogleOAuth();
+      await refreshGmailStatus();
+    } catch {
+      setGmailError("Could not disconnect Gmail.");
+      setGmailLoading(false);
+    }
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -151,6 +189,51 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
               {f}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="px-6 py-3 border-b" style={{ borderColor: "#e5e5e5", background: "#fff" }}>
+        <div
+          className="flex items-center justify-between rounded-xl border px-4 py-3"
+          style={{ borderColor: "#e5e5e5", background: gmailStatus?.connected ? "#f0fdf4" : "#fafafa" }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center justify-center rounded-lg"
+              style={{ width: 32, height: 32, background: gmailStatus?.connected ? "#dcfce7" : "#fff", border: "1px solid #e5e5e5" }}
+            >
+              {gmailLoading ? <Loader2 size={14} className="animate-spin" color="#737373" /> : gmailStatus?.connected ? <Check size={14} color="#16a34a" /> : <Mail size={14} color="#737373" />}
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span style={{ fontSize: 12.5, fontWeight: 400, color: "#0a0a0a" }}>
+                {gmailStatus?.connected ? `Gmail connected!${gmailStatus.email ? ` as ${gmailStatus.email}` : ""}` : "Connect Gmail to send emails"}
+              </span>
+              <span style={{ fontSize: 11.5, color: gmailError ? "#ef4444" : "#737373", fontWeight: 300 }}>
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {gmailStatus?.connected ? (
+              <button
+                onClick={handleDisconnectGmail}
+                disabled={gmailLoading}
+                className="rounded-lg border px-3 py-1.5 transition-colors"
+                style={{ fontSize: 12, color: "#525252", borderColor: "#e5e5e5", background: "#fff", fontWeight: 300, opacity: gmailLoading ? 0.6 : 1 }}
+              >
+                Disconnect
+              </button>
+            ) : (
+              <button
+                onClick={startGoogleOAuth}
+                disabled={gmailLoading || gmailStatus?.configured === false}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-opacity"
+                style={{ fontSize: 12, color: "#fff", background: "#0a0a0a", fontWeight: 400, opacity: gmailLoading || gmailStatus?.configured === false ? 0.55 : 1 }}
+              >
+                <Mail size={12} /> Connect Gmail
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
