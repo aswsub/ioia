@@ -25,54 +25,110 @@ export const FindCompanyOutputSchema = z.object({
 export type FindCompanyMatch = z.infer<typeof FindCompanyMatchSchema>
 export type FindCompanyOutput = z.infer<typeof FindCompanyOutputSchema>
 
+// Chat-prompt fillers and grammatical glue that should never count as match
+// signal. Keep this list aggressive: a stray "am"/"this"/"company" that leaks
+// through hits dozens of blurbs as substrings and floods the result list.
 const STOPWORDS = new Set([
-  "a", "an", "the", "at", "in", "on", "for", "to", "of", "and", "or",
+  // articles / prepositions / conjunctions
+  "a", "an", "the", "at", "in", "on", "for", "to", "of", "and", "or", "with",
+  "from", "by", "as", "into", "onto", "about",
+  // pronouns + auxiliaries (the "i am looking" case)
+  "i", "me", "my", "mine", "we", "us", "our", "you", "your", "they", "them",
+  "am", "is", "are", "was", "were", "be", "been", "being",
+  "do", "does", "did", "have", "has", "had",
+  "will", "would", "should", "could", "can", "may", "might", "must",
+  // generic verbs students use in outreach prompts
+  "looking", "look", "want", "wanting", "wants", "interested", "hoping",
+  "hope", "trying", "try", "seeking", "seek", "find", "show", "give", "list",
+  "work", "works", "working", "join", "joining", "apply", "applying",
+  // generic nouns / qualifiers
+  "this", "that", "these", "those", "any", "some", "all", "such",
+  "company", "companies", "team", "teams", "year", "years", "season",
+  "next", "upcoming", "current", "currently", "now", "soon",
+  "summer", "fall", "winter", "spring", "autumn",
+  // role / opportunity glue
   "intern", "internship", "interns", "swe", "engineer", "engineering",
-  "role", "roles", "position", "positions", "job", "jobs", "summer", "fall",
+  "role", "roles", "position", "positions", "job", "jobs", "opportunity",
+  "opportunities",
 ])
 
 function tokenize(query: string): string[] {
   return query
     .toLowerCase()
-    .split(/[\s,./@()\[\]"']+/)
-    .map(t => t.trim())
+    .split(/[\s,./@()\[\]"'!?;:]+/)
+    .map(t => t.trim().replace(/^['"]+|['"]+$/g, ""))
     .filter(t => t.length > 1 && !STOPWORDS.has(t))
 }
 
-function scoreCompany(company: Company, queryTokens: string[]): { score: number; reason: string } {
+// Word-level token set for a string. Used so "am" cannot match inside
+// "management" / "Ramp" / "stream" — matching is at word boundaries.
+function wordSet(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(w => w.length > 0),
+  )
+}
+
+type ReasonTier = "name" | "team" | "blurb"
+type Hit = { tier: ReasonTier; reason: string; score: number }
+
+function scoreCompany(company: Company, queryTokens: string[]): { score: number; hits: Hit[] } {
   const name = company.name.toLowerCase()
   const id = company.id.toLowerCase()
-  const blurb = company.blurb.toLowerCase()
+  const nameWords = wordSet(company.name)
+  const blurbWords = wordSet(company.blurb)
   const teams = company.teams.map(t => t.toLowerCase())
 
-  const reasons: string[] = []
+  const hits: Hit[] = []
   let score = 0
+  const seenTokens = new Set<string>()
 
   for (const token of queryTokens) {
+    if (seenTokens.has(token)) continue
+    seenTokens.add(token)
+
     if (token === id || token === name) {
-      reasons.push(`matched on company name`)
+      hits.push({ tier: "name", reason: `matched on company name`, score: 3 })
       score += 3
       continue
     }
-    if (name.includes(token) || id.includes(token)) {
-      reasons.push(`matched on company name fragment "${token}"`)
+    // Word-boundary match against the company name (handles multi-word names).
+    if (nameWords.has(token)) {
+      hits.push({ tier: "name", reason: `matched on company name fragment "${token}"`, score: 2 })
       score += 2
       continue
     }
+    // Teams are short phrases — substring is fine and lets "sync engine"
+    // queries hit the "Sync Engine" team.
     const team = teams.find(t => t.includes(token))
     if (team) {
-      reasons.push(`matched on team: ${team}`)
+      hits.push({ tier: "team", reason: `matched on team: ${team}`, score: 2 })
       score += 2
       continue
     }
-    if (blurb.includes(token)) {
-      reasons.push(`matched on blurb token "${token}"`)
+    // Blurb match is word-level. "am" no longer matches inside "management",
+    // "engine" no longer matches inside "engineering" — required tokens must
+    // be the whole word in the blurb.
+    if (blurbWords.has(token)) {
+      hits.push({ tier: "blurb", reason: `matched on blurb token "${token}"`, score: 1 })
       score += 1
     }
   }
 
-  const uniqReasons = Array.from(new Set(reasons))
-  return { score, reason: uniqReasons[0] ?? "" }
+  return { score, hits }
+}
+
+function pickReason(hits: Hit[]): string {
+  // Prefer the highest-tier reason so the UI doesn't show "matched on blurb
+  // token 'am'" when the company also matched its full name.
+  const order: ReasonTier[] = ["name", "team", "blurb"]
+  for (const tier of order) {
+    const hit = hits.find(h => h.tier === tier)
+    if (hit) return hit.reason
+  }
+  return ""
 }
 
 function suggestContactId(company: Company, queryLower: string): string {
@@ -103,17 +159,26 @@ export function findCompanyMatches(
 
   const scored = companies
     .map(company => {
-      const { score, reason } = scoreCompany(company, tokens)
-      return { company, score, reason }
+      const { score, hits } = scoreCompany(company, tokens)
+      return { company, score, hits }
     })
     .filter(s => s.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
 
-  const matches: FindCompanyMatch[] = scored.map(({ company, reason }) => ({
+  // Name-match-floor filter: if any company matched on its actual name
+  // (a strong signal that the user named a specific company), drop matches
+  // that only got a blurb-token hit. Otherwise "intern at Linear" returns
+  // Linear plus three companies whose blurbs contain unrelated stray tokens.
+  const hasNameHit = scored.some(s => s.hits.some(h => h.tier === "name"))
+  const filtered = hasNameHit
+    ? scored.filter(s => s.hits.some(h => h.tier === "name" || h.tier === "team"))
+    : scored
+
+  const ranked = filtered.sort((a, b) => b.score - a.score).slice(0, limit)
+
+  const matches: FindCompanyMatch[] = ranked.map(({ company, hits }) => ({
     company,
     suggestedContactId: suggestContactId(company, queryLower),
-    matchReason: reason,
+    matchReason: pickReason(hits),
   }))
 
   return FindCompanyOutputSchema.parse({ matches })
