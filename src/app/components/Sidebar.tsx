@@ -43,17 +43,23 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
         className="flex items-center gap-2 px-4 py-3 border-b"
         style={{ borderColor: "#e5e5e5", minHeight: 48 }}
       >
-        <img
-          src={ioiaLogo}
-          alt="ioia"
-          style={{
-            height: 28,
-            width: "auto",
-            display: "block",
-            flexShrink: 0,
-            borderRadius: 6,
-          }}
-        />
+        <div
+          className="flex items-center justify-center flex-shrink-0"
+          style={{ width: 28, height: 28, borderRadius: 6, background: "#fff" }}
+        >
+          <img
+            src={ioiaLogo}
+            alt="ioia"
+            style={{
+              height: 22,
+              width: 22,
+              display: "block",
+              borderRadius: 5,
+              objectFit: "contain",
+              objectPosition: "center",
+            }}
+          />
+        </div>
         <span style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {displayName}
         </span>

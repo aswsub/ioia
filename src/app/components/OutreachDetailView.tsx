@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Send, Check, Trash2, ArrowUpRight,
   FileText, User, Building2, BookOpen, Mail,
 } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
 import { getRecentWorksByAuthor } from "../../lib/openalex";
+import fileLogo from "../../assets/file.png";
 
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
@@ -57,6 +58,25 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
   const [papers, setPapers] = useState(draft.professor.recentPapers ?? []);
   const isSent = draft.status === "sent";
   const citations = CITATIONS[draft.id] ?? [];
+  const bodyWordCount = useMemo(() => body.trim().split(/\s+/).filter(Boolean).length, [body]);
+  const openAlexProfileUrl = useMemo(() => {
+    const id = draft.professor.openAlexId?.trim();
+    if (!id) return null;
+    if (id.startsWith("https://openalex.org/")) return id;
+    const withoutHost = id.startsWith("openalex.org/") ? id.slice("openalex.org/".length) : id;
+    return `https://openalex.org/${withoutHost}`;
+  }, [draft.professor.openAlexId]);
+
+  const peopleSearchLinks = useMemo(() => {
+    const name = draft.professor.name.trim();
+    const inst = draft.professor.university.trim();
+    const q = encodeURIComponent(`${name} ${inst}`);
+    return {
+      google: `https://www.google.com/search?q=${q}`,
+      linkedin: `https://www.linkedin.com/search/results/people/?keywords=${q}`,
+      scholar: `https://scholar.google.com/scholar?q=${q}`,
+    };
+  }, [draft.professor.name, draft.professor.university]);
 
   useEffect(() => {
     setPapers(draft.professor.recentPapers ?? []);
@@ -226,14 +246,85 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 className="px-6 py-3 border-t flex items-center justify-between"
                 style={{ borderColor: isSent ? "#d1fae5" : "#f0f0f0", background: isSent ? "#f0fdf4" : "#fafafa" }}
               >
-                <span style={{ fontSize: 11.5, color: "#d4d4d4", fontWeight: 300 }}>
-                  ✦ Personalized to {draft.professor.research.length} research areas
-                </span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>
+                    {bodyWordCount} words
+                  </span>
+                  <span style={{ fontSize: 11.5, color: "#d4d4d4", fontWeight: 300 }}>
+                    {draft.professor.university}
+                  </span>
+                  {draft.professor.homepage && (
+                    <a
+                      href={draft.professor.homepage}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5"
+                      style={{ fontSize: 11.5, color: "#0a0a0a", fontWeight: 300 }}
+                    >
+                      <ArrowUpRight size={12} /> homepage
+                    </a>
+                  )}
+                  {papers?.[0]?.url && (
+                    <a
+                      href={papers[0].url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 min-w-0"
+                      style={{ fontSize: 11.5, color: "#0a0a0a", fontWeight: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={papers[0].title}
+                    >
+                      <img src={fileLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {papers[0].title}
+                      </span>
+                    </a>
+                  )}
+                  {openAlexProfileUrl && (
+                    <a
+                      href={openAlexProfileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5"
+                      style={{ fontSize: 11.5, color: "#0a0a0a", fontWeight: 300 }}
+                    >
+                      <ArrowUpRight size={12} /> OpenAlex
+                    </a>
+                  )}
+                </div>
                 <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>
                   {(draft.matchScore * 100).toFixed(0)}% match score
                 </span>
               </div>
             </div>
+
+            {/* Papers card (kept under the draft; avoids duplicating in the right column) */}
+            {(openAlexProfileUrl || (papers?.length ?? 0) > 0) && (
+              <div className="rounded-xl border overflow-hidden" style={{ borderColor: "#e5e5e5", background: "#fff" }}>
+                <div className="px-6 py-4 border-b" style={{ borderColor: "#f0f0f0" }}>
+                  <p style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 400, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    Published work
+                  </p>
+                </div>
+                <div className="px-6 py-4 flex flex-col gap-2">
+                  {openAlexProfileUrl && (
+                    <a href={openAlexProfileUrl} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-2"
+                      style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 300 }}>
+                      <ArrowUpRight size={12} /> OpenAlex profile
+                    </a>
+                  )}
+                  {(papers ?? []).slice(0, 8).map((p) => (
+                    <a key={p.url} href={p.url} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-2"
+                      style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 300 }}>
+                      <img src={fileLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      <span style={{ color: "#525252" }}>{p.year}</span>
+                      <span>{p.title}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Citations card */}
             {citations.length > 0 && (
@@ -325,6 +416,42 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                   </a>
                 </div>
 
+                {/* Online presence */}
+                <div className="flex items-start gap-2.5">
+                  <User size={13} style={{ color: "#a3a3a3", flexShrink: 0, marginTop: 2 }} />
+                  <div className="flex flex-wrap gap-2">
+                    {draft.professor.homepage && (
+                      <a href={draft.professor.homepage} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                        style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                        <ArrowUpRight size={11} /> homepage
+                      </a>
+                    )}
+                    {openAlexProfileUrl && (
+                      <a href={openAlexProfileUrl} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                        style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                        <ArrowUpRight size={11} /> OpenAlex
+                      </a>
+                    )}
+                    <a href={peopleSearchLinks.linkedin} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                      style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                      <ArrowUpRight size={11} /> LinkedIn search
+                    </a>
+                    <a href={peopleSearchLinks.scholar} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                      style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                      <ArrowUpRight size={11} /> Scholar search
+                    </a>
+                    <a href={peopleSearchLinks.google} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+                      style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
+                      <ArrowUpRight size={11} /> Google
+                    </a>
+                  </div>
+                </div>
+
                 <div className="flex items-start gap-2.5">
                   <BookOpen size={13} style={{ color: "#a3a3a3", flexShrink: 0, marginTop: 2 }} />
                   <div className="flex flex-wrap gap-1.5">
@@ -374,9 +501,6 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
 
             {/* AI notes card */}
             <div className="rounded-xl border px-5 py-4" style={{ borderColor: "#e5e5e5", background: "#fff" }}>
-              <p style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 400, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 10 }}>
-                Why this professor
-              </p>
               <p style={{ fontSize: 12.5, color: "#525252", fontWeight: 300, lineHeight: 1.7, marginBottom: 10 }}>
                 Picked for overlap on{" "}
                 <span style={{ color: "#0a0a0a", fontWeight: 400 }}>
@@ -394,33 +518,6 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 )}
               </p>
 
-              {(draft.professor.homepage || (papers?.length ?? 0) > 0) && (
-                <div className="flex flex-col gap-1.5">
-                  {draft.professor.homepage && (
-                    <a
-                      href={draft.professor.homepage}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5"
-                      style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 300 }}
-                    >
-                      <ArrowUpRight size={12} /> Homepage
-                    </a>
-                  )}
-                  {(papers ?? []).slice(0, 5).map((p) => (
-                    <a
-                      key={p.url}
-                      href={p.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5"
-                      style={{ fontSize: 12, color: "#0a0a0a", fontWeight: 300 }}
-                    >
-                      <FileText size={12} /> {p.title} ({p.year})
-                    </a>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>

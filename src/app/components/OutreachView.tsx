@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Send, Check, Trash2, LayoutGrid,
   ChevronUp, ChevronDown, ArrowUpDown, ArrowRight,
@@ -59,14 +59,35 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
   const [sortKey, setSortKey] = useState<SortKey>("matchScore");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "sent">("all");
+  const [scope, setScope] = useState<"latest" | "all">("latest");
+  const [latestBatchIds, setLatestBatchIds] = useState<Set<string> | null>(null);
+  const [latestLabel, setLatestLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const rawIds = localStorage.getItem("ioia:last_draft_batch_ids");
+      const rawPrompt = localStorage.getItem("ioia:last_draft_batch_prompt");
+      const ids = rawIds ? (JSON.parse(rawIds) as string[]) : [];
+      setLatestBatchIds(new Set(ids));
+      setLatestLabel(rawPrompt ?? null);
+    } catch {
+      setLatestBatchIds(null);
+      setLatestLabel(null);
+    }
+  }, [drafts.length]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("desc"); }
   };
 
+  const scopedDrafts = useMemo(() => {
+    if (scope === "latest" && latestBatchIds && latestBatchIds.size > 0) return drafts.filter((d) => latestBatchIds.has(d.id));
+    return drafts;
+  }, [drafts, scope, latestBatchIds]);
+
   const filtered = useMemo(() => {
-    const base = statusFilter === "all" ? drafts : drafts.filter((d) => d.status === statusFilter);
+    const base = statusFilter === "all" ? scopedDrafts : scopedDrafts.filter((d) => d.status === statusFilter);
     return [...base].sort((a, b) => {
       let av: string | number, bv: string | number;
       if (sortKey === "professor")    { av = a.professor.name;       bv = b.professor.name; }
@@ -77,10 +98,10 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [drafts, sortKey, sortDir, statusFilter]);
+  }, [scopedDrafts, sortKey, sortDir, statusFilter]);
 
-  const draftCount = drafts.filter((d) => d.status === "draft").length;
-  const sentCount  = drafts.filter((d) => d.status === "sent").length;
+  const draftCount = scopedDrafts.filter((d) => d.status === "draft").length;
+  const sentCount  = scopedDrafts.filter((d) => d.status === "sent").length;
 
   if (drafts.length === 0) {
     return (
@@ -133,24 +154,57 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
           )}
         </div>
 
-        {/* Status filter tabs */}
-        <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: "#f5f5f5" }}>
-          {(["all", "draft", "sent"] as const).map((f) => (
+        <div className="flex items-center gap-2">
+          {/* Batch scope */}
+          <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: "#f5f5f5" }}>
             <button
-              key={f}
-              onClick={() => setStatusFilter(f)}
-              className="rounded-md px-3 py-1 transition-all capitalize"
+              onClick={() => setScope("latest")}
+              className="rounded-md px-3 py-1 transition-all"
               style={{
                 fontSize: 12,
-                fontWeight: statusFilter === f ? 400 : 300,
-                color: statusFilter === f ? "#0a0a0a" : "#737373",
-                background: statusFilter === f ? "#fff" : "transparent",
-                boxShadow: statusFilter === f ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                fontWeight: scope === "latest" ? 400 : 300,
+                color: scope === "latest" ? "#0a0a0a" : "#737373",
+                background: scope === "latest" ? "#fff" : "transparent",
+                boxShadow: scope === "latest" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+              }}
+              title={latestLabel ? `Latest: ${latestLabel}` : "Latest chat results"}
+            >
+              Latest chat
+            </button>
+            <button
+              onClick={() => setScope("all")}
+              className="rounded-md px-3 py-1 transition-all"
+              style={{
+                fontSize: 12,
+                fontWeight: scope === "all" ? 400 : 300,
+                color: scope === "all" ? "#0a0a0a" : "#737373",
+                background: scope === "all" ? "#fff" : "transparent",
+                boxShadow: scope === "all" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
               }}
             >
-              {f}
+              All
             </button>
-          ))}
+          </div>
+
+          {/* Status filter tabs */}
+          <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: "#f5f5f5" }}>
+            {(["all", "draft", "sent"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className="rounded-md px-3 py-1 transition-all capitalize"
+                style={{
+                  fontSize: 12,
+                  fontWeight: statusFilter === f ? 400 : 300,
+                  color: statusFilter === f ? "#0a0a0a" : "#737373",
+                  background: statusFilter === f ? "#fff" : "transparent",
+                  boxShadow: statusFilter === f ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

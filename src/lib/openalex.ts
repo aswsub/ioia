@@ -4,6 +4,8 @@
 // Docs: https://docs.openalex.org
 
 import type { Professor, RecentPaper } from "../../cold_email_workflow/prompts/context";
+import type { DirectoryHit, InstitutionKey } from "./directories";
+import { fetchDirectoryHits } from "./directories";
 
 const BASE = "https://api.openalex.org";
 const MAILTO = (import.meta.env.VITE_OPENALEX_EMAIL as string) || "ioia-app@example.com";
@@ -299,6 +301,16 @@ export async function searchProfessors(
     authorIds = await collectAuthorsFromWorks(titleFilter);
   }
 
+  // If the user asked for more than we could collect via concept filters, broaden:
+  // pull additional authors from institution-only works and merge.
+  if (instId && authorIds.length < limit) {
+    const extra = await collectAuthorsFromWorks(`institutions.id:${instId},publication_year:>2010`);
+    const merged = new Map<string, true>();
+    for (const id of authorIds) merged.set(id, true);
+    for (const id of extra) merged.set(id, true);
+    authorIds = Array.from(merged.keys());
+  }
+
   if (authorIds.length === 0) {
     // Distinguish "no matches" from "OpenAlex call failed" so the UI can show a useful error.
     if (lastWorksError instanceof Error) throw lastWorksError;
@@ -307,13 +319,15 @@ export async function searchProfessors(
   }
 
   // Fetch author profiles in one batch
-  const batchFilter = `id:${authorIds.slice(0, 20).join("|")}`;
+  // Fetch more authors than requested so post-filters don't shrink below limit.
+  const batchIds = authorIds.slice(0, Math.min(Math.max(limit * 8, 40), 200));
+  const batchFilter = `id:${batchIds.join("|")}`;
   console.log("OpenAlex authors filter:", batchFilter);
   let authors: OAAuthor[] = [];
   try {
     const data = await get<OAList<OAAuthor>>("/authors", {
       filter: batchFilter,
-      per_page: "20",
+      per_page: String(batchIds.length),
       select: "id,display_name,orcid,last_known_institutions,x_concepts,works_count",
     });
     authors = data.results;
@@ -332,13 +346,35 @@ export async function searchProfessors(
   }
 
   const professors = await Promise.all(
-    authors.slice(0, limit).map((a) => enrichAuthor(a, keywords))
+    authors.map((a) => enrichAuthor(a, keywords))
   );
 
-  return professors
-    .filter((p) => p.concepts.length > 0)
-    .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, limit);
+  let ranked = professors.sort((a, b) => b.matchScore - a.matchScore);
+
+  // Directory fallback: if an institution was requested and OpenAlex can't fill the quota,
+  // pull additional names from official directories as low-confidence matches.
+  if (instId && institutions.length > 0 && ranked.length < limit) {
+    const instName = institutions[0] as InstitutionKey;
+    const dirHits: DirectoryHit[] = await fetchDirectoryHits(instName, Math.max(40, limit * 4));
+    const existingNames = new Set(ranked.map((p) => p.name.toLowerCase()));
+    const fillers = dirHits
+      .filter((h) => !existingNames.has(h.name.toLowerCase()))
+      .slice(0, Math.max(0, limit - ranked.length))
+      .map((h) => ({
+        id: `dir_${h.institution}_${h.name}`.replace(/\s+/g, "_"),
+        name: h.name,
+        affiliation: h.institution,
+        email: null,
+        homepage: h.profileUrl,
+        concepts: [],
+        recentPapers: [],
+        matchScore: 0.05,
+      })) satisfies Professor[];
+
+    ranked = [...ranked, ...fillers];
+  }
+
+  return ranked.slice(0, limit);
 }
 
 export async function getProfessorByOrcid(orcid: string): Promise<Professor | null> {

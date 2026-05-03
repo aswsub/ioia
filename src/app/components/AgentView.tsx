@@ -11,7 +11,7 @@ import { extractKeywordsFromPrompt, draftEmail } from "../../lib/claude";
 import { searchProfessors } from "../../lib/openalex";
 import { findCompanyForQuery } from "../../lib/find_company";
 import { useAuth } from "../../lib/auth";
-import type { UserProfile } from "../../../cold_email_workflow/prompts/context";
+import type { Professor, UserProfile } from "../../../cold_email_workflow/prompts/context";
 import type { ToneProfile } from "../../../cold_email_workflow/prompts/tone";
 import type { Company, CompanyContact } from "../../../cold_email_workflow/schemas";
 
@@ -43,24 +43,33 @@ function parseAtTags(raw: string): {
   let n: number | null = null;
 
   const cleanedLines: string[] = [];
-  const tagRe =
-    /@(?:(school|topic|n|count)\s*:\s*([^\s@]+(?:\s+[^\s@]+)*?)|(\d{1,2}))(?:\b|$)/gi;
+  // Tag grammar:
+  // - @school:UCLA (no spaces), or @school:"UC Berkeley"
+  // - @topic:rl, or @topic:"Biomedical engineering"
+  // - @n:10 / @count:10
+  //
+  // Values with spaces MUST be quoted; this avoids accidental capture like:
+  // "@school:UCLA that are related to @topic:..."
+  const tagRe = /@(school|topic|n|count)\s*:\s*(?:"([^"]+)"|([^\s@]+))/gi;
+  const shorthandRe = /@(\d{1,2})(?:\b|$)/g;
 
   for (const line of raw.split("\n")) {
     let m: RegExpExecArray | null;
     while ((m = tagRe.exec(line)) !== null) {
       const kind = (m[1] ?? "").toLowerCase();
-      const value = (m[2] ?? "").trim();
-      const shorthandNum = m[3] ? Number(m[3]) : NaN;
+      const value = (m[2] ?? m[3] ?? "").trim();
       if (kind === "school" && value) schools.push(value);
       if (kind === "topic" && value) topics.push(value);
       if ((kind === "n" || kind === "count") && value) {
         const parsed = Number(value.replace(/[^\d]/g, ""));
         if (Number.isFinite(parsed) && parsed > 0) n = Math.min(parsed, 10);
       }
-      if (!kind && Number.isFinite(shorthandNum) && shorthandNum > 0) n = Math.min(shorthandNum, 10);
     }
-    const rest = line.replace(tagRe, "").replace(/\s{2,}/g, " ").trim();
+    for (const sm of line.matchAll(shorthandRe)) {
+      const shorthandNum = Number(sm[1]);
+      if (Number.isFinite(shorthandNum) && shorthandNum > 0) n = Math.min(shorthandNum, 10);
+    }
+    const rest = line.replace(tagRe, "").replace(shorthandRe, "").replace(/\s{2,}/g, " ").trim();
     if (rest) cleanedLines.push(rest);
   }
 
@@ -138,7 +147,7 @@ function AgentMessage({ msg, isNew }: { msg: Message; isNew?: boolean }) {
   return (
     <div className="flex gap-3" style={{ animation: isNew ? "fadeSlideIn 0.3s ease" : "none" }}>
       <div className="flex-shrink-0 mt-0.5" style={{ width: 22, height: 22 }}>
-        <img src={ioiaLogo} alt="ioia" style={{ width: 22, height: 22, borderRadius: 6, display: "block" }} />
+        <img src={ioiaLogo} alt="ioia" style={{ width: 20, height: 20, borderRadius: 6, display: "block", objectFit: "contain", objectPosition: "center" }} />
       </div>
       <div className="flex flex-col gap-2 flex-1 min-w-0">
         {isNew && msg.steps && (
@@ -156,6 +165,45 @@ function AgentMessage({ msg, isNew }: { msg: Message; isNew?: boolean }) {
       </div>
     </div>
   );
+}
+
+function renderUserTextWithTags(text: string) {
+  // Basic inline highlighting for @school/@topic/@n tags in the chat bubble.
+  const parts: Array<{ t: string; kind: "school" | "topic" | "n" | null }> = [];
+  const re = /@(school|topic|n|count)\s*:\s*(?:"([^"]+)"|([^\s@]+))|@(\d{1,2})(?:\b|$)/gi;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push({ t: text.slice(last, m.index), kind: null });
+    if (m[1]) {
+      const kind = (m[1] === "count" ? "n" : (m[1] as any)) as "school" | "topic" | "n";
+      parts.push({ t: m[0], kind });
+    } else if (m[4]) {
+      parts.push({ t: `@${m[4]}`, kind: "n" });
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ t: text.slice(last), kind: null });
+
+  const styleFor = (kind: "school" | "topic" | "n") => {
+    if (kind === "school") return { background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" };
+    if (kind === "topic") return { background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" };
+    return { background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa" };
+  };
+
+  return parts.map((p, idx) => {
+    if (!p.kind) return <span key={idx}>{p.t}</span>;
+    const s = styleFor(p.kind);
+    return (
+      <span
+        key={idx}
+        className="rounded-md px-1"
+        style={{ ...s, fontFamily: "var(--font-display)", fontSize: 12.5, paddingTop: 1, paddingBottom: 1 }}
+      >
+        {p.t.trim()}
+      </span>
+    );
+  });
 }
 
 export function AgentView({
@@ -271,14 +319,18 @@ export function AgentView({
     setMessages((prev) => [...prev, thinkingMsg]);
 
     try {
-      const { researchAreas, institutions, opportunityType } = await extractKeywordsFromPrompt(value);
+      const tags = parseAtTags(value);
+      const llmInput = tags.cleaned || value;
+      const { researchAreas, institutions, opportunityType } = await extractKeywordsFromPrompt(llmInput);
       // Heuristic fallback: if the LLM extractor misses an institution/count, infer from raw prompt.
       const inferredInstitutions = [...institutions];
       const hasBerkeley = /\b(uc\s*berkeley|u\.?\s*c\.?\s*berkeley|university of california[, ]+berkeley|berkeley)\b/i.test(value);
       const hasCMU = /\b(cmu|carnegie mellon)\b/i.test(value);
       const hasUCLA = /\b(ucla|uc\s*los\s*angeles|u\.?\s*c\.?\s*l\.?\s*a\.?)\b/i.test(value);
       const hasCalPoly = /\b(cal\s*poly(\s*slo)?|california\s*polytechnic\s*state\s*university)\b/i.test(value);
-      if (inferredInstitutions.length === 0) {
+      if (tags.schools.length > 0) {
+        inferredInstitutions.splice(0, inferredInstitutions.length, ...tags.schools);
+      } else if (inferredInstitutions.length === 0) {
         if (hasCMU) inferredInstitutions.push("CMU");
         if (hasBerkeley) inferredInstitutions.push("UC Berkeley");
         if (hasUCLA) inferredInstitutions.push("UCLA");
@@ -290,7 +342,8 @@ export function AgentView({
           value.match(/\b(find|give|show|list)\b(?:\s+\w+){0,3}\s+(\d{1,2})\b/i) ??
           value.match(/\b(\d{1,2})\s+(professors?|faculty)\b/i);
         const n = m ? Number(m[2] ?? m[1]) : NaN;
-        return Number.isFinite(n) && n > 0 ? Math.min(n, 10) : 5;
+        const fromText = Number.isFinite(n) && n > 0 ? Math.min(n, 10) : 5;
+        return typeof tags.n === "number" ? tags.n : fromText;
       })();
 
       console.log("Extracted:", { researchAreas, institutions: inferredInstitutions, opportunityType, inferredCount });
@@ -343,7 +396,16 @@ export function AgentView({
         tone: toneProfile,
       };
 
-      const allKeywords = [...new Set([...researchAreas, ...(dbProfile?.research_interests ?? [])])];
+      const allKeywords = (() => {
+        const base = [...researchAreas, ...(dbProfile?.research_interests ?? [])];
+        const merged = [...new Set([...base, ...tags.topics])];
+        if (tags.topics.length > 0) {
+          const first = tags.topics;
+          const rest = merged.filter((k) => !first.includes(k));
+          return [...first, ...rest];
+        }
+        return merged;
+      })();
 
       const drafts: OutreachDraft[] = [];
       const colors = ["#f0f4ff", "#fff7ed", "#f0fdf4", "#fdf4ff", "#fff1f2"];
@@ -445,6 +507,15 @@ export function AgentView({
           : "";
         summaryWithNote = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}${note}. I've drafted personalized emails for each — review them in Outreach.`;
       }
+
+      // Persist draft batch metadata so Outreach can filter "latest chat" vs "all".
+      try {
+        const ids = drafts.map((d) => d.id);
+        localStorage.setItem("ioia:last_draft_batch_ids", JSON.stringify(ids));
+        localStorage.setItem("ioia:last_draft_batch_prompt", value.slice(0, 160));
+        localStorage.setItem("ioia:last_draft_batch_at", new Date().toISOString());
+      } catch { /* ignore */ }
+
       const agentMsg: Message = {
         id: (Date.now() + 2).toString(), role: "agent", content: summaryWithNote,
         steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
@@ -564,7 +635,7 @@ export function AgentView({
                   <div key={msg.id} className="flex justify-end">
                     <div className="rounded-2xl px-4 py-2.5"
                       style={{ background: "#fff", border: "1px solid #e5e5e5", fontSize: 13.5, color: "#0a0a0a", fontWeight: 300, maxWidth: "80%", lineHeight: 1.6, animation: "fadeSlideIn 0.25s ease" }}>
-                      {msg.content}
+                      {renderUserTextWithTags(msg.content)}
                     </div>
                   </div>
                 ) : (
@@ -585,7 +656,7 @@ export function AgentView({
               {isThinking && (
                 <div className="flex gap-3 items-center" style={{ animation: "fadeSlideIn 0.25s ease" }}>
                   <div className="flex-shrink-0" style={{ width: 22, height: 22 }}>
-                    <img src={ioiaLogo} alt="ioia" style={{ width: 22, height: 22, borderRadius: 6, display: "block" }} />
+                    <img src={ioiaLogo} alt="ioia" style={{ width: 20, height: 20, borderRadius: 6, display: "block", objectFit: "contain", objectPosition: "center" }} />
                   </div>
                   <Loader2 size={13} style={{ color: "#a3a3a3", animation: "spin 1s linear infinite" }} />
                 </div>
@@ -614,13 +685,131 @@ function InputCard({ value, onChange, onSend, onKeyDown, textareaRef, disabled, 
   onKeyDown: (e: React.KeyboardEvent) => void; textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean; maxWidth?: number;
 }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [activeKind, setActiveKind] = useState<"school" | "topic" | "n">("school");
+  const tags = parseAtTags(value);
+
+  const SCHOOL_OPTIONS = ["UC Berkeley", "CMU", "UCLA", "Cal Poly SLO"];
+  const TOPIC_OPTIONS = ["reinforcement learning", "machine learning", "AI infrastructure", "LLMs"];
+  const N_OPTIONS = ["3", "5", "10"];
+
+  const insertTag = (kind: "school" | "topic" | "n", val: string) => {
+    const ta = textareaRef.current;
+    const cur = value;
+    const maybeQuote = (s: string) => (/\s/.test(s) ? `"${s.replaceAll("\"", "")}"` : s);
+    const at = kind === "n"
+      ? `@n:${val}`
+      : kind === "school"
+        ? `@school:${maybeQuote(val)}`
+        : `@topic:${maybeQuote(val)}`;
+    if (!ta) {
+      onChange((cur + (cur.endsWith(" ") || cur.length === 0 ? "" : " ") + at + " ").trimStart());
+      return;
+    }
+    const start = ta.selectionStart ?? cur.length;
+    const end = ta.selectionEnd ?? cur.length;
+    const before = cur.slice(0, start);
+    const after = cur.slice(end);
+    const prefix = before.endsWith(" ") || before.length === 0 ? "" : " ";
+    const next = `${before}${prefix}${at} ${after}`.replace(/\s{2,}/g, " ");
+    onChange(next);
+    requestAnimationFrame(() => {
+      const pos = (before + prefix + at + " ").length;
+      ta.focus();
+      ta.setSelectionRange(pos, pos);
+    });
+    setShowMenu(false);
+  };
+
   return (
     <div className="w-full rounded-2xl border flex flex-col"
       style={{ maxWidth, background: "#fff", borderColor: "#e5e5e5", boxShadow: "0 2px 12px 0 rgba(0,0,0,0.05)" }}>
-      <textarea ref={textareaRef} value={value} onChange={(e) => onChange(e.target.value)}
-        onKeyDown={onKeyDown} placeholder="Describe who you're looking for — research area, school, keywords…"
-        rows={2} disabled={disabled} className="w-full resize-none outline-none bg-transparent px-4 pt-4 pb-2"
-        style={{ fontSize: 14, color: "#0a0a0a", fontWeight: 300, lineHeight: 1.6, fontFamily: "var(--font-sans)", minHeight: 56, caretColor: "#0a0a0a" }} />
+      <div className="relative">
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => {
+            const v = e.target.value;
+            onChange(v);
+            setShowMenu(v.includes("@"));
+          }}
+          onKeyDown={onKeyDown}
+          placeholder="Describe who you're looking for — research area, school, keywords…"
+          rows={2}
+          disabled={disabled}
+          className="w-full resize-none outline-none bg-transparent px-4 pt-4 pb-2"
+          style={{ fontSize: 14, color: "#0a0a0a", fontWeight: 300, lineHeight: 1.6, fontFamily: "var(--font-sans)", minHeight: 56, caretColor: "#0a0a0a" }}
+        />
+
+        {showMenu && !disabled && (
+          <div
+            className="absolute left-4 right-4 -top-3 translate-y-[-100%] rounded-xl border shadow-sm overflow-hidden"
+            style={{ background: "#fff", borderColor: "#e5e5e5" }}
+          >
+            <div className="flex items-center gap-1 p-1" style={{ background: "#fafafa", borderBottom: "1px solid #f0f0f0" }}>
+              {(["school", "topic", "n"] as const).map((k) => (
+                <button
+                  key={k}
+                  onClick={() => setActiveKind(k)}
+                  className="rounded-lg px-2.5 py-1 transition-all"
+                  style={{
+                    fontSize: 12,
+                    fontWeight: activeKind === k ? 400 : 300,
+                    color: activeKind === k ? "#0a0a0a" : "#737373",
+                    background: activeKind === k ? "#fff" : "transparent",
+                    boxShadow: activeKind === k ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                  }}
+                >
+                  @{k}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowMenu(false)}
+                className="ml-auto rounded-lg px-2.5 py-1"
+                style={{ fontSize: 12, color: "#a3a3a3", fontWeight: 300 }}
+              >
+                close
+              </button>
+            </div>
+            <div className="p-2 flex flex-wrap gap-1.5">
+              {(activeKind === "school" ? SCHOOL_OPTIONS : activeKind === "topic" ? TOPIC_OPTIONS : N_OPTIONS).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => insertTag(activeKind, opt)}
+                  className="rounded-full px-2.5 py-1 border transition-colors"
+                  style={{ fontSize: 12, borderColor: "#e5e5e5", background: "#fff", color: "#0a0a0a", fontWeight: 300 }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f5f5f5"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#fff"; }}
+                >
+                  {activeKind === "n" ? `@n:${opt}` : activeKind === "school" ? `@school:${opt}` : `@topic:${opt}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      {(tags.schools.length > 0 || tags.topics.length > 0 || typeof tags.n === "number") && (
+        <div className="px-4 pb-1 flex flex-wrap gap-1.5">
+          {tags.schools.map((s) => (
+            <span key={`school:${s}`} className="rounded-full px-2 py-0.5"
+              style={{ fontSize: 11, background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", fontWeight: 300 }}>
+              @school:{s}
+            </span>
+          ))}
+          {tags.topics.map((t) => (
+            <span key={`topic:${t}`} className="rounded-full px-2 py-0.5"
+              style={{ fontSize: 11, background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", fontWeight: 300 }}>
+              @topic:{t}
+            </span>
+          ))}
+          {typeof tags.n === "number" && (
+            <span className="rounded-full px-2 py-0.5"
+              style={{ fontSize: 11, background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa", fontWeight: 300 }}>
+              @n:{tags.n}
+            </span>
+          )}
+        </div>
+      )}
       <div className="flex items-center justify-between px-3 pb-3 pt-1">
         <button className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors"
           style={{ fontSize: 12.5, color: "#a3a3a3", fontWeight: 300 }}
