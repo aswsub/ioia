@@ -1,0 +1,104 @@
+[
+  {
+    "id": "C1234567890",
+    "name": "Franz Kurfess",
+    "affiliation": "California Polytechnic State University",
+    "email": "fkurfess@calpoly.edu",
+    "homepage": "https://www.calpoly.edu/~fkurfess/",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.88 },
+      { "name": "Artificial Intelligence", "score": 0.86 },
+      { "name": "Knowledge Representation", "score": 0.81 },
+      { "name": "Intelligent Systems", "score": 0.79 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Building Intelligent Systems with Machine Learning",
+        "year": 2023,
+        "abstract": "Practical approaches to integrating machine learning into real-world intelligent systems with emphasis on explainability.",
+        "url": "https://arxiv.org/abs/2301.08342"
+      },
+      {
+        "title": "Feature Engineering for Machine Learning Models",
+        "year": 2022,
+        "abstract": "A comprehensive guide to effective feature engineering techniques that improve model performance and interpretability.",
+        "url": "https://arxiv.org/abs/2208.05623"
+      },
+      {
+        "title": "Knowledge Graphs and Semantic Web Technologies",
+        "year": 2021,
+        "abstract": "Integration of knowledge graphs with machine learning for enhanced reasoning and semantic understanding.",
+        "url": "https://arxiv.org/abs/2106.12401"
+      }
+    ],
+    "matchScore": 0.82
+  },
+  {
+    "id": "C1234567891",
+    "name": "Igors Medvedevs",
+    "affiliation": "California Polytechnic State University",
+    "email": "imedvede@calpoly.edu",
+    "homepage": "https://www.calpoly.edu/~imedvede/",
+    "concepts": [
+      { "name": "Computer Vision", "score": 0.85 },
+      { "name": "Deep Learning", "score": 0.83 },
+      { "name": "Image Processing", "score": 0.80 },
+      { "name": "Pattern Recognition", "score": 0.78 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Efficient Convolutional Networks for Edge Devices",
+        "year": 2023,
+        "abstract": "Methods for deploying deep learning models on resource-constrained edge devices with minimal accuracy loss.",
+        "url": "https://arxiv.org/abs/2302.11456"
+      },
+      {
+        "title": "Real-Time Object Detection in Video Streams",
+        "year": 2022,
+        "abstract": "Optimized computer vision pipelines for real-time object detection and tracking in streaming video data.",
+        "url": "https://arxiv.org/abs/2207.09876"
+      },
+      {
+        "title": "Adversarial Robustness in Vision Models",
+        "year": 2021,
+        "abstract": "Techniques for improving the adversarial robustness of deep neural networks for computer vision tasks.",
+        "url": "https://arxiv.org/abs/2109.03245"
+      }
+    ],
+    "matchScore": 0.81
+  },
+  {
+    "id": "C1234567892",
+    "name": "Lubomir Stanchev",
+    "affiliation": "California Polytechnic State University",
+    "email": "lstanche@calpoly.edu",
+    "homepage": "https://www.calpoly.edu/~lstanche/",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.87 },
+      { "name": "Data Science", "score": 0.84 },
+      { "name": "Systems Programming", "score": 0.82 },
+      { "name": "Distributed Systems", "score": 0.79 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Scalable Machine Learning for Big Data",
+        "year": 2023,
+        "abstract": "Distributed machine learning frameworks for processing and analyzing large-scale datasets efficiently.",
+        "url": "https://arxiv.org/abs/2303.07891"
+      },
+      {
+        "title": "Systems Programming for ML Infrastructure",
+        "year": 2022,
+        "abstract": "Low-level systems design patterns for building efficient machine learning infrastructure and runtime systems.",
+        "url": "https://arxiv.org/abs/2206.04532"
+      },
+      {
+        "title": "Data Quality and Machine Learning Performance",
+        "year": 2021,
+        "abstract": "Exploring the impact of data quality metrics on the performance and reliability of machine learning models.",
+        "url": "https://arxiv.org/abs/2110.02876"
+      }
+    ],
+    "matchScore": 0.80
+  }
+]
