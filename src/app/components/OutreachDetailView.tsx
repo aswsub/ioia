@@ -75,9 +75,10 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
     const name = draft.professor.name.trim();
     const inst = draft.professor.university.trim();
     const q = encodeURIComponent(`${name} ${inst}`);
+    const qName = encodeURIComponent(name);
     return {
       google: `https://www.google.com/search?q=${q}`,
-      linkedin: `https://www.linkedin.com/search/results/people/?keywords=${q}`,
+      linkedin: `https://www.linkedin.com/search/results/people/?keywords=${qName}`,
       scholar: `https://scholar.google.com/scholar?q=${q}`,
     };
   }, [draft.professor.name, draft.professor.university]);
