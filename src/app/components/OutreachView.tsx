@@ -62,19 +62,45 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
   const [scope, setScope] = useState<"latest" | "all">("latest");
   const [latestBatchIds, setLatestBatchIds] = useState<Set<string> | null>(null);
   const [latestLabel, setLatestLabel] = useState<string | null>(null);
+  const [latestAt, setLatestAt] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       const rawIds = localStorage.getItem("ioia:last_draft_batch_ids");
       const rawPrompt = localStorage.getItem("ioia:last_draft_batch_prompt");
+      const rawAt = localStorage.getItem("ioia:last_draft_batch_at");
       const ids = rawIds ? (JSON.parse(rawIds) as string[]) : [];
       setLatestBatchIds(new Set(ids));
       setLatestLabel(rawPrompt ?? null);
+      setLatestAt(rawAt ?? null);
+      // Only reset scope to "all" on initial mount if there's no batch info.
+      // Don't reset it every time drafts change, as that would prevent viewing the latest batch.
     } catch {
       setLatestBatchIds(null);
       setLatestLabel(null);
+      setLatestAt(null);
     }
-  }, [drafts.length]);
+  }, []);
+
+  // Refresh latest batch info when drafts change (new drafts from agent)
+  useEffect(() => {
+    try {
+      const rawIds = localStorage.getItem("ioia:last_draft_batch_ids");
+      const rawPrompt = localStorage.getItem("ioia:last_draft_batch_prompt");
+      const rawAt = localStorage.getItem("ioia:last_draft_batch_at");
+      const ids = rawIds ? (JSON.parse(rawIds) as string[]) : [];
+      // Only update if there are new IDs (agent just generated drafts)
+      if (ids.length > 0) {
+        setLatestBatchIds(new Set(ids));
+        setLatestLabel(rawPrompt ?? null);
+        setLatestAt(rawAt ?? null);
+        // Auto-switch to "latest" scope when new drafts arrive
+        setScope("latest");
+      }
+    } catch {
+      // ignore
+    }
+  }, [drafts]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -82,7 +108,9 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
   };
 
   const scopedDrafts = useMemo(() => {
-    if (scope === "latest" && latestBatchIds && latestBatchIds.size > 0) return drafts.filter((d) => latestBatchIds.has(d.id));
+    if (scope === "latest" && latestBatchIds && latestBatchIds.size > 0) {
+      return drafts.filter((d) => latestBatchIds.has(d.id));
+    }
     return drafts;
   }, [drafts, scope, latestBatchIds]);
 
@@ -319,7 +347,7 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
                         className="h-full rounded-full"
                         style={{
                           width: `${draft.matchScore * 100}%`,
-                          background: draft.matchScore >= 0.9 ? "#16a34a" : draft.matchScore >= 0.8 ? "#0a0a0a" : "#f59e0b",
+                          background: draft.matchScore >= 0.9 ? "#16a34a" : "#0a0a0a",
                         }}
                       />
                     </div>

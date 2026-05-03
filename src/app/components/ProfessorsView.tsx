@@ -18,7 +18,7 @@ const DEFAULT_COLOR = { bg: "#f5f5f5", text: "#525252", border: "#e5e5e5" };
 type GroupBy = "institution" | "none";
 
 function MatchBar({ score }: { score: number }) {
-  const color = score >= 0.9 ? "#16a34a" : score >= 0.8 ? "#0a0a0a" : "#f59e0b";
+  const color = score >= 0.9 ? "#16a34a" : "#0a0a0a";
   return (
     <div className="flex items-center gap-2">
       <div className="rounded-full overflow-hidden" style={{ width: 40, height: 3, background: "#f0f0f0" }}>

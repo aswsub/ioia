@@ -102,6 +102,10 @@ const INST_ALIASES: Record<string, string> = {
   "usc": "University of Southern California",
   "georgia tech": "Georgia Institute of Technology",
   "ut austin": "University of Texas at Austin",
+  "uci": "University of California, Irvine",
+  "uc irvine": "University of California, Irvine",
+  "uc, irvine": "University of California, Irvine",
+  "university of california irvine": "University of California, Irvine",
 };
 
 async function resolveInstitution(name: string): Promise<string | null> {
@@ -211,6 +215,25 @@ async function resolveConcepts(keywords: string[]): Promise<string[]> {
   return [...new Set(ids)];
 }
 
+// ── Seed data loader ─────────────────────────────────────────────────────────
+async function loadSeedData(school: string): Promise<Professor[]> {
+  const schoolLower = school.toLowerCase().trim();
+  const seedName = schoolLower === "mit" ? "mit" :
+                   schoolLower.includes("stanford") ? "stanford" : null;
+  if (!seedName) return [];
+
+  try {
+    const response = await fetch(`/data/seed/${seedName}.json`);
+    if (!response.ok) return [];
+    const data = await response.json() as Professor[];
+    console.log(`Loaded ${data.length} professors from seed data for ${seedName}`);
+    return data;
+  } catch (e) {
+    console.warn(`Failed to load seed data for ${seedName}:`, e);
+    return [];
+  }
+}
+
 // ── Main search: works-first approach ────────────────────────────────────────
 // Search /works by concept + institution, collect unique authors, fetch profiles
 
@@ -221,6 +244,21 @@ export async function searchProfessors(
 ): Promise<Professor[]> {
   if (keywords.length === 0) return [];
   console.log("OpenAlex client:", OA_CLIENT_VERSION);
+
+  // Try seed data first for supported schools
+  if (institutions.length > 0) {
+    const seedData = await loadSeedData(institutions[0]);
+    if (seedData.length > 0) {
+      // Score seed data by keyword match
+      const scored = seedData.map(prof => ({
+        ...prof,
+        matchScore: computeMatchScore(prof.concepts, keywords)
+      }))
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, limit);
+      if (scored.length > 0) return scored;
+    }
+  }
 
   const [instId, conceptIds] = await Promise.all([
     institutions.length > 0 ? resolveInstitution(institutions[0]) : Promise.resolve(null),
@@ -288,12 +326,13 @@ export async function searchProfessors(
       `concepts.id:${conceptsFilter},publication_year:>2017`
     );
   }
-  if (authorIds.length === 0 && instId) {
+  if (authorIds.length === 0 && conceptIds.length > 0) {
+    // Broaden to all years if still no results
     authorIds = await collectAuthorsFromWorks(
-      `institutions.id:${instId},publication_year:>2020`
+      `concepts.id:${conceptsFilter}`
     );
   }
-  // Last resort: keyword title search
+  // Last resort: keyword title search (only if concepts didn't work)
   if (authorIds.length === 0) {
     const titleFilter = instId
       ? `title.search:${keywords.slice(0, 3).join(" ")},institutions.id:${instId}`
@@ -302,13 +341,21 @@ export async function searchProfessors(
   }
 
   // If the user asked for more than we could collect via concept filters, broaden:
-  // pull additional authors from institution-only works and merge.
-  if (instId && authorIds.length < limit) {
-    const extra = await collectAuthorsFromWorks(`institutions.id:${instId},publication_year:>2010`);
-    const merged = new Map<string, true>();
-    for (const id of authorIds) merged.set(id, true);
-    for (const id of extra) merged.set(id, true);
-    authorIds = Array.from(merged.keys());
+  // pull additional authors from related concepts (not just institution-only)
+  if (instId && authorIds.length < limit && conceptIds.length > 0) {
+    // Try searching for related concepts at the same institution
+    const relatedFilter = conceptIds.length > 4 
+      ? conceptIds.slice(4, 8).join("|")
+      : conceptIds.slice(0, 2).join("|");
+    if (relatedFilter) {
+      const extra = await collectAuthorsFromWorks(
+        `concepts.id:${relatedFilter},institutions.id:${instId},publication_year:>2015`
+      );
+      const merged = new Map<string, true>();
+      for (const id of authorIds) merged.set(id, true);
+      for (const id of extra) merged.set(id, true);
+      authorIds = Array.from(merged.keys());
+    }
   }
 
   if (authorIds.length === 0) {
@@ -350,6 +397,20 @@ export async function searchProfessors(
   );
 
   let ranked = professors.sort((a, b) => b.matchScore - a.matchScore);
+
+  // Filter out low-confidence matches (< 0.35 match score) to avoid returning irrelevant professors
+  // This prevents returning psychology professors when searching for reinforcement learning
+  const strongMatches = ranked.filter((p) => p.matchScore >= 0.35);
+  
+  // If we have strong matches, use only those. Otherwise, keep all matches but mark them as weak.
+  if (strongMatches.length > 0) {
+    ranked = strongMatches;
+  } else if (ranked.length > 0) {
+    // Log that we're returning weak matches
+    console.warn(
+      `No strong matches found (threshold: 0.35). Returning ${ranked.length} weak matches with scores: ${ranked.map((p) => `${p.name}:${p.matchScore.toFixed(2)}`).join(", ")}`
+    );
+  }
 
   // Directory fallback: if an institution was requested and OpenAlex can't fill the quota,
   // pull additional names from official directories as low-confidence matches.
@@ -498,7 +559,18 @@ function computeMatchScore(concepts: { name: string; score: number }[], keywords
   let total = 0, hits = 0;
   for (const c of concepts.slice(0, 5)) {
     const name = c.name.toLowerCase();
-    if (kw.some((k) => name.includes(k) || k.includes(name))) { total += c.score; hits++; }
+    // Require more substantial keyword matches, not just substring inclusion
+    // This prevents "making" from matching "reinforcement learning"
+    if (kw.some((k) => {
+      const kwLower = k.toLowerCase();
+      // Exact match or significant substring (at least 4 chars)
+      return name === kwLower || 
+             (name.includes(kwLower) && kwLower.length >= 4) ||
+             (kwLower.includes(name) && name.length >= 4);
+    })) { 
+      total += c.score; 
+      hits++; 
+    }
   }
   return hits > 0 ? Math.min(total / hits, 1) : 0.2;
 }

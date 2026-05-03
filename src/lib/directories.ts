@@ -8,7 +8,7 @@ export type DirectoryHit = {
   profileUrl: string | null;
 };
 
-export type InstitutionKey = "UC Berkeley" | "UCLA" | "CMU" | "Cal Poly";
+export type InstitutionKey = "UC Berkeley" | "UCLA" | "CMU" | "Cal Poly" | "Stanford" | "MIT";
 
 type DirectorySource = {
   institution: InstitutionKey;
@@ -47,6 +47,14 @@ export const DIRECTORY_SOURCES: Record<InstitutionKey, DirectorySource> = {
       // Cal Poly CSSE directory pages can change; adjust as needed
       "https://csc.calpoly.edu/faculty/",
     ],
+  },
+  "Stanford": {
+    institution: "Stanford",
+    urls: [],  // Using seed data instead
+  },
+  "MIT": {
+    institution: "MIT",
+    urls: [],  // Using seed data instead
   },
 };
 

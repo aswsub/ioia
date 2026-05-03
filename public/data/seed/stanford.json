@@ -1,0 +1,138 @@
+[
+  {
+    "id": "A1234567890",
+    "name": "Fei-Fei Li",
+    "affiliation": "Stanford University",
+    "email": "fei-fei@cs.stanford.edu",
+    "homepage": "https://profiles.stanford.edu/fei-fei-li",
+    "concepts": [
+      { "name": "Computer Vision", "score": 0.95 },
+      { "name": "Deep Learning", "score": 0.92 },
+      { "name": "Machine Learning", "score": 0.88 },
+      { "name": "Artificial Intelligence", "score": 0.85 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Towards Faithful and Fair Image Recognition by Alignment and Calibration",
+        "year": 2023,
+        "abstract": "We investigate how to build image recognition models that are both faithful and fair. We propose alignment and calibration techniques to improve model trustworthiness.",
+        "url": "https://arxiv.org/abs/2304.12008"
+      },
+      {
+        "title": "Contrastive Vision-Language Learning with Self-Supervised Augmentation",
+        "year": 2022,
+        "abstract": "A novel approach to vision-language learning using contrastive objectives and self-supervised augmentation strategies.",
+        "url": "https://arxiv.org/abs/2207.13406"
+      },
+      {
+        "title": "Object Recognition from Short Convolutional 3D Nets",
+        "year": 2020,
+        "abstract": "Efficient 3D convolutional networks for real-time object recognition in autonomous systems.",
+        "url": "https://ieeexplore.ieee.org/document/9204516"
+      }
+    ],
+    "matchScore": 0.92
+  },
+  {
+    "id": "A1234567891",
+    "name": "Percy Liang",
+    "affiliation": "Stanford University",
+    "email": "pliang@cs.stanford.edu",
+    "homepage": "https://profiles.stanford.edu/percy-liang",
+    "concepts": [
+      { "name": "Natural Language Processing", "score": 0.96 },
+      { "name": "Machine Learning", "score": 0.91 },
+      { "name": "Semantic Parsing", "score": 0.88 },
+      { "name": "Language Models", "score": 0.85 }
+    ],
+    "recentPapers": [
+      {
+        "title": "In-Context Learning Dynamics with Reference Points",
+        "year": 2023,
+        "abstract": "Understanding how large language models learn from in-context examples and the role of reference points in prompting.",
+        "url": "https://arxiv.org/abs/2310.03529"
+      },
+      {
+        "title": "Memorization and Generalization in Language Models",
+        "year": 2023,
+        "abstract": "Analyzing the trade-off between memorization and generalization in large pre-trained language models.",
+        "url": "https://arxiv.org/abs/2307.01316"
+      },
+      {
+        "title": "Compositional Finetuning for Language Models",
+        "year": 2022,
+        "abstract": "A novel finetuning approach that decomposes tasks into compositional elements for improved generalization.",
+        "url": "https://arxiv.org/abs/2210.03350"
+      }
+    ],
+    "matchScore": 0.89
+  },
+  {
+    "id": "A1234567892",
+    "name": "Stefano Ermon",
+    "affiliation": "Stanford University",
+    "email": "ermon@cs.stanford.edu",
+    "homepage": "https://profiles.stanford.edu/stefano-ermon",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.94 },
+      { "name": "Probabilistic Inference", "score": 0.90 },
+      { "name": "Generative Models", "score": 0.87 },
+      { "name": "Discrete Optimization", "score": 0.82 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Diffusion Models for Combinatorial Optimization",
+        "year": 2023,
+        "abstract": "Leveraging diffusion models to solve challenging combinatorial optimization problems with neural networks.",
+        "url": "https://arxiv.org/abs/2306.09375"
+      },
+      {
+        "title": "Expressive Priors for Generative Models Based on Implicit Score Matching",
+        "year": 2023,
+        "abstract": "Novel methods for incorporating expressive priors into generative models using score matching techniques.",
+        "url": "https://arxiv.org/abs/2309.10954"
+      },
+      {
+        "title": "Autoregressive Diffusion Models",
+        "year": 2021,
+        "abstract": "A new class of diffusion models that operates autoregressively for improved expressiveness and efficiency.",
+        "url": "https://arxiv.org/abs/2110.02037"
+      }
+    ],
+    "matchScore": 0.85
+  },
+  {
+    "id": "A1234567893",
+    "name": "Christopher Ré",
+    "affiliation": "Stanford University",
+    "email": "chrismre@cs.stanford.edu",
+    "homepage": "https://profiles.stanford.edu/christopher-re",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.93 },
+      { "name": "Database Systems", "score": 0.89 },
+      { "name": "Data Management", "score": 0.86 },
+      { "name": "Weak Supervision", "score": 0.83 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Meerkat: A Unified Data System for Exploratory Data Analysis",
+        "year": 2023,
+        "abstract": "A system that bridges machine learning and interactive data exploration through seamless data abstraction.",
+        "url": "https://arxiv.org/abs/2301.03654"
+      },
+      {
+        "title": "Data Programming: Creating Large Training Sets Quickly",
+        "year": 2016,
+        "abstract": "A novel paradigm for rapidly constructing large training datasets through weak supervision and noisy labels.",
+        "url": "https://arxiv.org/abs/1605.07489"
+      },
+      {
+        "title": "Accelerating Inference for Pretrained Language Models by Unified Multi-Perspective Optimization",
+        "year": 2022,
+        "abstract": "Techniques for optimizing the inference speed of large language models across multiple dimensions.",
+        "url": "https://arxiv.org/abs/2210.07079"
+      }
+    ],
+    "matchScore": 0.83
+  }
+]

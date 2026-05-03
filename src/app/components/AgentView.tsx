@@ -9,6 +9,7 @@ import {
 } from "../../lib/db";
 import { extractKeywordsFromPrompt, draftEmail } from "../../lib/claude";
 import { searchProfessors } from "../../lib/openalex";
+import { extractTextFromFile } from "../../lib/ocr";
 import { useAuth } from "../../lib/auth";
 import type { UserProfile } from "../../../cold_email_workflow/prompts/context";
 import type { ToneProfile } from "../../../cold_email_workflow/prompts/tone";
@@ -179,6 +180,7 @@ export function AgentView({
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesRef = useRef<Message[]>([]);
   const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<{ name: string; text: string }[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -351,6 +353,15 @@ export function AgentView({
             description: resume.slice(0, 2000),
           });
 
+          // Add current chat attachments as additional context for drafting.
+          for (const a of attachments.slice(0, 3)) {
+            items.push({
+              title: `Attachment: ${a.name}`.slice(0, 80),
+              org: dbProfile?.university ?? "",
+              description: a.text.slice(0, 1200),
+            });
+          }
+
           return items;
         })(),
         tone: toneProfile,
@@ -396,7 +407,7 @@ export function AgentView({
       const drafts: OutreachDraft[] = [];
       for (const prof of matched) {
         try {
-          const emailDraft = await draftEmail({ user: userProfile, professor: prof, opportunity: opportunityType });
+          const emailDraft = await draftEmail({ user: userProfile, target: { kind: "research", professor: prof } });
           const colors = ["#f0f4ff", "#fff7ed", "#f0fdf4", "#fdf4ff", "#fff1f2"];
           drafts.push({
             id: `draft_${prof.id}_${Date.now()}`,
@@ -424,9 +435,19 @@ export function AgentView({
 
       const summary = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}. I've drafted personalized emails for each — review them in Outreach.`;
       const requested = inferredCount;
-      const note = matched.length < requested
-        ? ` (you asked for ${requested}, but OpenAlex returned ${matched.length} strong matches for that school/topic)`
-        : "";
+      
+      // Check if any matches are low-confidence (< 0.35 score)
+      const lowConfidenceMatches = matched.filter((p) => p.matchScore < 0.35);
+      const hasLowConfidence = lowConfidenceMatches.length > 0;
+      
+      let note = "";
+      if (matched.length < requested) {
+        note = ` (you asked for ${requested}, but OpenAlex returned ${matched.length} strong matches for that school/topic)`;
+      }
+      if (hasLowConfidence && matched.length === 1) {
+        note += ` ⚠️ Note: This is a low-confidence match (${(matched[0].matchScore * 100).toFixed(0)}% relevance). Try broadening your search or using different keywords.`;
+      }
+      
       const summaryWithNote = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}${note}. I've drafted personalized emails for each — review them in Outreach.`;
       const agentMsg: Message = {
         id: (Date.now() + 2).toString(), role: "agent", content: summaryWithNote,
@@ -524,7 +545,11 @@ export function AgentView({
               Describe your research interests and ioia handles discovery, personalization, and outreach.
             </p>
             <InputCard value={input} onChange={(v) => { setInput(v); autoResize(); }} onSend={() => send()}
-              onKeyDown={handleKey} textareaRef={textareaRef} disabled={isThinking} maxWidth={600} />
+              onKeyDown={handleKey} textareaRef={textareaRef} disabled={isThinking} maxWidth={600}
+              attachments={attachments}
+              onAddAttachment={(att) => setAttachments((prev) => [...prev, att].slice(-5))}
+              onRemoveAttachment={(name) => setAttachments((prev) => prev.filter((a) => a.name !== name))}
+            />
             <div className="flex flex-wrap gap-2 justify-center mt-5" style={{ maxWidth: 600 }}>
               {SUGGESTIONS.map((s) => (
                 <button key={s} onClick={() => send(s)}
@@ -583,7 +608,11 @@ export function AgentView({
             style={{ background: "linear-gradient(to top, #fafafa 70%, transparent)" }}>
             <div className="mx-auto" style={{ maxWidth: 640 }}>
               <InputCard value={input} onChange={(v) => { setInput(v); autoResize(); }} onSend={() => send()}
-                onKeyDown={handleKey} textareaRef={textareaRef} disabled={isThinking} />
+                onKeyDown={handleKey} textareaRef={textareaRef} disabled={isThinking}
+                attachments={attachments}
+                onAddAttachment={(att) => setAttachments((prev) => [...prev, att].slice(-5))}
+                onRemoveAttachment={(name) => setAttachments((prev) => prev.filter((a) => a.name !== name))}
+              />
             </div>
           </div>
         )}
@@ -592,16 +621,20 @@ export function AgentView({
   );
 }
 
-function InputCard({ value, onChange, onSend, onKeyDown, textareaRef, disabled, maxWidth }: {
+function InputCard({ value, onChange, onSend, onKeyDown, textareaRef, disabled, maxWidth, attachments, onAddAttachment, onRemoveAttachment }: {
   value: string; onChange: (v: string) => void; onSend: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void; textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean; maxWidth?: number;
+  attachments: { name: string; text: string }[];
+  onAddAttachment: (att: { name: string; text: string }) => void;
+  onRemoveAttachment: (name: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const [activeKind, setActiveKind] = useState<"school" | "topic" | "n">("school");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const tags = parseAtTags(value);
 
-  const SCHOOL_OPTIONS = ["UC Berkeley", "CMU", "UCLA", "Cal Poly SLO"];
+  const SCHOOL_OPTIONS = ["UC Berkeley", "UCLA", "CMU", "Cal Poly SLO", "UC Irvine"];
   const TOPIC_OPTIONS = ["reinforcement learning", "machine learning", "AI infrastructure", "LLMs"];
   const N_OPTIONS = ["3", "5", "10"];
 
@@ -722,13 +755,51 @@ function InputCard({ value, onChange, onSend, onKeyDown, textareaRef, disabled, 
           )}
         </div>
       )}
+      {attachments.length > 0 && (
+        <div className="px-4 pb-1 flex flex-wrap gap-1.5">
+          {attachments.map((a) => (
+            <button
+              key={a.name}
+              onClick={() => onRemoveAttachment(a.name)}
+              className="rounded-full px-2 py-0.5 border"
+              style={{ fontSize: 11, background: "#fff", color: "#525252", borderColor: "#e5e5e5", fontWeight: 300 }}
+              title="Remove attachment"
+            >
+              {a.name} ×
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between px-3 pb-3 pt-1">
-        <button className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors"
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.txt,.md"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                const text = await extractTextFromFile(file);
+                onAddAttachment({ name: file.name, text });
+              } catch (err) {
+                console.warn("attach extract failed:", err);
+              } finally {
+                // allow re-selecting same file
+                e.target.value = "";
+              }
+            }}
+          />
+          <button
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors"
           style={{ fontSize: 12.5, color: "#a3a3a3", fontWeight: 300 }}
+            onClick={() => fileInputRef.current?.click()}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#525252"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#a3a3a3"; }}>
           <Paperclip size={13} /> Attach
-        </button>
+          </button>
+        </div>
         <button onClick={onSend} disabled={!value.trim() || disabled}
           className="flex items-center justify-center rounded-lg"
           style={{ width: 32, height: 32, background: !value.trim() || disabled ? "#e5e5e5" : "#0a0a0a", cursor: !value.trim() || disabled ? "default" : "pointer", transition: "background 0.15s" }}>

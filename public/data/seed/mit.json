@@ -1,0 +1,172 @@
+[
+  {
+    "id": "B1234567890",
+    "name": "Regina Barzilay",
+    "affiliation": "Massachusetts Institute of Technology",
+    "email": "regina@csail.mit.edu",
+    "homepage": "https://people.csail.mit.edu/regina/",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.94 },
+      { "name": "Natural Language Processing", "score": 0.91 },
+      { "name": "Artificial Intelligence", "score": 0.89 },
+      { "name": "Healthcare AI", "score": 0.87 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Towards Interpretable Clinical Trial Design: A Tensor-Based Approach",
+        "year": 2023,
+        "abstract": "Applying tensor decomposition and interpretable ML to understand clinical trial design and patient outcomes.",
+        "url": "https://arxiv.org/abs/2305.11234"
+      },
+      {
+        "title": "Self-Supervised Learning for Drug Discovery and Development",
+        "year": 2022,
+        "abstract": "Novel self-supervised approaches to accelerate molecular property prediction and drug discovery pipelines.",
+        "url": "https://arxiv.org/abs/2207.08890"
+      },
+      {
+        "title": "MolCLR: Molecular Contrastive Learning for Few-Shot Property Prediction",
+        "year": 2022,
+        "abstract": "Contrastive learning framework for efficient few-shot prediction of molecular properties.",
+        "url": "https://arxiv.org/abs/2206.09010"
+      }
+    ],
+    "matchScore": 0.88
+  },
+  {
+    "id": "B1234567891",
+    "name": "Antonio Torralba",
+    "affiliation": "Massachusetts Institute of Technology",
+    "email": "torralba@csail.mit.edu",
+    "homepage": "https://people.csail.mit.edu/torralba/",
+    "concepts": [
+      { "name": "Computer Vision", "score": 0.96 },
+      { "name": "Deep Learning", "score": 0.93 },
+      { "name": "Scene Understanding", "score": 0.89 },
+      { "name": "Image Synthesis", "score": 0.86 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Learning to Manipulate Individual Objects in an Image",
+        "year": 2023,
+        "abstract": "Techniques for enabling fine-grained object manipulation and editing within natural images using neural networks.",
+        "url": "https://arxiv.org/abs/2303.14102"
+      },
+      {
+        "title": "Toward Counterfactual Fairness Through Causal Graphs",
+        "year": 2023,
+        "abstract": "Using causal inference and graphical models to achieve fair machine learning for vision applications.",
+        "url": "https://arxiv.org/abs/2301.00286"
+      },
+      {
+        "title": "Places: An Image Database for Deep Scene Understanding",
+        "year": 2016,
+        "abstract": "A large-scale image database and neural network models for scene recognition and understanding.",
+        "url": "https://arxiv.org/abs/1610.02055"
+      }
+    ],
+    "matchScore": 0.91
+  },
+  {
+    "id": "B1234567892",
+    "name": "Armando Solar-Lezama",
+    "affiliation": "Massachusetts Institute of Technology",
+    "email": "asolar@csail.mit.edu",
+    "homepage": "https://people.csail.mit.edu/asolar/",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.90 },
+      { "name": "Program Synthesis", "score": 0.92 },
+      { "name": "Programming Languages", "score": 0.88 },
+      { "name": "Neural Symbolic AI", "score": 0.82 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Neural Guided Deductive Search for Real-Time Program Synthesis from Examples",
+        "year": 2023,
+        "abstract": "Using neural networks to guide deductive synthesis, enabling real-time program generation from input-output examples.",
+        "url": "https://arxiv.org/abs/2302.06692"
+      },
+      {
+        "title": "Learning to Infer Program Sketches",
+        "year": 2022,
+        "abstract": "Deep learning approach to automatically infer program structure sketches, reducing search space for synthesis.",
+        "url": "https://arxiv.org/abs/2210.14487"
+      },
+      {
+        "title": "The Sketching Approach to Program Synthesis",
+        "year": 2008,
+        "abstract": "Foundational work on sketch-based program synthesis, enabling users to provide partial specifications for code generation.",
+        "url": "https://dl.acm.org/doi/10.1145/1391956.1391959"
+      }
+    ],
+    "matchScore": 0.87
+  },
+  {
+    "id": "B1234567893",
+    "name": "Yoon Kim",
+    "affiliation": "Massachusetts Institute of Technology",
+    "email": "yoonkim@csail.mit.edu",
+    "homepage": "https://people.csail.mit.edu/yoonkim/",
+    "concepts": [
+      { "name": "Natural Language Processing", "score": 0.95 },
+      { "name": "Machine Learning", "score": 0.92 },
+      { "name": "Language Models", "score": 0.90 },
+      { "name": "Deep Learning", "score": 0.87 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Analyzing and Editing Factual Knowledge in Language Models",
+        "year": 2023,
+        "abstract": "Methods for identifying, understanding, and surgically editing factual knowledge stored in neural language models.",
+        "url": "https://arxiv.org/abs/2308.15908"
+      },
+      {
+        "title": "Calibration in Deep Learning",
+        "year": 2023,
+        "abstract": "Comprehensive analysis of how to improve confidence calibration in large language models.",
+        "url": "https://arxiv.org/abs/2308.04313"
+      },
+      {
+        "title": "Convolutional Neural Networks for Sentence Classification",
+        "year": 2014,
+        "abstract": "Pioneering work applying convolutional neural networks to NLP tasks, achieving state-of-the-art results.",
+        "url": "https://arxiv.org/abs/1408.5882"
+      }
+    ],
+    "matchScore": 0.89
+  },
+  {
+    "id": "B1234567894",
+    "name": "Susanne Altoff",
+    "affiliation": "Massachusetts Institute of Technology",
+    "email": "altoff@csail.mit.edu",
+    "homepage": "https://people.csail.mit.edu/altoff/",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.88 },
+      { "name": "Computer Vision", "score": 0.85 },
+      { "name": "Robotics", "score": 0.84 },
+      { "name": "Neural Networks", "score": 0.81 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Vision-Based Mobile Robot Navigation Using Neural Networks",
+        "year": 2023,
+        "abstract": "Deep learning approaches for robust visual navigation in mobile robots using end-to-end neural networks.",
+        "url": "https://arxiv.org/abs/2304.05234"
+      },
+      {
+        "title": "Self-Supervised Representation Learning for Robotics",
+        "year": 2022,
+        "abstract": "Efficient self-supervised learning methods enabling robots to acquire visual representations from unlabeled data.",
+        "url": "https://arxiv.org/abs/2206.11827"
+      },
+      {
+        "title": "Learning Dexterous In-Hand Manipulation",
+        "year": 2019,
+        "abstract": "Using reinforcement learning and simulation to teach robots complex dexterous manipulation skills.",
+        "url": "https://arxiv.org/abs/1808.00177"
+      }
+    ],
+    "matchScore": 0.84
+  }
+]

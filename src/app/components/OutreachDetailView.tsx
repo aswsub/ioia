@@ -498,7 +498,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                   className="h-full rounded-full"
                   style={{
                     width: `${draft.matchScore * 100}%`,
-                    background: draft.matchScore >= 0.9 ? "#16a34a" : draft.matchScore >= 0.8 ? "#0a0a0a" : "#f59e0b",
+                    background: draft.matchScore >= 0.9 ? "#16a34a" : "#0a0a0a",
                     transition: "width 0.6s ease",
                   }}
                 />
