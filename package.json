@@ -9,7 +9,9 @@
     "smoke:tone": "tsx --env-file=.env cold_email_workflow/tests/smoke.ts",
     "extract:tone": "tsx --env-file=.env cold_email_workflow/extract_tone_runner.ts",
     "test:e2e": "tsx --env-file=.env cold_email_workflow/tests/end_to_end.ts",
-    "test:pipeline": "tsx --env-file=.env cold_email_workflow/tests/pipeline.ts"
+    "test:pipeline": "tsx --env-file=.env cold_email_workflow/tests/pipeline.ts",
+    "test:pipeline:internship": "tsx --env-file=.env cold_email_workflow/tests/pipeline_internship.ts",
+    "find:company": "tsx cold_email_workflow/find_company_runner.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

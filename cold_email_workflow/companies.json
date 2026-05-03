@@ -1,0 +1,278 @@
+{
+    "_comment": "SEEDED DEMO DATA. Notable work titles and URLs are real and verified. Contact names and emails are FAKE — do not actually email them. Email format follows each company's typical pattern (firstname@domain or firstname.lastname@domain) for plausibility in the demo. Replace with real verified contacts before any real outreach.",
+    "companies": [
+      {
+        "id": "linear",
+        "name": "Linear",
+        "domain": "linear.app",
+        "blurb": "Issue tracking and project management for software teams, known for a fast, keyboard-driven UI built on a custom realtime sync engine.",
+        "notableWork": [
+          {
+            "title": "Scaling the Linear Sync Engine",
+            "type": "talk",
+            "url": "https://linear.app/blog/scaling-the-linear-sync-engine",
+            "summary": "Cofounder Tuomas Artman details how the realtime sync engine evolved as Linear scaled, including the local-first object graph, MobX-backed in-memory layer, and how they handle conflict resolution without CRDTs for most data.",
+            "author": "Tuomas Artman"
+          },
+          {
+            "title": "Linear's API and webhook system",
+            "type": "product",
+            "url": "https://linear.app/developers/graphql",
+            "summary": "Public GraphQL API and webhook architecture that mirrors the same sync primitives the desktop client uses.",
+            "author": null
+          }
+        ],
+        "teams": ["Sync Engine", "API Platform", "Mobile", "AI"],
+        "contacts": [
+          {
+            "id": "linear-recruiter-1",
+            "name": "Maya Chen",
+            "role": "University Recruiter",
+            "email": "university-recruiting@linear.app",
+            "linkedin": null
+          },
+          {
+            "id": "linear-ic-1",
+            "name": "Daniel Park",
+            "role": "Senior Software Engineer, Sync Engine",
+            "email": "daniel@linear.app",
+            "linkedin": null
+          }
+        ]
+      },
+      {
+        "id": "vercel",
+        "name": "Vercel",
+        "domain": "vercel.com",
+        "blurb": "Frontend cloud platform behind Next.js, focused on edge compute, AI SDK tooling, and developer experience for web apps.",
+        "notableWork": [
+          {
+            "title": "Streaming from serverless Node.js and Edge Runtime on Vercel",
+            "type": "blog",
+            "url": "https://vercel.com/blog/streaming-for-serverless-node-js-and-edge-runtimes-with-vercel-functions",
+            "summary": "How Vercel built HTTP response streaming on top of AWS Lambda using a callback URL bridge, becoming the first serverless provider with stable streaming support.",
+            "author": "Lydia Hallie"
+          },
+          {
+            "title": "Vercel Edge Functions GA",
+            "type": "blog",
+            "url": "https://vercel.com/blog/edge-functions-generally-available",
+            "summary": "Edge Functions running on V8 isolates, including OG Image Generation moving to the edge for ~40% faster response and ~15x lower cost.",
+            "author": null
+          }
+        ],
+        "teams": ["Edge Runtime", "AI SDK", "Next.js", "Turbopack"],
+        "contacts": [
+          {
+            "id": "vercel-recruiter-1",
+            "name": "Priya Shah",
+            "role": "University Recruiter",
+            "email": "university-recruiting@vercel.com",
+            "linkedin": null
+          },
+          {
+            "id": "vercel-ic-1",
+            "name": "Lydia Mendez",
+            "role": "Staff Engineer, Edge Runtime",
+            "email": "lydia@vercel.com",
+            "linkedin": null
+          }
+        ]
+      },
+      {
+        "id": "supabase",
+        "name": "Supabase",
+        "domain": "supabase.com",
+        "blurb": "Open-source Firebase alternative built on Postgres, with auth, realtime, storage, edge functions, and vector embeddings.",
+        "notableWork": [
+          {
+            "title": "Stripe-To-Postgres Sync Engine as a standalone library",
+            "type": "blog",
+            "url": "https://supabase.com/blog/stripe-engine-as-sync-library",
+            "summary": "Open-sourced TypeScript library for syncing Stripe webhook data directly into Postgres, designed for serverless and Node.js backends.",
+            "author": null
+          },
+          {
+            "title": "Sync Stripe Data to Your Supabase Database in One Click",
+            "type": "launch",
+            "url": "https://supabase.com/blog/stripe-sync-engine-integration",
+            "summary": "Dashboard integration that makes the Stripe Sync Engine a one-click install on any Supabase project.",
+            "author": null
+          }
+        ],
+        "teams": ["Realtime", "Auth", "Postgres", "Edge Functions"],
+        "contacts": [
+          {
+            "id": "supabase-recruiter-1",
+            "name": "Tomas Reinhardt",
+            "role": "University Recruiter",
+            "email": "university-recruiting@supabase.com",
+            "linkedin": null
+          },
+          {
+            "id": "supabase-ic-1",
+            "name": "Hannah Liu",
+            "role": "Senior Engineer, Realtime",
+            "email": "hannah@supabase.com",
+            "linkedin": null
+          }
+        ]
+      },
+      {
+        "id": "ramp",
+        "name": "Ramp",
+        "domain": "ramp.com",
+        "blurb": "Spend management and corporate cards for businesses, known for an engineering-first culture and aggressive AI tooling adoption.",
+        "notableWork": [
+          {
+            "title": "How Ramp's engineering operates at hyperspeed with Claude Code",
+            "type": "blog",
+            "url": "https://www.anthropic.com/customers/ramp",
+            "summary": "How Ramp engineers built test-automation extensions on top of Claude Code, with ~50% of engineers using it weekly and 1M+ lines of AI-assisted code generated in 30 days.",
+            "author": null
+          },
+          {
+            "title": "Ramp's product platform and approval workflows",
+            "type": "product",
+            "url": "https://ramp.com/product",
+            "summary": "Merchant-level spend restrictions, automated approval workflows, and expense processing — the systems that handle real-time policy enforcement at scale.",
+            "author": null
+          }
+        ],
+        "teams": ["Payments Platform", "Spend Controls", "Data Platform", "Risk"],
+        "contacts": [
+          {
+            "id": "ramp-recruiter-1",
+            "name": "Aditya Rao",
+            "role": "University Recruiter",
+            "email": "university-recruiting@ramp.com",
+            "linkedin": null
+          },
+          {
+            "id": "ramp-ic-1",
+            "name": "Zack Goldberg",
+            "role": "Senior Software Engineer, Payments Platform",
+            "email": "zack@ramp.com",
+            "linkedin": null
+          }
+        ]
+      },
+      {
+        "id": "anthropic",
+        "name": "Anthropic",
+        "domain": "anthropic.com",
+        "blurb": "AI safety company building Claude. Engineering work spans frontier model training, agentic systems like Claude Code, and the developer platform.",
+        "notableWork": [
+          {
+            "title": "How we designed Claude Code auto mode",
+            "type": "blog",
+            "url": "https://www.anthropic.com/engineering",
+            "summary": "How the Claude Code team built and tested classifiers to make permission decisions automatically, instead of always prompting the user.",
+            "author": null
+          },
+          {
+            "title": "Building effective agents",
+            "type": "blog",
+            "url": "https://www.anthropic.com/engineering/building-effective-agents",
+            "summary": "Anthropic's principles for designing agentic systems with LLMs, emphasizing simplicity and composability over heavyweight frameworks.",
+            "author": null
+          }
+        ],
+        "teams": ["Claude Code", "Developer Platform", "Inference", "Agents"],
+        "contacts": [
+          {
+            "id": "anthropic-recruiter-1",
+            "name": "Elena Park",
+            "role": "University Recruiter",
+            "email": "university-recruiting@anthropic.com",
+            "linkedin": null
+          },
+          {
+            "id": "anthropic-ic-1",
+            "name": "Marcus Chen",
+            "role": "Member of Technical Staff, Claude Code",
+            "email": "marcus@anthropic.com",
+            "linkedin": null
+          }
+        ]
+      },
+      {
+        "id": "perplexity",
+        "name": "Perplexity",
+        "domain": "perplexity.ai",
+        "blurb": "AI-native answer engine combining search, retrieval, and large language models to replace traditional web search for many queries.",
+        "notableWork": [
+          {
+            "title": "Perplexity's search index and retrieval stack",
+            "type": "product",
+            "url": "https://www.perplexity.ai",
+            "summary": "Realtime search, retrieval, and citation pipeline that grounds LLM answers in fresh web sources — the technical core of the product.",
+            "author": null
+          },
+          {
+            "title": "Perplexity Comet browser",
+            "type": "launch",
+            "url": "https://www.perplexity.ai/comet",
+            "summary": "Agentic browser that uses Perplexity's models to take actions on the user's behalf across tabs and websites.",
+            "author": null
+          }
+        ],
+        "teams": ["Search", "Retrieval", "Browser Agents", "Mobile"],
+        "contacts": [
+          {
+            "id": "perplexity-recruiter-1",
+            "name": "Sara Khan",
+            "role": "University Recruiter",
+            "email": "university-recruiting@perplexity.ai",
+            "linkedin": null
+          },
+          {
+            "id": "perplexity-ic-1",
+            "name": "Ravi Subramanian",
+            "role": "Senior Engineer, Search",
+            "email": "ravi@perplexity.ai",
+            "linkedin": null
+          }
+        ]
+      },
+      {
+        "id": "retool",
+        "name": "Retool",
+        "domain": "retool.com",
+        "blurb": "Internal tools platform that lets teams build admin panels, dashboards, and workflows on top of any database or API.",
+        "notableWork": [
+          {
+            "title": "Retool AI and Agents",
+            "type": "product",
+            "url": "https://retool.com/products/ai",
+            "summary": "AI-powered actions and agent workflows that integrate LLMs into internal tools, with model routing and structured output handling.",
+            "author": null
+          },
+          {
+            "title": "Retool Workflows",
+            "type": "product",
+            "url": "https://retool.com/products/workflows",
+            "summary": "Cron and event-triggered automations with Python and JS code blocks, queue processing, and observability built in.",
+            "author": null
+          }
+        ],
+        "teams": ["Workflows", "AI", "Mobile", "Database"],
+        "contacts": [
+          {
+            "id": "retool-recruiter-1",
+            "name": "James Whitford",
+            "role": "University Recruiter",
+            "email": "university-recruiting@retool.com",
+            "linkedin": null
+          },
+          {
+            "id": "retool-ic-1",
+            "name": "Nina Vasquez",
+            "role": "Senior Engineer, Workflows",
+            "email": "nina@retool.com",
+            "linkedin": null
+          }
+        ]
+      }
+    ]
+  }

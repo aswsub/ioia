@@ -14,12 +14,15 @@ import {
   type DraftEmailInput,
 } from "../prompts/draft_email"
 import type { ToneProfile } from "../prompts/tone"
-import type { ExperienceItem, Professor, UserProfile } from "../prompts/context"
+import type { ExperienceItem, UserProfile } from "../prompts/context"
 import {
   ExtractedTonePhrasesSchema,
   EmailDraftSchema,
   assertDraftEmailInputViable,
+  type Company,
+  type CompanyContact,
 } from "../schemas"
+import { findCompany } from "../find_company"
 
 type ExtractedTonePhrases = z.infer<typeof ExtractedTonePhrasesSchema>
 type EmailDraft = z.infer<typeof EmailDraftSchema>
@@ -27,9 +30,7 @@ type EmailDraft = z.infer<typeof EmailDraftSchema>
 const client = new Anthropic()
 
 // ============================================================================
-// Pipeline helpers (non-streaming variant for testing — duplicated from
-// tests/end_to_end.ts. Lift into shared `runtime.ts` when both call sites
-// would benefit from changes propagating.)
+// Pipeline helpers (non-streaming variant, mirrors tests/pipeline.ts).
 // ============================================================================
 
 async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases> {
@@ -83,30 +84,61 @@ async function draftEmail(input: DraftEmailInput): Promise<EmailDraft> {
 }
 
 // ============================================================================
-// Single fixture input — change values here to test against different inputs.
+// Internship outreach scenarios. Each scenario picks a Company + Contact
+// from the verified seed file via findCompany. Two scenarios verify the
+// authorship-attribution branch:
+//   1. Linear / Daniel Park — IC, but the talk's author is Tuomas Artman.
+//      The model must NOT say "your talk." Should attribute to Tuomas
+//      or "your team's."
+//   2. Vercel / Lydia Mendez — IC. The streaming post's author is Lydia
+//      Hallie. Same first name, different person. Authorship match is
+//      exact-string, so the model should NOT conflate them.
 // ============================================================================
 
-const PROFESSOR: Professor = {
-  id: "fixture_berkeley_1",
-  name: "Dr. Sanjit Seshia",
-  affiliation: "UC Berkeley",
-  email: null,
-  homepage: "https://people.eecs.berkeley.edu/~sseshia/",
-  concepts: [
-    { name: "formal methods", score: 0.81 },
-    { name: "program synthesis", score: 0.74 },
-    { name: "cyber-physical systems", score: 0.58 },
-  ],
-  recentPapers: [
-    {
-      title: "Inductive synthesis of distributed-system invariants from execution traces",
-      year: 2024,
-      abstract:
-        "We present a CEGIS-based pipeline for inferring invariants of distributed protocols from finite trace samples. The synthesized invariants are verified against TLA+ models and explored in case studies on Raft and Paxos variants.",
-      url: "https://example.org/papers/cegis-distributed",
-    },
-  ],
-  matchScore: 0.84,
+type Scenario = {
+  label: string
+  query: string
+  teamFocus: string
+}
+
+const SCENARIOS: Scenario[] = [
+  {
+    label: "Linear / Daniel Park (IC, talk author = Tuomas Artman, cofounder)",
+    query: "Linear sync engine internship",
+    teamFocus: "Sync Engine",
+  },
+  {
+    label: "Vercel / Lydia Mendez (IC, post author = Lydia Hallie — peer-level + name-similarity canary)",
+    query: "Vercel edge runtime",
+    teamFocus: "Edge Runtime",
+  },
+  {
+    label: "Anthropic / Marcus Chen (IC, both notableWork have author=null) — should INCLUDE FOCUS sentence",
+    query: "Anthropic Claude Code internship",
+    teamFocus: "Claude Code",
+  },
+  {
+    label: "Anthropic / Elena Park (RECRUITER) — should OMIT FOCUS sentence",
+    query: "Anthropic internship",
+    teamFocus: "Claude Code",
+  },
+]
+
+function loadTarget(query: string): { company: Company; contact: CompanyContact } {
+  const result = findCompany(query)
+  const match = result.matches[0]
+  if (!match) {
+    throw new Error(
+      `findCompany("${query}") returned no matches. Check cold_email_workflow/companies.json.`,
+    )
+  }
+  const contact = match.company.contacts.find(c => c.id === match.suggestedContactId)
+  if (!contact) {
+    throw new Error(
+      `Suggested contact id "${match.suggestedContactId}" not found in ${match.company.name}'s contacts.`,
+    )
+  }
+  return { company: match.company, contact }
 }
 
 const WRITING_SAMPLE = `Built a thing this weekend that scrapes professor pages and dumps a CSV. Honestly thought it'd take 2 hours, ended up shipping at 4am. The gnarly part was OpenAlex rate limits — I ended up batching with backoff and that fixed it. Not perfect but it works on three universities.`
@@ -120,7 +152,7 @@ const EXPERIENCE: ExperienceItem[] = [
   },
 ]
 
-const RESEARCH_INTERESTS = ["program synthesis", "distributed systems"]
+const RESEARCH_INTERESTS = ["realtime sync", "developer tools"]
 
 // ============================================================================
 // Run
@@ -138,7 +170,8 @@ function printDraft(draft: EmailDraft): void {
     console.log(`  [${c.source}] ${c.claim}`)
     console.log(`          ref: ${c.ref}`)
   }
-  console.log(`body:`)
+  const wordCount = draft.body.trim().split(/\s+/).length
+  console.log(`body (${wordCount} words):`)
   console.log("-".repeat(70))
   for (const line of draft.body.split("\n")) console.log(line)
   console.log("-".repeat(70))
@@ -150,12 +183,12 @@ async function main(): Promise<void> {
     researchInterests: RESEARCH_INTERESTS,
   })
 
+  // Tone extraction is shared across scenarios (same writing sample, same user).
   const phrases = await extractTonePhrases(WRITING_SAMPLE)
-
   const tone: ToneProfile = {
-    voice: "conversational",
-    length: "moderate",
-    traits: ["mentions_specific_paper", "asks_genuine_question", "avoids_buzzwords"],
+    voice: "direct",
+    length: "concise",
+    traits: ["mentions_specific_paper", "data_driven_language", "avoids_buzzwords"],
     ...phrases,
   }
 
@@ -166,17 +199,41 @@ async function main(): Promise<void> {
     gpa: 3.7,
     researchInterests: RESEARCH_INTERESTS,
     shortBio:
-      "CS junior at Cal Poly, focused on systems and verification. Looking for a research role for fall 2026.",
+      "CS junior at Cal Poly. Looking for a SWE internship for summer 2026, ideally on a team building developer tooling or realtime systems.",
     experience: EXPERIENCE,
     tone,
   }
 
-  const draft = await draftEmail({
-    user,
-    target: { kind: "research", professor: PROFESSOR },
-  })
+  for (const scenario of SCENARIOS) {
+    console.log("=".repeat(72))
+    console.log(scenario.label)
+    console.log("=".repeat(72))
 
-  printDraft(draft)
+    const { company, contact } = loadTarget(scenario.query)
+    console.log(`recipient: ${contact.name} (${contact.role})`)
+    const authoredByRecipient = company.notableWork.find(w => w.author === contact.name)
+    const namedAuthors = company.notableWork
+      .filter(w => w.author !== null)
+      .map(w => `${w.title} -> ${w.author}`)
+    console.log(`recipient authored notableWork: ${authoredByRecipient ? authoredByRecipient.title : "(none)"}`)
+    if (namedAuthors.length > 0) {
+      console.log(`named-author works in this company: ${namedAuthors.join(" | ")}`)
+    }
+    console.log()
+
+    const draft = await draftEmail({
+      user,
+      target: {
+        kind: "internship",
+        company,
+        contact,
+        teamFocus: scenario.teamFocus,
+      },
+    })
+
+    printDraft(draft)
+    console.log()
+  }
 }
 
 main().catch(err => {

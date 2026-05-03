@@ -11,6 +11,7 @@ import {
   EMAIL_DRAFT_TOOL,
   buildDraftEmailSystem,
   buildDraftEmailUserMessage,
+  maxTokensFor,
   type DraftEmailInput,
 } from "../prompts/draft_email"
 import {
@@ -209,7 +210,7 @@ async function extractTonePhrases(sample: string): Promise<ExtractedTonePhrases>
 async function streamDraftEmail(input: DraftEmailInput): Promise<EmailDraft> {
   const stream = client.messages.stream({
     model: "claude-sonnet-4-5",
-    max_tokens: 1500,
+    max_tokens: maxTokensFor(input.target.kind),
     system: buildDraftEmailSystem(input),
     tools: [EMAIL_DRAFT_TOOL as unknown as Anthropic.Messages.Tool],
     tool_choice: { type: "tool", name: EMAIL_DRAFT_TOOL.name },
@@ -361,7 +362,20 @@ async function main() {
   console.log("=".repeat(72))
   console.log("Step 2: drafting email (Sonnet, streaming)…")
   console.log("=".repeat(72))
-  const draft = await streamDraftEmail({ user, professor, opportunity, userNotes })
+  // The interactive runner only supports research outreach right now. Internship
+  // outreach needs Company + CompanyContact data, which lives in
+  // data/seed/companies.json and is wired through find_company_runner.ts.
+  if (opportunity === "internship") {
+    throw new Error(
+      "end_to_end.ts does not yet collect Company/Contact data for internship outreach. " +
+        "Use find_company_runner.ts (or pipeline_internship.ts) for the internship path.",
+    )
+  }
+  const draft = await streamDraftEmail({
+    user,
+    target: { kind: "research", professor },
+    userNotes,
+  })
 
   // 12. final draft pretty-print
   console.log()
