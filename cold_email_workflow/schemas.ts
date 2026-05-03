@@ -104,12 +104,24 @@ export const EmailDraftSchema = z.object({
 // suggested.
 const TO_FILL = "TO_FILL"
 
+// Email may be:
+//   - a valid email string (seed: hand-curated; live: Apollo unlocked)
+//   - the TO_FILL sentinel (seed-only, gets filtered out by findCompanyMatches)
+//   - null (live discovery: Apollo couldn't unlock + no pattern guess available)
+//
+// emailStatus tracks how trustworthy the address is so the UI can warn the
+// user before send. Optional for backwards compatibility with the seed file
+// (seed entries are all "verified" by hand).
+export const EmailStatusSchema = z.enum(["verified", "guessed", "unknown"])
+export type EmailStatus = z.infer<typeof EmailStatusSchema>
+
 export const CompanyContactSchema = z.object({
   id: z.string(),
   name: z.string(),
   role: z.string(), // "Recruiter, University", "Senior SWE, Sync Team"
-  email: z.union([z.string().email(), z.literal(TO_FILL)]),
+  email: z.union([z.string().email(), z.literal(TO_FILL), z.null()]),
   linkedin: z.union([z.string().url(), z.literal(TO_FILL), z.null()]),
+  emailStatus: EmailStatusSchema.optional(),
 })
 
 export const NotableWorkSchema = z.object({
@@ -131,7 +143,10 @@ export const CompanySchema = z.object({
   name: z.string(), // "Linear"
   domain: z.string(), // "linear.app"
   blurb: z.string(), // one-line description of what they do
-  notableWork: z.array(NotableWorkSchema).min(1).max(5),
+  // min(0) so live-discovered companies (no curated notableWork) validate.
+  // Seed entries are still expected to have at least one — that's a curation
+  // standard, not a schema invariant.
+  notableWork: z.array(NotableWorkSchema).min(0).max(5),
   teams: z.array(z.string()), // ["Sync Engine", "Mobile", "API Platform"]
   contacts: z.array(CompanyContactSchema).min(1),
 })
