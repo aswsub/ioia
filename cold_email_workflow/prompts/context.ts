@@ -15,6 +15,13 @@ export type ExperienceItem = {
   endDate?: string
 }
 
+export type Project = {
+  name: string
+  description: string
+  technologies?: string[]
+  link?: string
+}
+
 export type UserProfile = {
   fullName: string
   university: string
@@ -23,6 +30,7 @@ export type UserProfile = {
   researchInterests: string[]
   shortBio: string
   experience: ExperienceItem[]
+  projects: Project[]
   tone: ToneProfile
 }
 
@@ -80,6 +88,21 @@ function renderExperience(items: ExperienceItem[]): string {
       const dates = dateParts.join(" to ")
       const head = `${i + 1}. ${ut(e.title)}, ${ut(e.org)}${dates ? ` (${dates})` : ""}`
       return `${head}\n   ${ut(e.description)}`
+    })
+    .join("\n")
+}
+
+function renderProjects(items: Project[]): string {
+  return items
+    .map((p, i) => {
+      let head = `${i + 1}. ${ut(p.name)}`
+      if (p.technologies && p.technologies.length > 0) {
+        head += ` — ${ut(p.technologies.join(", "))}`
+      }
+      if (p.link) {
+        head += ` (${ut(p.link)})`
+      }
+      return `${head}\n   ${ut(p.description)}`
     })
     .join("\n")
 }
@@ -183,6 +206,14 @@ export function renderContextBlock(input: ContextInput): string {
     "Experience (pick the SINGLE most relevant item to reference; ignore the rest):",
     experience.length > 0 ? renderExperience(experience) : "  (none provided)",
   )
+
+  if (user.projects.length > 0) {
+    sections.push(
+      "",
+      "Projects (reference specific projects if relevant to professor's work):",
+      renderProjects(user.projects.slice(0, 5)),
+    )
+  }
 
   if (userNotes?.trim()) {
     sections.push(

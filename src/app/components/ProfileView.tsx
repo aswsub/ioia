@@ -8,7 +8,8 @@ import {
 import { useAuth } from "../../lib/auth";
 import { loadUserProfile, saveUserProfile } from "../../lib/db";
 import { extractTextFromFile } from "../../lib/ocr";
-import { extractToneFromSample } from "../../lib/claude";
+import { extractToneFromSample, extractProjectsFromResume } from "../../lib/claude";
+import type { Project } from "../../cold_email_workflow/prompts/context";
 
 type Tab = "profile" | "resume" | "writing" | "style";
 
@@ -182,6 +183,8 @@ export function ProfileView({ onBack }: ProfileViewProps) {
   });
 
   const [resumeFiles, setResumeFiles] = useState<UploadedFile[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [extractingProjects, setExtractingProjects] = useState(false);
   const [writingFiles, setWritingFiles] = useState<UploadedFile[]>([]);
   const [writingPaste, setWritingPaste] = useState("");
 
@@ -224,6 +227,15 @@ export function ProfileView({ onBack }: ProfileViewProps) {
       if (p.writing_sample_text) {
         setWritingFiles([{ id: "saved_writing", name: "Saved writing sample", size: `${(p.writing_sample_text.length / 1024).toFixed(1)} KB`, text: p.writing_sample_text }]);
       }
+      // Load existing projects
+      if (p.projects_json) {
+        try {
+          const parsed = JSON.parse(p.projects_json) as Project[];
+          setProjects(parsed);
+        } catch (e) {
+          console.error("Failed to parse projects:", e);
+        }
+      }
     });
   }, [user]);
 
@@ -234,6 +246,7 @@ export function ProfileView({ onBack }: ProfileViewProps) {
     writingPaste?: string;
     style?: StylePrefs;
     profile?: ProfileData;
+    projects?: Project[];
   } = {}) => {
     if (!user) return;
     const rf = overrides.resumeFiles ?? resumeFiles;
@@ -241,6 +254,7 @@ export function ProfileView({ onBack }: ProfileViewProps) {
     const wp = overrides.writingPaste ?? writingPaste;
     const st = overrides.style ?? style;
     const pr = overrides.profile ?? profile;
+    const currentProjects = overrides.projects ?? projects;
 
     await saveUserProfile({
       id: user.id,
@@ -253,6 +267,7 @@ export function ProfileView({ onBack }: ProfileViewProps) {
       short_bio: pr.bio,
       resume_text: rf.map((f) => f.text).join("\n\n") || null,
       writing_sample_text: wf.map((f) => f.text).join("\n\n") || wp || null,
+      projects_json: currentProjects.length > 0 ? JSON.stringify(currentProjects) : null,
       tone_voice: st.tone.toLowerCase(),
       tone_length: st.length.split(" ")[0].toLowerCase(),
       tone_traits: st.traits,
@@ -293,6 +308,24 @@ export function ProfileView({ onBack }: ProfileViewProps) {
     setResumeFiles(updated);
     // Autosave immediately after upload
     await autosave({ resumeFiles: updated });
+
+    // Extract projects from resume
+    const resumeText = updated.map((f) => f.text).join("\n\n");
+    if (resumeText.trim().length > 100) {
+      setExtractingProjects(true);
+      try {
+        const extracted = await extractProjectsFromResume(resumeText);
+        if (extracted.length > 0) {
+          setProjects(extracted);
+          // Autosave the extracted projects
+          await autosave({ resumeFiles: updated, projects: extracted });
+        }
+      } catch (e) {
+        console.error("Project extraction failed:", e);
+      } finally {
+        setExtractingProjects(false);
+      }
+    }
   };
 
   const handleWritingFiles = async (files: UploadedFile[]) => {
@@ -354,6 +387,7 @@ export function ProfileView({ onBack }: ProfileViewProps) {
       short_bio: profile.bio,
       resume_text: resumeText,
       writing_sample_text: writingText,
+      projects_json: projects.length > 0 ? JSON.stringify(projects) : null,
       tone_voice: style.tone.toLowerCase(),
       tone_length: style.length.split(" ")[0].toLowerCase(),
       tone_traits: style.traits,
@@ -483,6 +517,64 @@ export function ProfileView({ onBack }: ProfileViewProps) {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Projects section */}
+                {(projects.length > 0 || extractingProjects) && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <SectionLabel>Projects from resume</SectionLabel>
+                      {extractingProjects && (
+                        <div className="flex items-center gap-1.5" style={{ fontSize: 11, color: "#a3a3a3", fontWeight: 300 }}>
+                          <Loader2 size={10} style={{ animation: "spin 1s linear infinite" }} />
+                          Extracting…
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {projects.map((proj, idx) => (
+                        <div key={idx} className="rounded-lg border px-4 py-3" style={{ borderColor: "#f0f0f0", background: "#fff" }}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p style={{ fontSize: 13, fontWeight: 400, color: "#0a0a0a", marginBottom: 2 }}>
+                                {proj.name}
+                              </p>
+                              <p style={{ fontSize: 12, color: "#737373", fontWeight: 300, lineHeight: 1.5, marginBottom: proj.technologies && proj.technologies.length > 0 ? 6 : 0 }}>
+                                {proj.description}
+                              </p>
+                              {proj.technologies && proj.technologies.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {proj.technologies.map((tech) => (
+                                    <span key={tech} className="rounded-full px-2 py-0.5" style={{ fontSize: 11, background: "#f5f5f5", color: "#525252", border: "1px solid #e5e5e5" }}>
+                                      {tech}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {proj.link && (
+                                <p style={{ fontSize: 11, color: "#0066cc", marginTop: 6, wordBreak: "break-all" }}>
+                                  <a href={proj.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", borderBottom: "1px solid currentColor" }}>
+                                    {proj.link}
+                                  </a>
+                                </p>
+                              )}
+                            </div>
+                            <button onClick={() => {
+                              const updated = projects.filter((_, i) => i !== idx);
+                              setProjects(updated);
+                              autosave({ projects: updated });
+                            }}
+                              className="opacity-60 hover:opacity-100 transition-opacity flex-shrink-0"
+                              style={{ color: "#a3a3a3" }}
+                              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
+                              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#a3a3a3"; }}>
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
