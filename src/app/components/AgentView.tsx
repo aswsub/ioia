@@ -435,9 +435,21 @@ export function AgentView({
           } catch (e) { console.error(`Failed to draft for ${company.name}:`, e); }
         }
 
-        const matchedCount = result.matches.length;
-        const companyNames = result.matches.map((m) => m.company.name).slice(0, 3).join(", ");
-        summaryWithNote = `Found ${matchedCount} compan${matchedCount !== 1 ? "ies" : "y"} matching your internship search (${companyNames}). I've drafted personalized emails for each, review them in Outreach.`;
+        // Drafts may include multiple contacts per company (e.g. Figma has
+        // a recruiter + two ICs), so count unique companies separately from
+        // the email-row count to keep the summary accurate.
+        const draftCount = drafts.length;
+        const uniqueCompanyNames = Array.from(new Set(result.matches.map((m) => m.company.name)));
+        const companyList = uniqueCompanyNames.slice(0, 3).join(", ");
+        const emailWord = `email${draftCount !== 1 ? "s" : ""}`;
+        if (uniqueCompanyNames.length === 1) {
+          const recipient = uniqueCompanyNames[0];
+          summaryWithNote = draftCount > 1
+            ? `Drafted ${draftCount} ${emailWord} to people at ${recipient} (one per contact). Review them in Outreach.`
+            : `Drafted ${draftCount} ${emailWord} to ${recipient}. Review it in Outreach.`;
+        } else {
+          summaryWithNote = `Drafted ${draftCount} ${emailWord} for your internship search across ${uniqueCompanyNames.length} companies (${companyList}). Review them in Outreach.`;
+        }
       } else {
         console.log("Searching OpenAlex with:", { allKeywords, institutions: inferredInstitutions, inferredCount });
         const matched = await searchProfessors(allKeywords, inferredInstitutions, inferredCount);
