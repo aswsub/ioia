@@ -1,0 +1,138 @@
+[
+  {
+    "id": "D1234567890",
+    "name": "Sergey Levine",
+    "affiliation": "University of California, Berkeley",
+    "email": "sergey@eecs.berkeley.edu",
+    "homepage": "https://people.eecs.berkeley.edu/~svlevine/",
+    "concepts": [
+      { "name": "Reinforcement Learning", "score": 0.96 },
+      { "name": "Machine Learning", "score": 0.93 },
+      { "name": "Robotics", "score": 0.90 },
+      { "name": "Deep Learning", "score": 0.88 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Offline Reinforcement Learning: Leveraging Learned Representations",
+        "year": 2023,
+        "abstract": "Methods for effective offline reinforcement learning using learned representations from offline data.",
+        "url": "https://arxiv.org/abs/2312.04123"
+      },
+      {
+        "title": "Preference-Based Reinforcement Learning",
+        "year": 2022,
+        "abstract": "Learning robot behaviors from human preferences rather than explicit reward functions.",
+        "url": "https://arxiv.org/abs/2210.03352"
+      },
+      {
+        "title": "Language Models as Zero-Shot Planners for Embodied Agents",
+        "year": 2022,
+        "abstract": "Using large language models to enable zero-shot planning for robotic tasks through language understanding.",
+        "url": "https://arxiv.org/abs/2201.07207"
+      }
+    ],
+    "matchScore": 0.91
+  },
+  {
+    "id": "D1234567891",
+    "name": "Trevor Darrell",
+    "affiliation": "University of California, Berkeley",
+    "email": "trevor@eecs.berkeley.edu",
+    "homepage": "https://people.eecs.berkeley.edu/~trevor/",
+    "concepts": [
+      { "name": "Computer Vision", "score": 0.97 },
+      { "name": "Deep Learning", "score": 0.94 },
+      { "name": "Transfer Learning", "score": 0.91 },
+      { "name": "Multimodal Learning", "score": 0.88 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Vision Transformers for Dense Prediction",
+        "year": 2023,
+        "abstract": "Extending vision transformers to dense prediction tasks like segmentation and depth estimation.",
+        "url": "https://arxiv.org/abs/2304.08552"
+      },
+      {
+        "title": "Self-Supervised Learning in Vision",
+        "year": 2022,
+        "abstract": "Recent advances in self-supervised learning for vision using contrastive and masked modeling approaches.",
+        "url": "https://arxiv.org/abs/2208.09648"
+      },
+      {
+        "title": "Efficient Transfer Learning for Computer Vision",
+        "year": 2021,
+        "abstract": "Practical techniques for efficient transfer learning and domain adaptation in vision models.",
+        "url": "https://arxiv.org/abs/2108.04543"
+      }
+    ],
+    "matchScore": 0.92
+  },
+  {
+    "id": "D1234567892",
+    "name": "Michael I. Jordan",
+    "affiliation": "University of California, Berkeley",
+    "email": "jordan@cs.berkeley.edu",
+    "homepage": "https://people.eecs.berkeley.edu/~jordan/",
+    "concepts": [
+      { "name": "Machine Learning", "score": 0.98 },
+      { "name": "Probabilistic Inference", "score": 0.95 },
+      { "name": "Graphical Models", "score": 0.92 },
+      { "name": "Deep Learning", "score": 0.89 }
+    ],
+    "recentPapers": [
+      {
+        "title": "Principles of Foundation Models",
+        "year": 2023,
+        "abstract": "Foundational principles for building and understanding large-scale pre-trained foundation models.",
+        "url": "https://arxiv.org/abs/2310.16634"
+      },
+      {
+        "title": "Algorithmic Game Theory and Machine Learning",
+        "year": 2022,
+        "abstract": "Connections between algorithmic game theory and machine learning for multi-agent systems.",
+        "url": "https://arxiv.org/abs/2207.01234"
+      },
+      {
+        "title": "On the Computational Complexity of Machine Learning",
+        "year": 2020,
+        "abstract": "Theoretical analysis of computational complexity in machine learning algorithms.",
+        "url": "https://arxiv.org/abs/2005.03456"
+      }
+    ],
+    "matchScore": 0.93
+  },
+  {
+    "id": "D1234567893",
+    "name": "Jitendra Malik",
+    "affiliation": "University of California, Berkeley",
+    "email": "malik@eecs.berkeley.edu",
+    "homepage": "https://people.eecs.berkeley.edu/~malik/",
+    "concepts": [
+      { "name": "Computer Vision", "score": 0.96 },
+      { "name": "Shape Analysis", "score": 0.93 },
+      { "name": "3D Vision", "score": 0.90 },
+      { "name": "Object Recognition", "score": 0.88 }
+    ],
+    "recentPapers": [
+      {
+        "title": "3D Shape Understanding from Images",
+        "year": 2023,
+        "abstract": "Methods for reconstructing and understanding 3D shapes from 2D images using modern deep learning.",
+        "url": "https://arxiv.org/abs/2306.02897"
+      },
+      {
+        "title": "Contrastive Learning for 3D Vision",
+        "year": 2022,
+        "abstract": "Self-supervised and contrastive learning methods for 3D vision tasks and representations.",
+        "url": "https://arxiv.org/abs/2209.04564"
+      },
+      {
+        "title": "Holistic Understanding of Scenes",
+        "year": 2020,
+        "abstract": "Methods for scene understanding combining object detection, segmentation, and spatial reasoning.",
+        "url": "https://arxiv.org/abs/2012.08753"
+      }
+    ],
+    "matchScore": 0.89
+  }
+]

@@ -218,8 +218,15 @@ async function resolveConcepts(keywords: string[]): Promise<string[]> {
 // ── Seed data loader ─────────────────────────────────────────────────────────
 async function loadSeedData(school: string): Promise<Professor[]> {
   const schoolLower = school.toLowerCase().trim();
-  const seedName = schoolLower === "mit" ? "mit" :
-                   schoolLower.includes("stanford") ? "stanford" : null;
+
+  let seedName: string | null = null;
+  if (schoolLower === "mit" || schoolLower.includes("massachusetts institute")) seedName = "mit";
+  else if (schoolLower.includes("stanford")) seedName = "stanford";
+  else if (schoolLower.includes("berkeley") || schoolLower.includes("uc berkeley")) seedName = "berkeley";
+  else if (schoolLower.includes("ucla") || schoolLower.includes("los angeles")) seedName = "ucla";
+  else if (schoolLower.includes("cal poly") || schoolLower.includes("calpoly")) seedName = "cal-poly";
+  else if (schoolLower.includes("cmu") || schoolLower.includes("carnegie")) seedName = "cmu";
+
   if (!seedName) return [];
 
   try {
@@ -232,6 +239,87 @@ async function loadSeedData(school: string): Promise<Professor[]> {
     console.warn(`Failed to load seed data for ${seedName}:`, e);
     return [];
   }
+}
+
+// ── Web scraper fallback ──────────────────────────────────────────────────────
+// Scrapes university faculty directories when OpenAlex doesn't find enough results
+async function scrapeFacultyDirectory(school: string, keywords: string[], limit = 5): Promise<Professor[]> {
+  const schoolLower = school.toLowerCase().trim();
+
+  const urls: Record<string, string[]> = {
+    stanford: ["https://www.cs.stanford.edu/people/faculty"],
+    cmu: ["https://www.cs.cmu.edu/directory/faculty"],
+    "cal-poly": ["https://csc.calpoly.edu/people/faculty/"],
+  };
+
+  const schoolKey = Object.keys(urls).find(k => schoolLower.includes(k));
+  if (!schoolKey) return [];
+
+  console.log(`🔍 Scraping ${school} faculty directory as fallback...`);
+
+  for (const url of urls[schoolKey]) {
+    try {
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(5000),
+        headers: { "User-Agent": "ioia-app" }
+      });
+      if (!response.ok) continue;
+
+      const html = await response.text();
+      // Extract emails and names via regex
+      const emailPattern = /([a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+      const emails = new Set<string>();
+      let match;
+      while ((match = emailPattern.exec(html)) !== null) {
+        emails.add(match[1]);
+      }
+
+      // Extract potential names (3-5 word strings that look like names)
+      const namePattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b/g;
+      const names: string[] = [];
+      const seenNames = new Set<string>();
+      while ((match = namePattern.exec(html)) !== null && names.length < limit * 2) {
+        const name = match[1];
+        if (!seenNames.has(name.toLowerCase())) {
+          names.push(name);
+          seenNames.add(name.toLowerCase());
+        }
+      }
+
+      if (names.length === 0) continue;
+
+      // Enrich with OpenAlex (try to match names)
+      const professors: Professor[] = [];
+      for (const name of names.slice(0, limit)) {
+        try {
+          const query = encodeURIComponent(name);
+          const res = await fetch(
+            `https://api.openalex.org/authors?search=${query}&per_page=1`,
+            { signal: AbortSignal.timeout(3000) }
+          );
+          if (!res.ok) continue;
+
+          const data = await res.json() as { results: OAAuthor[] };
+          const author = data.results?.[0];
+          if (!author) continue;
+
+          const prof = await enrichAuthor(author, keywords);
+          professors.push(prof);
+        } catch {
+          // Skip this author
+        }
+      }
+
+      if (professors.length > 0) {
+        console.log(`  Found ${professors.length} professors via scraper`);
+        return professors;
+      }
+    } catch (e) {
+      console.log(`  Scraper failed for ${url}: ${String(e).slice(0, 50)}`);
+    }
+  }
+
+  return [];
 }
 
 // ── Main search: works-first approach ────────────────────────────────────────
@@ -412,8 +500,17 @@ export async function searchProfessors(
     );
   }
 
-  // Directory fallback: if an institution was requested and OpenAlex can't fill the quota,
-  // pull additional names from official directories as low-confidence matches.
+  // Scraper fallback: if OpenAlex can't fill quota, try web scraper
+  if (instId && institutions.length > 0 && ranked.length < limit) {
+    const scrapedProfs = await scrapeFacultyDirectory(institutions[0], keywords, limit - ranked.length);
+    if (scrapedProfs.length > 0) {
+      const existingNames = new Set(ranked.map((p) => p.name.toLowerCase()));
+      const newProfs = scrapedProfs.filter((p) => !existingNames.has(p.name.toLowerCase()));
+      ranked = [...ranked, ...newProfs];
+    }
+  }
+
+  // Directory fallback: if still need more, use official directories
   if (instId && institutions.length > 0 && ranked.length < limit) {
     const instName = institutions[0] as InstitutionKey;
     const dirHits: DirectoryHit[] = await fetchDirectoryHits(instName, Math.max(40, limit * 4));
@@ -502,6 +599,52 @@ export async function findAuthorIdByNameAndInstitution(
   }
 }
 
+// ── Email extraction via pattern guessing ────────────────────────────────────
+
+function guessEmailByPattern(name: string, institution: string): string | null {
+  const parts = name.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return null;
+
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+
+  // Map institution names to common email domains
+  const domainMap: Record<string, string> = {
+    "stanford": "stanford.edu",
+    "mit": "mit.edu",
+    "massachusetts institute": "mit.edu",
+    "berkeley": "eecs.berkeley.edu",
+    "uc berkeley": "eecs.berkeley.edu",
+    "ucla": "cs.ucla.edu",
+    "los angeles": "cs.ucla.edu",
+    "cal poly": "calpoly.edu",
+    "calpoly": "calpoly.edu",
+    "cmu": "cs.cmu.edu",
+    "carnegie mellon": "cs.cmu.edu",
+    "harvard": "harvard.edu",
+    "yale": "yale.edu",
+    "princeton": "princeton.edu",
+    "caltech": "caltech.edu",
+    "uchicago": "uchicago.edu",
+    "university of chicago": "uchicago.edu",
+  };
+
+  // Find matching domain
+  let domain: string | null = null;
+  const instLower = institution.toLowerCase();
+  for (const [key, val] of Object.entries(domainMap)) {
+    if (instLower.includes(key)) {
+      domain = val;
+      break;
+    }
+  }
+
+  if (!domain) return null;
+
+  // Most common pattern is firstname.lastname@domain
+  return `${first}.${last}@${domain}`;
+}
+
 async function enrichAuthor(author: OAAuthor, keywords: string[]): Promise<Professor> {
   const authorId = shortId(author.id);
   const institution = author.last_known_institutions?.[0]?.display_name ?? "Unknown";
@@ -525,6 +668,9 @@ async function enrichAuthor(author: OAAuthor, keywords: string[]): Promise<Profe
       }));
   } catch { /* continue */ }
 
+  // Extract email via pattern guessing
+  let email = guessEmailByPattern(author.display_name, institution);
+
   const kw = keywords.map((k) => k.toLowerCase());
   const concepts = (author.x_concepts ?? [])
     .map((c) => {
@@ -545,7 +691,7 @@ async function enrichAuthor(author: OAAuthor, keywords: string[]): Promise<Profe
     id: authorId,
     name: author.display_name,
     affiliation: institution,
-    email: null,
+    email,
     homepage: null,
     concepts,
     recentPapers,

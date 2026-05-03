@@ -73,7 +73,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
 
   const peopleSearchLinks = useMemo(() => {
     const name = draft.professor.name.trim();
-    const inst = draft.professor.university.trim();
+    const inst = (draft.professor.university || draft.professor.affiliation || "").trim();
     const q = encodeURIComponent(`${name} ${inst}`);
     const qName = encodeURIComponent(name);
     return {
@@ -81,7 +81,7 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
       linkedin: `https://www.linkedin.com/search/results/people/?keywords=${qName}`,
       scholar: `https://scholar.google.com/scholar?q=${q}`,
     };
-  }, [draft.professor.name, draft.professor.university]);
+  }, [draft.professor.name, draft.professor.university || draft.professor.affiliation]);
 
   useEffect(() => {
     setPapers(draft.professor.recentPapers ?? []);
@@ -89,9 +89,10 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
     if ((draft.professor.recentPapers?.length ?? 0) > 0) return;
     const run = async () => {
       const directId = draft.professor.openAlexId?.trim();
+      const inst = draft.professor.university || draft.professor.affiliation || "Unknown";
       const id = directId
         ? directId
-        : await findAuthorIdByNameAndInstitution(draft.professor.name, draft.professor.university);
+        : await findAuthorIdByNameAndInstitution(draft.professor.name, inst);
       if (!id) return;
       if (!directId) setResolvedOpenAlexId(id);
       const ws = await getRecentWorksByAuthor(id, 8);
@@ -399,9 +400,11 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 <span style={{ fontSize: 15, fontWeight: 400, color: "#0a0a0a", marginBottom: 2 }}>
                   {draft.professor.name}
                 </span>
-                <span style={{ fontSize: 12.5, color: "#737373", fontWeight: 300 }}>
-                  {draft.professor.title}
-                </span>
+                {(draft.professor.title) && (
+                  <span style={{ fontSize: 12.5, color: "#737373", fontWeight: 300 }}>
+                    {draft.professor.title}
+                  </span>
+                )}
               </div>
 
               {/* Details */}
@@ -409,21 +412,33 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                 <div className="flex items-center gap-2.5">
                   <Building2 size={13} style={{ color: "#a3a3a3", flexShrink: 0 }} />
                   <div className="flex flex-col">
-                    <span style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 400 }}>{draft.professor.university}</span>
-                    <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>{draft.professor.department}</span>
+                    <span style={{ fontSize: 12.5, color: "#0a0a0a", fontWeight: 400 }}>
+                      {draft.professor.university || draft.professor.affiliation || "Unknown"}
+                    </span>
+                    {(draft.professor.department) && (
+                      <span style={{ fontSize: 11.5, color: "#a3a3a3", fontWeight: 300 }}>
+                        {draft.professor.department}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5">
                   <Mail size={13} style={{ color: "#a3a3a3", flexShrink: 0 }} />
-                  <a
-                    href={`mailto:${draft.professor.email}`}
-                    className="flex items-center gap-1 hover:text-gray-700 transition-colors"
-                    style={{ fontSize: 12.5, color: "#525252", fontWeight: 300 }}
-                  >
-                    {draft.professor.email}
-                    <ArrowUpRight size={11} />
-                  </a>
+                  {draft.professor.email ? (
+                    <a
+                      href={`mailto:${draft.professor.email}`}
+                      className="flex items-center gap-1 hover:text-gray-700 transition-colors"
+                      style={{ fontSize: 12.5, color: "#525252", fontWeight: 300 }}
+                    >
+                      {draft.professor.email}
+                      <ArrowUpRight size={11} />
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: 12.5, color: "#d1d5db", fontWeight: 300 }}>
+                      Email not found — search manually
+                    </span>
+                  )}
                 </div>
 
                 {/* Online presence */}

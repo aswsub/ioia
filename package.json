@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "scrape:faculty": "node scripts/scrape-faculty.js",
     "smoke:tone": "tsx --env-file=.env cold_email_workflow/tests/smoke.ts",
     "extract:tone": "tsx --env-file=.env cold_email_workflow/extract_tone_runner.ts",
     "test:e2e": "tsx --env-file=.env cold_email_workflow/tests/end_to_end.ts",
@@ -80,6 +81,7 @@
     "@tailwindcss/vite": "4.1.12",
     "@types/node": "^25.6.0",
     "@vitejs/plugin-react": "4.7.0",
+    "cheerio": "^1.2.0",
     "tailwindcss": "4.1.12",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
