@@ -1,18 +1,20 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { ArrowUp, Paperclip, Loader2, Search, Mail, CheckCircle2, ArrowRight, Plus, Trash2, MessageSquare } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ArrowUp, Paperclip, Loader2, Search, Mail, CheckCircle2, ArrowRight } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
 import ioiaLogo from "figma:asset/ioia.png";
 import {
   loadChatMessages, saveChatMessage, loadUserProfile,
-  loadConversations, createConversation, updateConversationTitle, deleteConversation,
+  createConversation, updateConversationTitle,
   type DbConversation,
 } from "../../lib/db";
 import { extractKeywordsFromPrompt, draftEmail } from "../../lib/claude";
 import { searchProfessors } from "../../lib/openalex";
 import { extractTextFromFile } from "../../lib/ocr";
+import { findCompanyForQuery } from "../../lib/find_company";
 import { useAuth } from "../../lib/auth";
-import type { UserProfile } from "../../../cold_email_workflow/prompts/context";
+import type { Professor, UserProfile } from "../../../cold_email_workflow/prompts/context";
 import type { ToneProfile } from "../../../cold_email_workflow/prompts/tone";
+import type { Company, CompanyContact } from "../../../cold_email_workflow/schemas";
 
 type ToolStep = { icon: "search" | "mail" | "check"; label: string };
 type Message = { id: string; role: "user" | "agent"; content: string; steps?: ToolStep[]; timestamp: string };
@@ -79,6 +81,44 @@ function parseAtTags(raw: string): {
     schools: uniq(schools),
     topics: uniq(topics),
     n,
+  };
+}
+
+// Coerce a Company + CompanyContact + draft into the existing OutreachDraft
+// shape so the dashboard's persistence and detail UI keep working unchanged.
+// Department/research chips become the team list; recentPapers becomes the
+// company's notableWork. The current year is a placeholder — notableWork has
+// no publish date in the seed.
+function companyDraftToOutreachDraft(args: {
+  company: Company;
+  contact: CompanyContact;
+  emailDraft: { subject: string; body: string };
+  matchScore: number;
+  color: string;
+}): OutreachDraft {
+  const { company, contact, emailDraft, matchScore, color } = args;
+  const year = new Date().getFullYear();
+  return {
+    id: `draft_${company.id}_${contact.id}_${Date.now()}`,
+    professor: {
+      name: contact.name,
+      title: contact.role,
+      university: company.name,
+      department: company.teams[0] ?? "Engineering",
+      research: company.teams.slice(0, 4),
+      email: contact.email,
+      color,
+      openAlexId: null,
+      homepage: `https://${company.domain}`,
+      recentPapers: company.notableWork.map((w) => ({
+        title: w.title,
+        year,
+        url: w.url,
+      })),
+    },
+    subject: emailDraft.subject,
+    body: emailDraft.body,
+    matchScore,
   };
 }
 
@@ -168,15 +208,21 @@ function renderUserTextWithTags(text: string) {
 }
 
 export function AgentView({
+  conversations,
+  setConversations,
+  activeConvId,
+  setActiveConvId,
   onDraftsReady,
   onNavigateToOutreach,
 }: {
+  conversations: DbConversation[];
+  setConversations: React.Dispatch<React.SetStateAction<DbConversation[]>>;
+  activeConvId: string | null;
+  setActiveConvId: (id: string | null) => void;
   onDraftsReady?: (drafts: OutreachDraft[]) => void;
   onNavigateToOutreach?: () => void;
 }) {
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<DbConversation[]>([]);
-  const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesRef = useRef<Message[]>([]);
   const [input, setInput] = useState("");
@@ -190,17 +236,11 @@ export function AgentView({
     messagesRef.current = messages;
   }, [messages]);
 
-  // Load conversation list on mount
+  // Load messages when active conversation changes. When activeConvId clears
+  // (Sidebar "new chat" pressed), reset the input too so the user lands on a
+  // clean slate.
   useEffect(() => {
-    loadConversations().then((convs) => {
-      setConversations(convs);
-      if (convs.length > 0) setActiveConvId(convs[0].id);
-    });
-  }, []);
-
-  // Load messages when active conversation changes
-  useEffect(() => {
-    if (!activeConvId) { setMessages([]); return; }
+    if (!activeConvId) { setMessages([]); setInput(""); return; }
     loadChatMessages(activeConvId).then((rows) => {
       // Avoid clobbering optimistic UI messages when the DB hasn't caught up yet.
       if (rows.length === 0 && messagesRef.current.length > 0) return;
@@ -229,19 +269,6 @@ export function AgentView({
   };
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isThinking]);
-
-  const startNewConversation = useCallback(() => {
-    setActiveConvId(null);
-    setMessages([]);
-    setInput("");
-  }, []);
-
-  const handleDeleteConversation = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    await deleteConversation(id);
-    setConversations((prev) => prev.filter((c) => c.id !== id));
-    if (activeConvId === id) { setActiveConvId(null); setMessages([]); }
-  };
 
   const send = async (text?: string) => {
     const value = (text ?? input).trim();
@@ -377,52 +404,124 @@ export function AgentView({
         }
         return merged;
       })();
-      console.log("Searching OpenAlex with:", { allKeywords, institutions: inferredInstitutions, inferredCount });
-      const matched = await searchProfessors(allKeywords, inferredInstitutions, inferredCount);
-
-      if (matched.length === 0) {
-        const noMatchMsg: Message = {
-          id: (Date.now() + 2).toString(), role: "agent",
-          content: "I searched OpenAlex but couldn't find professors matching your request. Try different keywords or a broader research area.",
-          steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
-        saveChatMessage({ id: noMatchMsg.id, role: "agent", content: noMatchMsg.content, steps: null }, convId).catch(console.warn);
-        setIsThinking(false);
-        return;
-      }
-
-      // Persist/merge latest professor matches so the Professors tab can show a running history.
-      try {
-        localStorage.setItem("ioia:last_professors_batch", JSON.stringify(matched));
-        const raw = localStorage.getItem("ioia:last_professors");
-        const existing = raw ? (JSON.parse(raw) as Professor[]) : [];
-        const byId = new Map<string, Professor>();
-        for (const p of existing ?? []) if (p?.id) byId.set(p.id, p);
-        for (const p of matched) if (p?.id) byId.set(p.id, p);
-        localStorage.setItem("ioia:last_professors", JSON.stringify(Array.from(byId.values())));
-      } catch { /* ignore */ }
 
       const drafts: OutreachDraft[] = [];
-      for (const prof of matched) {
+      const colors = ["#f0f4ff", "#fff7ed", "#f0fdf4", "#fdf4ff", "#fff1f2"];
+      let summaryWithNote = "";
+
+      if (opportunityType === "internship") {
+        // Internship path: hit the seeded companies.json (no live network call)
+        // and pick a recruiter or IC per match. The email writer's internship
+        // branch consumes Company + CompanyContact.
+        console.log("Searching companies with:", { value, inferredCount });
+        const result = findCompanyForQuery(value, inferredCount);
+
+        if (result.matches.length === 0) {
+          const noMatchMsg: Message = {
+            id: (Date.now() + 2).toString(), role: "agent",
+            content: "I searched the company seed list but couldn't find a match. Try naming a company directly (e.g. \"intern at Linear\") or describing the team you want to work on.",
+            steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
+          saveChatMessage({ id: noMatchMsg.id, role: "agent", content: noMatchMsg.content, steps: null }, convId).catch(console.warn);
+          setIsThinking(false);
+          return;
+        }
+
+        for (const match of result.matches) {
+          const company = match.company as Company;
+          const contact = (company.contacts.find((c) => c.id === match.suggestedContactId) ?? company.contacts[0]) as CompanyContact;
+          const teamFocus = company.teams.find((t) => value.toLowerCase().includes(t.toLowerCase()));
+          try {
+            const emailDraft = await draftEmail({
+              user: userProfile,
+              target: { kind: "internship", company, contact, teamFocus },
+            });
+            drafts.push(companyDraftToOutreachDraft({
+              company, contact, emailDraft,
+              matchScore: 1 - drafts.length * 0.04,
+              color: colors[drafts.length % colors.length],
+            }));
+          } catch (e) { console.error(`Failed to draft for ${company.name}:`, e); }
+        }
+
+        // Drafts may include multiple contacts per company (e.g. Figma has
+        // a recruiter + two ICs), so count unique companies separately from
+        // the email-row count to keep the summary accurate.
+        const draftCount = drafts.length;
+        const uniqueCompanyNames = Array.from(new Set(result.matches.map((m) => m.company.name)));
+        const companyList = uniqueCompanyNames.slice(0, 3).join(", ");
+        const emailWord = `email${draftCount !== 1 ? "s" : ""}`;
+        if (uniqueCompanyNames.length === 1) {
+          const recipient = uniqueCompanyNames[0];
+          summaryWithNote = draftCount > 1
+            ? `Drafted ${draftCount} ${emailWord} to people at ${recipient} (one per contact). Review them in Outreach.`
+            : `Drafted ${draftCount} ${emailWord} to ${recipient}. Review it in Outreach.`;
+        } else {
+          summaryWithNote = `Drafted ${draftCount} ${emailWord} for your internship search across ${uniqueCompanyNames.length} companies (${companyList}). Review them in Outreach.`;
+        }
+      } else {
+        console.log("Searching OpenAlex with:", { allKeywords, institutions: inferredInstitutions, inferredCount });
+        const matched = await searchProfessors(allKeywords, inferredInstitutions, inferredCount);
+
+        if (matched.length === 0) {
+          const noMatchMsg: Message = {
+            id: (Date.now() + 2).toString(), role: "agent",
+            content: "I searched OpenAlex but couldn't find professors matching your request. Try different keywords or a broader research area.",
+            steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
+          saveChatMessage({ id: noMatchMsg.id, role: "agent", content: noMatchMsg.content, steps: null }, convId).catch(console.warn);
+          setIsThinking(false);
+          return;
+        }
+
+        // Persist/merge latest professor matches so the Professors tab can show a running history.
         try {
-          const emailDraft = await draftEmail({ user: userProfile, target: { kind: "research", professor: prof } });
-          const colors = ["#f0f4ff", "#fff7ed", "#f0fdf4", "#fdf4ff", "#fff1f2"];
-          drafts.push({
-            id: `draft_${prof.id}_${Date.now()}`,
-            professor: {
-              name: prof.name, title: "Professor", university: prof.affiliation,
-              department: prof.concepts[0]?.name ?? "CS",
-              research: prof.concepts.slice(0, 3).map((c) => c.name),
-              email: prof.email ?? "", color: colors[drafts.length % colors.length],
-              openAlexId: prof.id,
-              homepage: prof.homepage,
-              recentPapers: prof.recentPapers?.map((p) => ({ title: p.title, year: p.year, url: p.url })) ?? [],
-            },
-            subject: emailDraft.subject, body: emailDraft.body, matchScore: prof.matchScore,
-          });
-        } catch (e) { console.error(`Failed to draft for ${prof.name}:`, e); }
+          localStorage.setItem("ioia:last_professors_batch", JSON.stringify(matched));
+          const raw = localStorage.getItem("ioia:last_professors");
+          const existing = raw ? (JSON.parse(raw) as Professor[]) : [];
+          const byId = new Map<string, Professor>();
+          for (const p of existing ?? []) if (p?.id) byId.set(p.id, p);
+          for (const p of matched) if (p?.id) byId.set(p.id, p);
+          localStorage.setItem("ioia:last_professors", JSON.stringify(Array.from(byId.values())));
+        } catch { /* ignore */ }
+
+        for (const prof of matched) {
+          try {
+            const emailDraft = await draftEmail({
+              user: userProfile,
+              target: { kind: "research", professor: prof },
+            });
+            drafts.push({
+              id: `draft_${prof.id}_${Date.now()}`,
+              professor: {
+                name: prof.name, title: "Professor", university: prof.affiliation,
+                department: prof.concepts[0]?.name ?? "CS",
+                research: prof.concepts.slice(0, 3).map((c) => c.name),
+                email: prof.email ?? "", color: colors[drafts.length % colors.length],
+                openAlexId: prof.id,
+                homepage: prof.homepage,
+                recentPapers: prof.recentPapers?.map((p) => ({ title: p.title, year: p.year, url: p.url })) ?? [],
+              },
+              subject: emailDraft.subject, body: emailDraft.body, matchScore: prof.matchScore,
+            });
+          } catch (e) { console.error(`Failed to draft for ${prof.name}:`, e); }
+        }
+
+        const requested = inferredCount;
+        const lowConfidenceMatches = matched.filter((p) => p.matchScore < 0.35);
+        const hasLowConfidence = lowConfidenceMatches.length > 0;
+        let note = "";
+        if (matched.length < requested) {
+          note = ` (you asked for ${requested}, but OpenAlex returned ${matched.length} strong matches for that school/topic)`;
+        }
+        if (hasLowConfidence && matched.length === 1) {
+          note += ` Note: This is a low-confidence match (${(matched[0].matchScore * 100).toFixed(0)}% relevance). Try broadening your search or using different keywords.`;
+        }
+        summaryWithNote = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}${note}. I've drafted personalized emails for each — review them in Outreach.`;
       }
 
       // Persist draft batch metadata so Outreach can filter "latest chat" vs "all".
@@ -433,22 +532,6 @@ export function AgentView({
         localStorage.setItem("ioia:last_draft_batch_at", new Date().toISOString());
       } catch { /* ignore */ }
 
-      const summary = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}. I've drafted personalized emails for each — review them in Outreach.`;
-      const requested = inferredCount;
-      
-      // Check if any matches are low-confidence (< 0.35 score)
-      const lowConfidenceMatches = matched.filter((p) => p.matchScore < 0.35);
-      const hasLowConfidence = lowConfidenceMatches.length > 0;
-      
-      let note = "";
-      if (matched.length < requested) {
-        note = ` (you asked for ${requested}, but OpenAlex returned ${matched.length} strong matches for that school/topic)`;
-      }
-      if (hasLowConfidence && matched.length === 1) {
-        note += ` ⚠️ Note: This is a low-confidence match (${(matched[0].matchScore * 100).toFixed(0)}% relevance). Try broadening your search or using different keywords.`;
-      }
-      
-      const summaryWithNote = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}${note}. I've drafted personalized emails for each — review them in Outreach.`;
       const agentMsg: Message = {
         id: (Date.now() + 2).toString(), role: "agent", content: summaryWithNote,
         steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
@@ -488,50 +571,6 @@ export function AgentView({
         @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
-
-      {/* ── Conversation sidebar ── */}
-      <div className="flex flex-col border-r flex-shrink-0" style={{ width: 220, borderColor: "#e5e5e5", background: "#fff" }}>
-        <div className="px-3 py-3 border-b flex items-center justify-between" style={{ borderColor: "#e5e5e5" }}>
-          <span style={{ fontSize: 12, fontWeight: 400, color: "#0a0a0a" }}>Chats</span>
-          <button onClick={startNewConversation}
-            className="flex items-center justify-center rounded-lg transition-colors"
-            style={{ width: 26, height: 26 }} title="New chat"
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f5f5f5"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-            <Plus size={14} color="#525252" />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto py-1">
-          {conversations.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-24 gap-1">
-              <MessageSquare size={16} color="#d4d4d4" />
-              <span style={{ fontSize: 11.5, color: "#d4d4d4", fontWeight: 300 }}>No chats yet</span>
-            </div>
-          )}
-          {conversations.map((conv) => {
-            const isActive = conv.id === activeConvId;
-            return (
-              <div key={conv.id} onClick={() => setActiveConvId(conv.id)}
-                className="group flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors mx-1 rounded-lg"
-                style={{ background: isActive ? "#f5f5f5" : "transparent" }}
-                onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "#fafafa"; }}
-                onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                <MessageSquare size={12} color={isActive ? "#0a0a0a" : "#a3a3a3"} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: isActive ? "#0a0a0a" : "#525252", fontWeight: isActive ? 400 : 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-                  {conv.title}
-                </span>
-                <button onClick={(e) => handleDeleteConversation(e, conv.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                  style={{ color: "#a3a3a3" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#a3a3a3"; }}>
-                  <Trash2 size={11} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* ── Chat area ── */}
       <div className="flex flex-col flex-1 min-w-0 h-full relative" style={{ background: "#fafafa" }}>

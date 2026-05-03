@@ -97,12 +97,19 @@ export const EmailDraftSchema = z.object({
 // CompanyContact (a recruiter or an IC). Seed data lives in data/seed/companies.json.
 // ============================================================================
 
+// Sentinel placeholder used in the seed file for contacts that still need to
+// be researched (e.g. recruiters whose emails haven't been confirmed). The
+// schema accepts the placeholder so seed loading doesn't fail; downstream
+// code (findCompanyMatches) filters these contacts out so they're never
+// suggested.
+const TO_FILL = "TO_FILL"
+
 export const CompanyContactSchema = z.object({
   id: z.string(),
   name: z.string(),
   role: z.string(), // "Recruiter, University", "Senior SWE, Sync Team"
-  email: z.string().email(),
-  linkedin: z.string().url().nullable(),
+  email: z.union([z.string().email(), z.literal(TO_FILL)]),
+  linkedin: z.union([z.string().url(), z.literal(TO_FILL), z.null()]),
 })
 
 export const NotableWorkSchema = z.object({
