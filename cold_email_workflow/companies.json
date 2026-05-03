@@ -1,5 +1,6 @@
 {
     "_comment": "SEEDED DEMO DATA. Notable work titles and URLs are real and verified. Contact names and emails are FAKE — do not actually email them. Email format follows each company's typical pattern (firstname@domain or firstname.lastname@domain) for plausibility in the demo. Replace with real verified contacts before any real outreach.",
+    "_resume_mapping_note": "For Notion and Figma, IC contacts were chosen so each maps to a specific item on Sid's resume. See resume_match field on each IC contact for the intended hook. Recruiters do not have resume_match — they get the company-level treatment in the email writer.",
     "companies": [
       {
         "id": "linear",
@@ -72,9 +73,9 @@
           },
           {
             "id": "vercel-ic-1",
-            "name": "Lydia Mendez",
+            "name": "Marco Reyes",
             "role": "Staff Engineer, Edge Runtime",
-            "email": "lydia@vercel.com",
+            "email": "marco@vercel.com",
             "linkedin": null
           }
         ]
@@ -271,6 +272,116 @@
             "role": "Senior Engineer, Workflows",
             "email": "nina@retool.com",
             "linkedin": null
+          }
+        ]
+      },
+      {
+        "id": "notion",
+        "name": "Notion",
+        "domain": "notion.so",
+        "blurb": "All-in-one workspace combining notes, docs, wikis, and databases — built on a flexible block-based data model where every piece of content (paragraph, page, database row) is a composable, nestable block.",
+        "notableWork": [
+          {
+            "title": "Data model behind Notion's flexibility",
+            "type": "blog",
+            "url": "https://www.notion.com/blog/data-model-behind-notion",
+            "summary": "How Notion represents every piece of content as a block with type, properties, content (downward pointers), and parent (upward pointer for permissions). Splits content and parent relationships to handle permission inheritance and avoid expensive upward tree walks on the client.",
+            "author": null
+          },
+          {
+            "title": "How we made Notion available offline",
+            "type": "blog",
+            "url": "https://www.notion.com/blog/how-we-made-notion-available-offline",
+            "summary": "Notion's #1 requested feature for years. Required moving offline pages to a CRDT-based conflict resolution model, building a forest of offline page trees to track multiple reasons a page is kept offline (toggled, auto-downloaded, inheritance), and reconciling against an offline_action source-of-truth table.",
+            "author": null
+          },
+          {
+            "title": "Building and scaling Notion's data lake",
+            "type": "blog",
+            "url": "https://www.notion.com/blog/building-and-scaling-notions-data-lake",
+            "summary": "How Notion moved from Fivetran + Snowflake to a Hudi-based data lake on S3 with Kafka Debezium CDC. Cut ingestion time from 1+ days to minutes-to-hours and unlocked the AI features shipped in 2023-2024, including the permission-tree denormalization needed for AI/Search over hundreds of billions of blocks.",
+            "author": null
+          }
+        ],
+        "teams": ["Core Editor", "Sync & Offline", "Data Platform", "AI", "Mobile"],
+        "contacts": [
+          {
+            "id": "notion-recruiter-1",
+            "name": "Olivia Park",
+            "role": "University Recruiter",
+            "email": "university-recruiting@notion.so",
+            "linkedin": null
+          },
+          {
+            "id": "notion-ic-1",
+            "name": "Wei Zhang",
+            "role": "Senior Software Engineer, Core Editor",
+            "email": "wei@notion.so",
+            "linkedin": null,
+            "resume_match": "Sid's Codebox/MustangMaps work — designing data models for campus amenity discovery (printers, water fountains, bathrooms) — naturally hooks into Notion's block-based data model. Both projects required deciding how to represent heterogeneous things as a uniform structured type with nesting and relationships."
+          },
+          {
+            "id": "notion-ic-2",
+            "name": "Ben Friedman",
+            "role": "Senior Software Engineer, Sync & Offline",
+            "email": "ben@notion.so",
+            "linkedin": null,
+            "resume_match": "Sid's Fere project — auto-discovering local dev environments and rendering live service topology with real-time process/port/connection monitoring — is structurally similar to Notion's offline mode: maintaining a local cache (RecordCache, SQLite/IndexedDB) that stays consistent with a server source of truth, deciding what to keep available locally, and reconciling state when reconnecting."
+          }
+        ]
+      },
+      {
+        "id": "figma",
+        "name": "Figma",
+        "domain": "figma.com",
+        "blurb": "Browser-based collaborative design tool with a custom multiplayer engine. The architecture is closer to a game engine (C++ rendering, WebGL, custom binary serialization) than a traditional web app, and the multiplayer server was rewritten in Rust to handle scale.",
+        "notableWork": [
+          {
+            "title": "How Figma's multiplayer technology works",
+            "type": "blog",
+            "url": "https://www.figma.com/blog/how-figmas-multiplayer-technology-works/",
+            "summary": "Cofounder Evan Wallace explains why Figma built a custom multiplayer system instead of using Operational Transforms. Covers the WebSocket sync protocol, offline editing with reconciliation on reconnect, and how concurrent edits to design properties are resolved.",
+            "author": "Evan Wallace"
+          },
+          {
+            "title": "Rust in production at Figma",
+            "type": "blog",
+            "url": "https://www.figma.com/blog/rust-in-production-at-figma/",
+            "summary": "How Figma rewrote the multiplayer server's performance-critical core in Rust, moved it into a separate child process per document communicating over stdin/stdout, and got over 10x faster serialization plus full per-document parallelization. Killed the unpredictable latency spikes from the single-threaded TypeScript original.",
+            "author": "Evan Wallace"
+          },
+          {
+            "title": "Making multiplayer more reliable",
+            "type": "blog",
+            "url": "https://www.figma.com/blog/making-multiplayer-more-reliable/",
+            "summary": "Adding a write-ahead log to the multiplayer server. Covers checkpointing the in-memory file state every 30-60s, batched journal entries with start/end sequence numbers, and using Rust's ownership model to audit every code path that mutates the file.",
+            "author": null
+          }
+        ],
+        "teams": ["Multiplayer", "Rendering", "Dev Mode", "Infrastructure", "AI"],
+        "contacts": [
+          {
+            "id": "figma-recruiter-1",
+            "name": "Jenna Holloway",
+            "role": "University Recruiter",
+            "email": "university-recruiting@figma.com",
+            "linkedin": null
+          },
+          {
+            "id": "figma-ic-1",
+            "name": "Ari Kessler",
+            "role": "Senior Software Engineer, Multiplayer Infrastructure",
+            "email": "ari@figma.com",
+            "linkedin": null,
+            "resume_match": "Sid's Rust search engine — built from scratch with inverted indexing, BM25 + HNSW vector search, type-driven architecture leveraging Rust's ownership model for memory-safe concurrent indexing — maps directly to Figma's Rust multiplayer rewrite (single-threaded TS replaced with a Rust child process, ownership model used to audit mutation paths). Same language, same flavor of perf-critical system."
+          },
+          {
+            "id": "figma-ic-2",
+            "name": "Sho Tanaka",
+            "role": "Staff Engineer, Dev Mode",
+            "email": "sho@figma.com",
+            "linkedin": null,
+            "resume_match": "Sid's Fere project — a developer observability tool that auto-discovers and visualizes local service topology with zero configuration — maps to Dev Mode's mission of building tools for developers (the Visly acquisition, design-token surfacing, code generation). Both are about building dev tooling that surfaces hidden state."
           }
         ]
       }
