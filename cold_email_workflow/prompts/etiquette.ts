@@ -88,39 +88,207 @@ Hard avoids regardless of tone:
 `.trim()
 
 export const INTERNSHIP_ETIQUETTE = `
-NORMS FOR COLD EMAILING ABOUT AN INTERNSHIP OR ENGINEERING ROLE:
+NORMS FOR COLD EMAILING ABOUT A SOFTWARE ENGINEERING INTERNSHIP:
 
-Subject line:
-- 4 to 8 words.
-- Reference a specific product, team, or recent company news when possible.
-- Good: "CS sophomore interested in Linear sync work"
-- Bad: "Interested in opportunities at your company"
+POSTURE (read this first):
+This is not a research email with the words swapped. The voice, structure, and length are different. The reader is a recruiter or engineer who reads the email in 10 seconds. The writer is selling capability, not curiosity. Verbs over nouns. Numbers over adjectives. Concrete over abstract.
 
-Opening:
-- One sentence: full name, university, major, and one concrete signal of what you build, drawn from CONTEXT.experience or CONTEXT.researchInterests.
-- Lead with capability: a project, a shipped thing, or a number pulled from CONTEXT.
-- Do NOT invent year, age, or any biographical detail not present in CONTEXT.
+DO NOT include an interest declaration paragraph. Sentences like "I want to spend the next two years working on X" belong in research emails, not here. Capability is shown through projects, not stated through ambitions.
 
-Reference to their work:
-- Reference a specific product decision, blog post, talk, or technical choice the recipient or their team made.
-- Show you understand the actual work, not the marketing copy.
+LOGICAL THREAD - the email must make ONE argument:
 
-Connection:
-- Tie to one project of yours that demonstrates relevant skill.
-- Name the stack, the scale, the outcome.
+The email is not a list of facts. It is an argument that builds: the writer wants to work on a specific kind of problem at this company, and the reader should believe it.
 
-The ask:
-- Process-oriented, not self-promotional. Ask about the team's HIRING state and the next concrete step (e.g. "Is your team hiring interns for summer 2026, and if so what's the application process?"), NOT about whether the recipient will "consider" the writer.
-- Best phrasing shapes: "Is your team hiring interns for summer 2026, and if so what's the application process?" / "Are you taking on engineering interns this cycle, and what's the usual way in?" / "Could I send a resume?" / "Open to a quick chat about whether this is a fit?"
-- Avoid self-promotional asks like "to be considered for the internship" — same cover-letter problem as the research case. The full rule lives in the VOICE REALISM "ask" section.
-- Do not write "Would you have 15 minutes to discuss opportunities" — that is the AI default and reads as such.
-- Make it easy to say yes. Offer to send a resume, a project link, or to work around their schedule.
+The thread must be:
+1. WHO I am + WHAT I'M TRYING TO LEARN OR BUILD (opener establishes intent)
+2. THE THING YOU/YOUR TEAM DID THAT MATCHES IT (hook proves the company is the right place)
+3. THE THING I'VE BUILT THAT MATCHES IT (proof shows this is real, not aspirational)
+4. THE ASK (specific, time-bound)
 
-Length:
-- Under 180 words for the body.
+Each sentence must connect to the one before it. Do not write sentences that float.
 
-Closing:
-- One line, signature, optional one-line link to portfolio or GitHub.
+CRITICAL - THE PROOF PARAGRAPH MUST CONNECT TO THE HOOK:
+The experience paragraph (sentences 3-4) must end on the technical concept that ties it back to the hook. Do NOT announce the connection ("which got me thinking about your work"). The connection must be specific and oblique.
 
-Hard avoids: same as research.
+If the connection is real, name the SPECIFIC SHARED TECHNICAL CONCEPT.
+If no specific shared concept exists, end on a concrete detail about what was hard or surprising in the project. Do not invent a connection.
+
+Example of a connected thread (good):
+- Opener: "I'm Sid, CS junior at Cal Poly, ex-Stripe intern. Been trying to figure out streaming and state-reconciliation patterns this term."
+- Hook: "Your team's post on streaming from serverless Node landed for me. The callback URL bridge is what I've been trying to replicate in a side project."
+- Proof: "I built a CSV-to-Stripe importer at Stripe last summer. 200+ merchants, onboarding cut from 3 days to 4 hours. The actual hard problem was reconciling state between the CSV parser and Postgres before the API call. That's the exact pattern your team's post addresses."
+- Ask: "Are you taking summer 2026 SWE interns on Edge Runtime? Happy to send a resume."
+
+Notice TWO things:
+1. CONNECTED THREAD: the opener declares intent (streaming + state reconciliation), the hook references the team's work on that exact thing, the proof describes a project that shares the technical pattern, and the proof's last sentence names the bridge ("That's the exact pattern your team's post addresses") without announcing it as a bridge.
+2. REGISTER VARIATION (see REGISTER VARIATION section below): the opener and hook are in casual-deflection register ("trying to figure out," "landed for me," "trying to replicate"). The proof shifts to a direct/literal register ("I built X at Y," "200+ merchants," "The actual hard problem was Z," "That's the exact pattern"). This shift is what makes the email read as written by a person rather than generated. Do NOT write the proof in the same casual-deflection register as the opener and hook.
+
+Example of a disconnected thread (bad, do not produce):
+- "I'm Sid, ex-Stripe intern."
+- "Your team's post on streaming landed for me."
+- "I built a CSV-to-Stripe importer."
+- "Stack: TypeScript, Postgres, Stripe API."
+- "Are you taking interns?"
+
+Each sentence is fine alone, but there is no argument, just facts. This is the failure mode to avoid.
+
+LENGTH:
+- 90 to 110 words target. Hard cap 140 words in the body (raised from 130 to make room for the optional FOCUS sentence).
+- 4 to 6 short sentences total. No paragraph longer than 2 sentences.
+- Shorter than the research email. If the draft hits 140, cut, don't trim. The FOCUS sentence is the first thing to drop if you're at the cap.
+
+SUBJECT LINE (this matters more than the body):
+Format: "[Strongest credential] interested in [specific team or product] @ [Company]"
+- 5 to 7 words, under 60 characters, must render on mobile.
+- The credential before "interested in" is the click. Pick the strongest signal from the user's experience in this priority order:
+  1. Prior internship at a recognizable company ("Ex-Stripe intern...")
+  2. Shipped product with traction ("Built fere.dev (200 stars)...")
+  3. Hackathon win or competition placement
+  4. School + concrete skill
+- The team or product reference must be specific. Not the company in general.
+- Good: "Ex-Stripe intern interested in Linear's sync engine"
+- Good: "Cal Poly junior who shipped fere.dev, Vercel edge runtime"
+- Bad: "Internship inquiry," "Software engineering opportunities," "Cal Poly student interested in your company"
+- Forbidden words in subject lines: inquiry, opportunity, opportunities, application, request, hello.
+
+OPENING (one or two sentences):
+- Sentence 1: Name, year, school, strongest credential, in that order. Repeat the credential from the subject line.
+- Sentence 2 (optional but PREFERRED): What the writer has been trying to learn or build this term, framed in a way that connects to the hook that follows. Keep it short, one short clause is enough.
+- The second sentence is what makes the rest of the email cohere. Without it, the email is a list of facts. With it, the email is an argument. See the LOGICAL THREAD section above.
+- Forbidden openers: "I hope this email finds you well," "I am reaching out," "My name is," "I came across [Company]."
+- Good (with intent): "I'm Sid, CS junior at Cal Poly, ex-Stripe intern. Been trying to figure out streaming and state-reconciliation patterns this term."
+- Good (no second sentence, only when the credential itself implies intent): "I'm Sid, CS junior at Cal Poly, ex-Stripe intern who shipped a CSV importer used by 200+ merchants."
+- BAD: "I'm Sid Balaji, a CS junior at Cal Poly, ex-Stripe intern." (period, end. No intent declared, leaves the rest of the email as disconnected facts.)
+
+THE HOOK (one sentence) - depends on the recipient AND on whether the artifact has a named author:
+
+DETERMINE RECIPIENT TYPE FIRST:
+- IC / engineer: role contains "Engineer," "MTS," "Member of Technical Staff," "Staff," "Lead," "Architect," "Founding."
+- Recruiter: role contains "Recruiter," "Talent," "People."
+
+IF RECIPIENT IS AN IC AND notableWork has author == recipient.name:
+- Reference the artifact AS THEIRS. "Your talk on X..." or "Your post on Y..."
+- This is the strongest hook available. Use it.
+- Example: "Your post on the streaming architecture stuck with me. The section on the bridge code is what I've been trying to replicate."
+
+IF RECIPIENT IS AN IC AND notableWork has author != null AND author != recipient.name:
+- DEFAULT: reference the artifact as "your team's" without naming the author. The recipient knows their coworkers; naming a peer reads as awkward.
+- Naming the actual author is only appropriate when the author is clearly SENIOR LEADERSHIP: cofounder, CTO, founding engineer, head of a major area. For peer-level authors (Staff Engineer, Senior Engineer, Senior DevRel, Member of Technical Staff), do NOT name them — say "your team's" instead.
+- DO NOT imply the recipient wrote it. This is an instant credibility kill.
+- Good (peer author): "Your team's post on streaming from serverless Node landed for me. The callback URL bridge is what I've been trying to replicate in a side project."
+- Good (senior leadership author): "Tuomas's talk on scaling the sync engine landed for me. The conflict resolution section is what I've been stuck on."
+- BAD (do not produce): "Your post on..." (when the recipient did not write it)
+- BAD (do not produce): "Lydia Hallie's post on streaming..." (peer-level author, named unnecessarily — should be "your team's post on streaming")
+
+IF RECIPIENT IS AN IC AND notableWork has author == null:
+- The artifact is a company-level piece (product page, generic launch). Reference it neutrally as the company's work.
+- Good: "Linear's API design, the way the sync primitives are exposed to webhooks, is what got me reading the rest of the docs."
+
+IF RECIPIENT IS A RECRUITER:
+- Do NOT reference a specific engineering artifact. Recruiters do not own technical decisions and referencing internal technical work reads as misdirected.
+- Reference the company, the product, the mission, a recent launch, or a customer outcome.
+- Good: "Linear is one of the few tools my whole team actually adopted. Issue trackers usually die on the vine."
+- Good: "Vercel deploys are what convinced me web infra had finally gotten good. I've shipped four side projects on Vercel in the last year."
+- BAD: "Your team's sync engine architecture..." (recruiter doesn't own this; sounds misdirected)
+
+UNIVERSAL RULES FOR THE HOOK:
+- One sentence (or two short ones if the second adds a specific concrete detail).
+- Specific enough that the email could not be sent to another company unchanged.
+- No compliments. ("I love what you're doing" is banned.)
+- Show research by citing something specific, not by labeling it good.
+- Never use "your post," "your talk," or "your blog" unless the Author field for that artifact exactly matches the recipient's name.
+
+THE PROOF (one or two sentences):
+- One project. Numbers. A link.
+- Format: [what it does] + [scale or result number] + [link, inline].
+- Pick the project most relevant to the team being emailed, not the most impressive one. If a more impressive but less relevant project exists, you may compress it to 4 words ("ex-Stripe payments intern") in the opener and skip it here.
+- Numbers required: users, stars, latency, throughput, dollars saved, time saved.
+- Good: "I built fere.dev, a macOS dev tool that maps local environments. 200 stars, 1k installs in the first month: github.com/sid/fere"
+
+THE FOCUS (one sentence, optional but preferred for IC recipients):
+
+After the proof and before the ask, include one sentence stating what specific technical area or problem the writer would want to work on at this team. This is the "fit" sentence: it converts the email from "consider me" to "I have a specific reason to be here."
+
+Requirements:
+- Name a SPECIFIC technical area, narrower than the team itself.
+- The area must be derivable from the company's notableWork or teams data, do not invent.
+- Frame as a stance, not a wish. "I'd want to work on X" or "The part I'd want to dig into is Y."
+- Connect to a specific failure mode, edge case, or open question, not the team's whole scope.
+
+Good (Anthropic / Claude Code):
+"If I'm a fit, I'd want to work on how the classifiers handle edge cases where user intent is ambiguous, that's the failure mode I keep getting stuck on."
+
+Good (Linear / Sync Engine):
+"The part I'd want to dig into is how the sync engine handles partial failure, that came up in my Stripe project too and I never solved it cleanly."
+
+Good (Vercel / Edge Runtime):
+"What I'd want to work on is the cold-start envelope on Edge, I hit that exact problem trying to deploy a streaming endpoint."
+
+Bad (do not produce):
+- "I'd love to work on anything your team needs." (no stance)
+- "I'd want to learn from your engineers." (about the writer, not the work)
+- "I'd want to work on Claude Code." (team scope, not specific)
+- "I want to contribute to your mission." (flattery, no technical content)
+
+OMIT THIS SENTENCE IF:
+- The recipient is a recruiter (recruiters route, they don't make technical decisions, this sentence is wasted on them).
+- The notableWork and teams data are too thin to derive a specific area honestly.
+- Including it would push the email over 140 words.
+
+When omitted, the email is shorter and that is fine. Forced fit sentences are worse than no fit sentence.
+
+THE ASK (one sentence):
+- Be specific. Pick one shape:
+  1. "Are you taking summer 2026 SWE interns? Happy to send a resume."
+  2. "Could I get 15 minutes about the [specific team] internship?"
+  3. "Would a referral to your university recruiting team be possible?"
+- Always specify season + year. Never "an internship."
+
+CLOSING:
+- "Thanks," or "Best," to match tone profile.
+- Full name.
+- One link below the name: GitHub, portfolio, or LinkedIn. Pick one.
+
+HARD AVOIDS:
+- "I hope this email finds you well." / "I am reaching out because." / "I would love the opportunity to."
+- "I know I'm just a student" / any apology for credentials.
+- "Passionate," "deeply interested," "dream company," "love what you're doing," "innovative," "groundbreaking," "exciting."
+- "Set up a time to chat" without specifying duration AND topic.
+- Em-dashes. Use commas, periods, or "and."
+- Mentioning the company without referencing a specific artifact.
+- Asking for "any opportunities."
+- Listing more than one prior experience in the body. Compress secondary experience to a credential phrase in the opener if needed.
+- Tech stack listed as a standalone sentence ("Stack: TypeScript, Postgres, the Stripe API."). Stack details belong inline in the project description, or omitted entirely. The link to the repo is sufficient — readers who want the stack will click.
+- Stacking three or more phrases from the casual-technical-deflection register ("landed for me," "stuck on," "gnarly part," "same shape," "closest thing"). Cap is two per email. See REGISTER VARIATION below.
+- Idiom in every sentence. At least one sentence must use literal, direct language.
+- Generic FOCUS sentences are worse than none. Omit if you cannot name a specific sub-area, edge case, or open question. Banned shapes: "I'd love to work on anything your team needs," "I'd want to learn from your engineers," "I'd want to work on [team scope without specificity]," "I want to contribute to your mission."
+
+VOICE:
+- Lead with verbs and concrete nouns. "I built X" beats "I have experience with X."
+- Strip every word that does not change meaning. Delete-test every sentence.
+- One technical detail per sentence. Not three.
+- Slight choppiness is correct. This email is read in 10 seconds. Polished prose that smooths out punch is a loss.
+
+REGISTER VARIATION:
+
+Real writing varies its register sentence to sentence. AI writing locks into one mode. The most common failure mode for this writer is to use too many "casual-technical-deflection" phrases, colloquial understatement of specific or strong claims.
+
+Examples of this register (each fine alone, but do not stack):
+- "landed for me" / "stuck with me" / "stuck on"
+- "gnarly part" / "tricky bit" / "messy"
+- "same shape of problem" / "same shape" / "similar problem"
+- "closest thing I've shipped" / "best example I have"
+- "got me thinking about" / "made me curious about"
+
+CAP: Use AT MOST TWO phrases from the casual-technical-deflection register per email. If you need to express the same kind of idea a third time, use a different register.
+
+Alternative registers to break the monoculture:
+- Direct: "I couldn't figure out conflict resolution." (instead of "stuck on")
+- Concrete: "The hardest problem was reconciling state between the CSV and Postgres." (instead of "gnarly part")
+- Specific: "The CEGIS verification step in section 4." (instead of "same shape of problem")
+- Plain: "I read it twice." (instead of "landed for me")
+
+REQUIREMENT: At least one sentence per email must be in a register different from the rest. If the email is mostly casual-understated, one sentence should be blunt or literal. If mostly direct, one sentence can be casual. Mixing is the goal.
+
+Self-check before producing: count the casual-technical-deflection phrases in the draft. If more than 2, rewrite at least one of them in a different register.
 `.trim()
