@@ -333,19 +333,11 @@ export async function searchProfessors(
   if (keywords.length === 0) return [];
   console.log("OpenAlex client:", OA_CLIENT_VERSION);
 
-  // Try seed data first for supported schools
+  // Load seed data if available, but continue to OpenAlex for more comprehensive results
+  let seedData: Professor[] = [];
   if (institutions.length > 0) {
-    const seedData = await loadSeedData(institutions[0]);
-    if (seedData.length > 0) {
-      // Score seed data by keyword match
-      const scored = seedData.map(prof => ({
-        ...prof,
-        matchScore: computeMatchScore(prof.concepts, keywords)
-      }))
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, limit);
-      if (scored.length > 0) return scored;
-    }
+    seedData = await loadSeedData(institutions[0]);
+    console.log(`Loaded ${seedData.length} professors from seed data for ${institutions[0]}`);
   }
 
   const [instId, conceptIds] = await Promise.all([
@@ -484,7 +476,22 @@ export async function searchProfessors(
     authors.map((a) => enrichAuthor(a, keywords))
   );
 
-  let ranked = professors.sort((a, b) => b.matchScore - a.matchScore);
+  // Merge OpenAlex results with seed data, deduplicating by name
+  const allProfessors = [...professors];
+  const existingNames = new Set(professors.map((p) => p.name.toLowerCase()));
+
+  for (const seedProf of seedData) {
+    if (!existingNames.has(seedProf.name.toLowerCase())) {
+      // Rescore seed professors against the current keywords
+      const scoredSeedProf = {
+        ...seedProf,
+        matchScore: computeMatchScore(seedProf.concepts, keywords)
+      };
+      allProfessors.push(scoredSeedProf);
+    }
+  }
+
+  let ranked = allProfessors.sort((a, b) => b.matchScore - a.matchScore);
 
   // Filter out low-confidence matches (< 0.35 match score) to avoid returning irrelevant professors
   // This prevents returning psychology professors when searching for reinforcement learning
