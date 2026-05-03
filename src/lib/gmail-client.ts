@@ -6,8 +6,26 @@ export type GmailConnectionStatus = {
   connectedAt: string | null;
 };
 
+export const GMAIL_TEST_RECIPIENT = "Z1npsI6zOgqvhrHXNLRnwG9r@gmail.com";
+
+export type SendDraftEmailInput = {
+  draftId: string;
+  subject: string;
+  body: string;
+};
+
+export type SendDraftEmailResult = {
+  id: string | null;
+  threadId: string | null;
+  labelIds: string[];
+  to: string;
+  testRecipient: boolean;
+};
+
 export async function getGmailConnectionStatus(): Promise<GmailConnectionStatus> {
-  const response = await fetch("/api/google/oauth/status", { credentials: "include" });
+  const response = await fetch("/api/google/oauth/status", {
+    credentials: "include",
+  });
   if (!response.ok) throw new Error("Unable to load Gmail connection status");
   return response.json() as Promise<GmailConnectionStatus>;
 }
@@ -23,4 +41,26 @@ export async function disconnectGoogleOAuth() {
     credentials: "include",
   });
   if (!response.ok) throw new Error("Unable to disconnect Gmail");
+}
+
+export async function sendDraftEmail(
+  input: SendDraftEmailInput,
+): Promise<SendDraftEmailResult> {
+  const response = await fetch("/api/google/messages/send", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  const payload = (await response.json().catch(() => null)) as
+    | (Partial<SendDraftEmailResult> & { error?: string })
+    | null;
+  if (!response.ok) {
+    throw new Error(payload?.error ?? "Unable to send email through Gmail");
+  }
+
+  return payload as SendDraftEmailResult;
 }

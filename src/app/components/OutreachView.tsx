@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Send, Check, Trash2, LayoutGrid,
+  Send, Check, LayoutGrid,
   ChevronUp, ChevronDown, ArrowUpDown, ArrowRight, Mail, Loader2,
 } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
@@ -61,7 +61,7 @@ function SortHeader({
   );
 }
 
-export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend, onDiscard }: OutreachViewProps) {
+export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent }: OutreachViewProps) {
   const [sortKey, setSortKey] = useState<SortKey>("matchScore");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "sent">("all");
@@ -291,6 +291,14 @@ export function OutreachView({ drafts, onSelectDraft, onNavigateToAgent, onSend,
                 {gmailStatus?.connected ? `Gmail connected!${gmailStatus.email ? ` as ${gmailStatus.email}` : ""}` : "Connect Gmail to send emails"}
               </span>
               <span style={{ fontSize: 11.5, color: gmailError ? "#ef4444" : "#737373", fontWeight: 300 }}>
+                {gmailError ??
+                  (gmailLoading
+                    ? "Checking Gmail connection..."
+                    : gmailStatus?.connected
+                    ? "Ready to send outreach drafts."
+                    : gmailStatus?.configured === false
+                    ? "Google OAuth is not configured."
+                    : "Connect once before sending drafts.")}
               </span>
             </div>
           </div>
