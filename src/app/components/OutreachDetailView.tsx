@@ -6,8 +6,11 @@ import {
   FileText, User, Building2, BookOpen, Mail,
 } from "lucide-react";
 import { OutreachDraft } from "./mock-data";
-import { getRecentWorksByAuthor } from "../../lib/openalex";
+import { findAuthorIdByNameAndInstitution, getRecentWorksByAuthor } from "../../lib/openalex";
 import fileLogo from "../../assets/file.png";
+import linkedinLogo from "../../assets/linkedin.png";
+import googleLogo from "../../assets/google.png";
+import openalexLogo from "../../assets/openalex.svg.png";
 
 type DraftWithStatus = OutreachDraft & { status: "draft" | "sent" };
 
@@ -56,16 +59,17 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
   const [editing, setEditing] = useState(false);
   const [justSent, setJustSent] = useState(false);
   const [papers, setPapers] = useState(draft.professor.recentPapers ?? []);
+  const [resolvedOpenAlexId, setResolvedOpenAlexId] = useState<string | null>(null);
   const isSent = draft.status === "sent";
   const citations = CITATIONS[draft.id] ?? [];
   const bodyWordCount = useMemo(() => body.trim().split(/\s+/).filter(Boolean).length, [body]);
   const openAlexProfileUrl = useMemo(() => {
-    const id = draft.professor.openAlexId?.trim();
+    const id = (resolvedOpenAlexId ?? draft.professor.openAlexId)?.trim();
     if (!id) return null;
     if (id.startsWith("https://openalex.org/")) return id;
     const withoutHost = id.startsWith("openalex.org/") ? id.slice("openalex.org/".length) : id;
     return `https://openalex.org/${withoutHost}`;
-  }, [draft.professor.openAlexId]);
+  }, [draft.professor.openAlexId, resolvedOpenAlexId]);
 
   const peopleSearchLinks = useMemo(() => {
     const name = draft.professor.name.trim();
@@ -80,15 +84,20 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
 
   useEffect(() => {
     setPapers(draft.professor.recentPapers ?? []);
+    setResolvedOpenAlexId(null);
     if ((draft.professor.recentPapers?.length ?? 0) > 0) return;
-    const id = draft.professor.openAlexId?.trim();
-    if (!id) return;
-    getRecentWorksByAuthor(id, 8)
-      .then((ws) => {
-        if (ws.length === 0) return;
-        setPapers(ws.map((w) => ({ title: w.title, year: w.year, url: w.url })));
-      })
-      .catch(() => {});
+    const run = async () => {
+      const directId = draft.professor.openAlexId?.trim();
+      const id = directId
+        ? directId
+        : await findAuthorIdByNameAndInstitution(draft.professor.name, draft.professor.university);
+      if (!id) return;
+      if (!directId) setResolvedOpenAlexId(id);
+      const ws = await getRecentWorksByAuthor(id, 8);
+      if (ws.length === 0) return;
+      setPapers(ws.map((w) => ({ title: w.title, year: w.year, url: w.url })));
+    };
+    run().catch(() => {});
   }, [draft.id]);
 
   const handleSend = () => {
@@ -431,13 +440,15 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                       <a href={openAlexProfileUrl} target="_blank" rel="noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
                         style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
-                        <ArrowUpRight size={11} /> OpenAlex
+                        <img src={openalexLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                        OpenAlex
                       </a>
                     )}
                     <a href={peopleSearchLinks.linkedin} target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
                       style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
-                      <ArrowUpRight size={11} /> LinkedIn search
+                      <img src={linkedinLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      LinkedIn
                     </a>
                     <a href={peopleSearchLinks.scholar} target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
@@ -447,7 +458,8 @@ export function OutreachDetailView({ draft, onBack, onSend, onDiscard }: Outreac
                     <a href={peopleSearchLinks.google} target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
                       style={{ fontSize: 11.5, borderColor: "#e5e5e5", color: "#0a0a0a", fontWeight: 300, background: "#fff" }}>
-                      <ArrowUpRight size={11} /> Google
+                      <img src={googleLogo} alt="" style={{ width: 12, height: 12, display: "block", objectFit: "contain" }} />
+                      Google
                     </a>
                   </div>
                 </div>
