@@ -29,12 +29,20 @@ const SUGGESTIONS = [
   "Find professors working on formal verification",
 ];
 
-const PIPELINE_STEPS: ToolStep[] = [
-  { icon: "search", label: "Parsing your request" },
-  { icon: "search", label: "Searching OpenAlex for matching professors" },
-  { icon: "mail", label: "Drafting personalized emails" },
-  { icon: "check", label: "Done" },
-];
+const getPipelineSteps = (stage: "parsing" | "searching" | "drafting" | "done"): ToolStep[] => {
+  const steps: ToolStep[] = [];
+  steps.push({ icon: "search", label: "Parsing your request" });
+  if (stage === "parsing") return steps;
+
+  steps.push({ icon: "search", label: "Searching for matching professors" });
+  if (stage === "searching") return steps;
+
+  steps.push({ icon: "mail", label: "Drafting personalized emails" });
+  if (stage === "drafting") return steps;
+
+  steps.push({ icon: "check", label: "Done" });
+  return steps;
+};
 
 function parseAtTags(raw: string): {
   cleaned: string;
@@ -310,9 +318,19 @@ export function AgentView({
     };
     setMessages((prev) => [...prev, thinkingMsg]);
 
+    const updateSteps = (stage: "parsing" | "searching" | "drafting" | "done") => {
+      const steps = getPipelineSteps(stage);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === thinkingId ? { ...m, steps } : m
+        )
+      );
+    };
+
     try {
       const tags = parseAtTags(value);
       const llmInput = tags.cleaned || value;
+      updateSteps("parsing");
       const { researchAreas, institutions, companies, roleHints, opportunityType } = await extractKeywordsFromPrompt(llmInput);
       // Heuristic fallback: if the LLM extractor misses an institution/count, infer from raw prompt.
       const inferredInstitutions = [...institutions];
@@ -428,6 +446,7 @@ export function AgentView({
         // writer's internship branch handles both cases — for live-discovered
         // companies, notableWork is empty and the prompt grounds the hook in
         // the company blurb instead (see prompts/context.ts).
+        updateSteps("searching");
         console.log("Searching companies with:", { value, companies, roleHints, inferredCount });
 
         const apolloErrors: string[] = [];
@@ -488,7 +507,7 @@ export function AgentView({
           const noMatchMsg: Message = {
             id: (Date.now() + 2).toString(), role: "agent",
             content: `I couldn't find a match in the seed list and Hunter didn't return anyone either${reason}. Try naming a company directly (e.g. "intern at Linear") or check that the proxy is running with \`npm run proxy:dev\`.`,
-            steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+            steps: getPipelineSteps("done"),
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           };
           setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
@@ -497,6 +516,7 @@ export function AgentView({
           return;
         }
 
+        updateSteps("drafting");
         for (const match of result.matches) {
           const company = match.company as Company;
           const contact = (company.contacts.find((c) => c.id === match.suggestedContactId) ?? company.contacts[0]) as CompanyContact;
@@ -533,6 +553,7 @@ export function AgentView({
           summaryWithNote = `Drafted ${draftCount} ${emailWord} for your internship search across ${uniqueCompanyNames.length} companies (${companyList})${liveNote}. Review them in Outreach.`;
         }
       } else {
+        updateSteps("searching");
         console.log("Searching OpenAlex with:", { allKeywords, institutions: inferredInstitutions, inferredCount });
         const matched = await searchProfessors(allKeywords, inferredInstitutions, inferredCount);
 
@@ -540,7 +561,7 @@ export function AgentView({
           const noMatchMsg: Message = {
             id: (Date.now() + 2).toString(), role: "agent",
             content: "I searched OpenAlex but couldn't find professors matching your request. Try different keywords or a broader research area.",
-            steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+            steps: getPipelineSteps("done"),
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           };
           setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
@@ -560,6 +581,7 @@ export function AgentView({
           localStorage.setItem("ioia:last_professors", JSON.stringify(Array.from(byId.values())));
         } catch { /* ignore */ }
 
+        updateSteps("drafting");
         for (const prof of matched) {
           try {
             const emailDraft = await draftEmail({
@@ -603,9 +625,10 @@ export function AgentView({
         localStorage.setItem("ioia:last_draft_batch_at", new Date().toISOString());
       } catch { /* ignore */ }
 
+      updateSteps("done");
       const agentMsg: Message = {
         id: (Date.now() + 2).toString(), role: "agent", content: summaryWithNote,
-        steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+        steps: getPipelineSteps("done"),
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => prev.map((m) => m.id === thinkingId ? agentMsg : m));
@@ -623,7 +646,7 @@ export function AgentView({
       const errMsg: Message = {
         id: (Date.now() + 2).toString(), role: "agent",
         content: `Something went wrong: ${err instanceof Error ? err.message : String(err)}`,
-        steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+        steps: getPipelineSteps("done"),
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => prev.map((m) => m.id === thinkingId ? errMsg : m));
