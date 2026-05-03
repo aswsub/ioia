@@ -9,9 +9,11 @@ import {
 } from "../../lib/db";
 import { extractKeywordsFromPrompt, draftEmail } from "../../lib/claude";
 import { searchProfessors } from "../../lib/openalex";
+import { findCompanyForQuery } from "../../lib/find_company";
 import { useAuth } from "../../lib/auth";
 import type { UserProfile } from "../../../cold_email_workflow/prompts/context";
 import type { ToneProfile } from "../../../cold_email_workflow/prompts/tone";
+import type { Company, CompanyContact } from "../../../cold_email_workflow/schemas";
 
 type ToolStep = { icon: "search" | "mail" | "check"; label: string };
 type Message = { id: string; role: "user" | "agent"; content: string; steps?: ToolStep[]; timestamp: string };
@@ -69,6 +71,44 @@ function parseAtTags(raw: string): {
     schools: uniq(schools),
     topics: uniq(topics),
     n,
+  };
+}
+
+// Coerce a Company + CompanyContact + draft into the existing OutreachDraft
+// shape so the dashboard's persistence and detail UI keep working unchanged.
+// Department/research chips become the team list; recentPapers becomes the
+// company's notableWork. The current year is a placeholder — notableWork has
+// no publish date in the seed.
+function companyDraftToOutreachDraft(args: {
+  company: Company;
+  contact: CompanyContact;
+  emailDraft: { subject: string; body: string };
+  matchScore: number;
+  color: string;
+}): OutreachDraft {
+  const { company, contact, emailDraft, matchScore, color } = args;
+  const year = new Date().getFullYear();
+  return {
+    id: `draft_${company.id}_${contact.id}_${Date.now()}`,
+    professor: {
+      name: contact.name,
+      title: contact.role,
+      university: company.name,
+      department: company.teams[0] ?? "Engineering",
+      research: company.teams.slice(0, 4),
+      email: contact.email,
+      color,
+      openAlexId: null,
+      homepage: `https://${company.domain}`,
+      recentPapers: company.notableWork.map((w) => ({
+        title: w.title,
+        year,
+        url: w.url,
+      })),
+    },
+    subject: emailDraft.subject,
+    body: emailDraft.body,
+    matchScore,
   };
 }
 
@@ -304,60 +344,107 @@ export function AgentView({
       };
 
       const allKeywords = [...new Set([...researchAreas, ...(dbProfile?.research_interests ?? [])])];
-      console.log("Searching OpenAlex with:", { allKeywords, institutions: inferredInstitutions, inferredCount });
-      const matched = await searchProfessors(allKeywords, inferredInstitutions, inferredCount);
-
-      if (matched.length === 0) {
-        const noMatchMsg: Message = {
-          id: (Date.now() + 2).toString(), role: "agent",
-          content: "I searched OpenAlex but couldn't find professors matching your request. Try different keywords or a broader research area.",
-          steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
-        saveChatMessage({ id: noMatchMsg.id, role: "agent", content: noMatchMsg.content, steps: null }, convId).catch(console.warn);
-        setIsThinking(false);
-        return;
-      }
-
-      // Persist/merge latest professor matches so the Professors tab can show a running history.
-      try {
-        localStorage.setItem("ioia:last_professors_batch", JSON.stringify(matched));
-        const raw = localStorage.getItem("ioia:last_professors");
-        const existing = raw ? (JSON.parse(raw) as Professor[]) : [];
-        const byId = new Map<string, Professor>();
-        for (const p of existing ?? []) if (p?.id) byId.set(p.id, p);
-        for (const p of matched) if (p?.id) byId.set(p.id, p);
-        localStorage.setItem("ioia:last_professors", JSON.stringify(Array.from(byId.values())));
-      } catch { /* ignore */ }
 
       const drafts: OutreachDraft[] = [];
-      for (const prof of matched) {
-        try {
-          const emailDraft = await draftEmail({ user: userProfile, professor: prof, opportunity: opportunityType });
-          const colors = ["#f0f4ff", "#fff7ed", "#f0fdf4", "#fdf4ff", "#fff1f2"];
-          drafts.push({
-            id: `draft_${prof.id}_${Date.now()}`,
-            professor: {
-              name: prof.name, title: "Professor", university: prof.affiliation,
-              department: prof.concepts[0]?.name ?? "CS",
-              research: prof.concepts.slice(0, 3).map((c) => c.name),
-              email: prof.email ?? "", color: colors[drafts.length % colors.length],
-              openAlexId: prof.id,
-              homepage: prof.homepage,
-              recentPapers: prof.recentPapers?.map((p) => ({ title: p.title, year: p.year, url: p.url })) ?? [],
-            },
-            subject: emailDraft.subject, body: emailDraft.body, matchScore: prof.matchScore,
-          });
-        } catch (e) { console.error(`Failed to draft for ${prof.name}:`, e); }
-      }
+      const colors = ["#f0f4ff", "#fff7ed", "#f0fdf4", "#fdf4ff", "#fff1f2"];
+      let summaryWithNote = "";
 
-      const summary = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}. I've drafted personalized emails for each — review them in Outreach.`;
-      const requested = inferredCount;
-      const note = matched.length < requested
-        ? ` (you asked for ${requested}, but OpenAlex returned ${matched.length} strong matches for that school/topic)`
-        : "";
-      const summaryWithNote = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}${note}. I've drafted personalized emails for each — review them in Outreach.`;
+      if (opportunityType === "internship") {
+        // Internship path: hit the seeded companies.json (no live network call)
+        // and pick a recruiter or IC per match. The email writer's internship
+        // branch consumes Company + CompanyContact.
+        console.log("Searching companies with:", { value, inferredCount });
+        const result = findCompanyForQuery(value, inferredCount);
+
+        if (result.matches.length === 0) {
+          const noMatchMsg: Message = {
+            id: (Date.now() + 2).toString(), role: "agent",
+            content: "I searched the company seed list but couldn't find a match. Try naming a company directly (e.g. \"intern at Linear\") or describing the team you want to work on.",
+            steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
+          saveChatMessage({ id: noMatchMsg.id, role: "agent", content: noMatchMsg.content, steps: null }, convId).catch(console.warn);
+          setIsThinking(false);
+          return;
+        }
+
+        for (const match of result.matches) {
+          const company = match.company as Company;
+          const contact = (company.contacts.find((c) => c.id === match.suggestedContactId) ?? company.contacts[0]) as CompanyContact;
+          const teamFocus = company.teams.find((t) => value.toLowerCase().includes(t.toLowerCase()));
+          try {
+            const emailDraft = await draftEmail({
+              user: userProfile,
+              target: { kind: "internship", company, contact, teamFocus },
+            });
+            drafts.push(companyDraftToOutreachDraft({
+              company, contact, emailDraft,
+              matchScore: 1 - drafts.length * 0.04,
+              color: colors[drafts.length % colors.length],
+            }));
+          } catch (e) { console.error(`Failed to draft for ${company.name}:`, e); }
+        }
+
+        const matchedCount = result.matches.length;
+        const companyNames = result.matches.map((m) => m.company.name).slice(0, 3).join(", ");
+        summaryWithNote = `Found ${matchedCount} compan${matchedCount !== 1 ? "ies" : "y"} matching your internship search (${companyNames}). I've drafted personalized emails for each, review them in Outreach.`;
+      } else {
+        console.log("Searching OpenAlex with:", { allKeywords, institutions: inferredInstitutions, inferredCount });
+        const matched = await searchProfessors(allKeywords, inferredInstitutions, inferredCount);
+
+        if (matched.length === 0) {
+          const noMatchMsg: Message = {
+            id: (Date.now() + 2).toString(), role: "agent",
+            content: "I searched OpenAlex but couldn't find professors matching your request. Try different keywords or a broader research area.",
+            steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          setMessages((prev) => prev.map((m) => m.id === thinkingId ? noMatchMsg : m));
+          saveChatMessage({ id: noMatchMsg.id, role: "agent", content: noMatchMsg.content, steps: null }, convId).catch(console.warn);
+          setIsThinking(false);
+          return;
+        }
+
+        // Persist/merge latest professor matches so the Professors tab can show a running history.
+        try {
+          localStorage.setItem("ioia:last_professors_batch", JSON.stringify(matched));
+          const raw = localStorage.getItem("ioia:last_professors");
+          const existing = raw ? (JSON.parse(raw) as Professor[]) : [];
+          const byId = new Map<string, Professor>();
+          for (const p of existing ?? []) if (p?.id) byId.set(p.id, p);
+          for (const p of matched) if (p?.id) byId.set(p.id, p);
+          localStorage.setItem("ioia:last_professors", JSON.stringify(Array.from(byId.values())));
+        } catch { /* ignore */ }
+
+        for (const prof of matched) {
+          try {
+            const emailDraft = await draftEmail({
+              user: userProfile,
+              target: { kind: "research", professor: prof },
+            });
+            drafts.push({
+              id: `draft_${prof.id}_${Date.now()}`,
+              professor: {
+                name: prof.name, title: "Professor", university: prof.affiliation,
+                department: prof.concepts[0]?.name ?? "CS",
+                research: prof.concepts.slice(0, 3).map((c) => c.name),
+                email: prof.email ?? "", color: colors[drafts.length % colors.length],
+                openAlexId: prof.id,
+                homepage: prof.homepage,
+                recentPapers: prof.recentPapers?.map((p) => ({ title: p.title, year: p.year, url: p.url })) ?? [],
+              },
+              subject: emailDraft.subject, body: emailDraft.body, matchScore: prof.matchScore,
+            });
+          } catch (e) { console.error(`Failed to draft for ${prof.name}:`, e); }
+        }
+
+        const requested = inferredCount;
+        const note = matched.length < requested
+          ? ` (you asked for ${requested}, but OpenAlex returned ${matched.length} strong matches for that school/topic)`
+          : "";
+        summaryWithNote = `Found ${matched.length} professor${matched.length !== 1 ? "s" : ""} matching your interests in ${allKeywords.slice(0, 3).join(", ")}${inferredInstitutions.length ? ` at ${inferredInstitutions.join(", ")}` : ""}${note}. I've drafted personalized emails for each — review them in Outreach.`;
+      }
       const agentMsg: Message = {
         id: (Date.now() + 2).toString(), role: "agent", content: summaryWithNote,
         steps: PIPELINE_STEPS.map((s) => ({ ...s, icon: "check" })),
