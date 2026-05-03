@@ -370,6 +370,35 @@ export function ProfileView({ onBack }: ProfileViewProps) {
     return () => clearTimeout(timer);
   }, [profile.name, profile.university, profile.major, profile.year, profile.gpa, profile.researchInterests, profile.bio, user]);
 
+  // Save on unmount (before navigating away) - also save via handleSave to ensure it persists
+  useEffect(() => {
+    return () => {
+      if (!user) return;
+      // Force save everything immediately
+      const resumeText = resumeFiles.map((f) => f.text).join("\n\n") || null;
+      const writingText = writingFiles.map((f) => f.text).join("\n\n") || writingPaste || null;
+      saveUserProfile({
+        id: user.id,
+        full_name: profileRef.current.name,
+        university: profileRef.current.university,
+        major: profileRef.current.major,
+        year: profileRef.current.year,
+        gpa: profileRef.current.gpa ? parseFloat(profileRef.current.gpa) : null,
+        research_interests: profileRef.current.researchInterests.split(",").map((s) => s.trim()).filter(Boolean),
+        short_bio: profileRef.current.bio,
+        resume_text: resumeText,
+        writing_sample_text: writingText,
+        projects_json: projects.length > 0 ? JSON.stringify(projects) : null,
+        tone_voice: styleRef.current.tone.toLowerCase(),
+        tone_length: styleRef.current.length.split(" ")[0].toLowerCase(),
+        tone_traits: styleRef.current.traits,
+        tone_signature_phrases: styleRef.current.signaturePhrases,
+        tone_avoid_phrases: styleRef.current.avoidPhrases,
+        tone_confidence: styleRef.current.confidence,
+      }).catch(e => console.error("Unmount save failed:", e));
+    };
+  }, [user, resumeFiles, writingFiles, writingPaste, projects]);
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
