@@ -6,6 +6,7 @@
 import type { Professor, RecentPaper } from "../../cold_email_workflow/prompts/context";
 import type { DirectoryHit, InstitutionKey } from "./directories";
 import { fetchDirectoryHits } from "./directories";
+import { upsertProfessor } from "./db";
 
 const BASE = "https://api.openalex.org";
 const MAILTO = (import.meta.env.VITE_OPENALEX_EMAIL as string) || "ioia-app@example.com";
@@ -539,7 +540,29 @@ export async function searchProfessors(
     ranked = [...ranked, ...fillers];
   }
 
-  return ranked.slice(0, limit);
+  const results = ranked.slice(0, limit);
+
+  // Save professors to Supabase for future reference (cache emails and data)
+  for (const prof of results) {
+    try {
+      await upsertProfessor({
+        id: prof.id,
+        name: prof.name,
+        title: "Professor",
+        institution: prof.affiliation,
+        department: prof.concepts[0]?.name ?? "Computer Science",
+        research: prof.concepts.slice(0, 3).map(c => c.name),
+        recent_paper: prof.recentPapers[0]?.title ?? null,
+        match_score: prof.matchScore,
+        email: prof.email ?? "",
+        color: "#f0f4ff",
+      });
+    } catch (e) {
+      console.warn(`Failed to save professor ${prof.name} to database:`, e);
+    }
+  }
+
+  return results;
 }
 
 export async function getProfessorByOrcid(orcid: string): Promise<Professor | null> {
