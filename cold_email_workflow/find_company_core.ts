@@ -19,7 +19,7 @@ export const FindCompanyMatchSchema = z.object({
 })
 
 export const FindCompanyOutputSchema = z.object({
-  matches: z.array(FindCompanyMatchSchema).max(5),
+  matches: z.array(FindCompanyMatchSchema).max(10),
 })
 
 export type FindCompanyMatch = z.infer<typeof FindCompanyMatchSchema>
@@ -131,16 +131,50 @@ function pickReason(hits: Hit[]): string {
   return ""
 }
 
-function suggestContactId(company: Company, queryLower: string): string {
-  const queryNamesTeam = company.teams.some(t => queryLower.includes(t.toLowerCase()))
+// Rank contacts for a query. The first ID is the "primary" suggestion (used
+// when the caller only wants one); subsequent IDs are also-relevant contacts
+// (different IC angles for companies like Figma that have multiple ICs).
+//
+// Ranking rules:
+//   - If the query names one of the company's teams, ICs come first
+//     (team-matching IC, then other ICs, then recruiter).
+//   - For generic intern/internship queries, the recruiter comes first
+//     (then ICs).
+//   - Otherwise, recruiter first as a safe default, then ICs.
+function suggestContactIds(company: Company, queryLower: string): string[] {
+  const namedTeam = company.teams.find(t => queryLower.includes(t.toLowerCase()))?.toLowerCase()
   const looksGeneric = /\b(intern|internship|interns|opportunit|application)\b/.test(queryLower)
 
-  const recruiter = company.contacts.find(c => c.role.toLowerCase().includes("recruit"))
-  const ic = company.contacts.find(c => !c.role.toLowerCase().includes("recruit"))
+  // Drop contacts that are still placeholders in the seed — they have no real
+  // email yet and shouldn't be suggested.
+  const usable = company.contacts.filter(c => c.name !== "TO_FILL" && c.email !== "TO_FILL")
+  const recruiters = usable.filter(c => c.role.toLowerCase().includes("recruit"))
+  const ics = usable.filter(c => !c.role.toLowerCase().includes("recruit"))
 
-  if (queryNamesTeam && ic) return ic.id
-  if (looksGeneric && recruiter) return recruiter.id
-  return (recruiter ?? ic ?? company.contacts[0])!.id
+  // Within ICs, push the one whose role mentions the named team to the top.
+  const rankedICs = namedTeam
+    ? [...ics].sort((a, b) => {
+        const aMatch = a.role.toLowerCase().includes(namedTeam) ? -1 : 0
+        const bMatch = b.role.toLowerCase().includes(namedTeam) ? -1 : 0
+        return aMatch - bMatch
+      })
+    : ics
+
+  let ordered: typeof company.contacts
+  if (namedTeam) {
+    ordered = [...rankedICs, ...recruiters]
+  } else if (looksGeneric) {
+    ordered = [...recruiters, ...rankedICs]
+  } else {
+    ordered = [...recruiters, ...rankedICs]
+  }
+
+  // Fall through to whatever usable contacts remain if neither bucket caught
+  // anything. If every contact is a TO_FILL placeholder we return an empty
+  // list, and findCompanyMatches will skip the company entirely.
+  if (ordered.length === 0) ordered = usable
+
+  return ordered.map(c => c.id)
 }
 
 // Pure function: companies in, ranked matches out. Used by both the Node
@@ -173,13 +207,23 @@ export function findCompanyMatches(
     ? scored.filter(s => s.hits.some(h => h.tier === "name" || h.tier === "team"))
     : scored
 
-  const ranked = filtered.sort((a, b) => b.score - a.score).slice(0, limit)
+  const ranked = filtered.sort((a, b) => b.score - a.score)
 
-  const matches: FindCompanyMatch[] = ranked.map(({ company, hits }) => ({
-    company,
-    suggestedContactId: suggestContactId(company, queryLower),
-    matchReason: pickReason(hits),
-  }))
+  // Expand each company into one row per relevant contact. A company like
+  // Figma with three contacts (recruiter + two ICs targeting different teams)
+  // becomes three rows; a company with one recruiter + one IC becomes two
+  // rows. Truncating at `limit` happens after expansion so the user gets a
+  // mix that respects company ranking and contact ranking.
+  const matches: FindCompanyMatch[] = []
+  for (const { company, hits } of ranked) {
+    const contactIds = suggestContactIds(company, queryLower)
+    const reason = pickReason(hits)
+    for (const contactId of contactIds) {
+      matches.push({ company, suggestedContactId: contactId, matchReason: reason })
+      if (matches.length >= limit) break
+    }
+    if (matches.length >= limit) break
+  }
 
   return FindCompanyOutputSchema.parse({ matches })
 }
