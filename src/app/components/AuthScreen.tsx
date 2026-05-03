@@ -45,7 +45,7 @@ export function AuthScreen() {
         <img
           src={ioiaLogo}
           alt="ioia"
-          style={{ height: 40, width: "auto", borderRadius: 10, marginBottom: 28 }}
+          style={{ height: 40, width: 40, borderRadius: 10, marginBottom: 28, objectFit: "contain", objectPosition: "center" }}
         />
 
         <h1 style={{ fontSize: 20, fontWeight: 400, color: "#0a0a0a", marginBottom: 6, letterSpacing: "-0.02em" }}>
