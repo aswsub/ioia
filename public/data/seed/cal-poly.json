@@ -13,22 +13,22 @@
     ],
     "recentPapers": [
       {
-        "title": "Building Intelligent Systems with Machine Learning",
+        "title": "Deep Learning and Artificial Intelligence: Project Collaboration across Classes",
         "year": 2023,
-        "abstract": "Practical approaches to integrating machine learning into real-world intelligent systems with emphasis on explainability.",
-        "url": "https://arxiv.org/abs/2301.08342"
+        "abstract": "Deep Learning can be considered as a subset of AI, and DL is heavily studied and used in AI. This paper describes project collaboration across classes at Cal Poly.",
+        "url": "https://peer.asee.org/34370.pdf"
       },
       {
-        "title": "Feature Engineering for Machine Learning Models",
+        "title": "Assessment of ethics and social justice aspects in data science and artificial intelligence",
         "year": 2022,
-        "abstract": "A comprehensive guide to effective feature engineering techniques that improve model performance and interpretability.",
-        "url": "https://arxiv.org/abs/2208.05623"
+        "abstract": "This document describes methods for assessing ethics and social justice aspects in data science and AI education at Cal Poly, including predictive machine learning models.",
+        "url": "https://peer.asee.org/assessment-of-ethics-and-social-justice-aspects-in-data-science-and-artificial-intelligence"
       },
       {
-        "title": "Knowledge Graphs and Semantic Web Technologies",
-        "year": 2021,
-        "abstract": "Integration of knowledge graphs with machine learning for enhanced reasoning and semantic understanding.",
-        "url": "https://arxiv.org/abs/2106.12401"
+        "title": "The Search Intelligence Process Using Artificial Intelligence",
+        "year": 2023,
+        "abstract": "Deep learning is a class of machine learning algorithms that enables search intelligence processes. This work is conducted at Cal Poly Computer Science and Software Engineering Department.",
+        "url": "https://journalofsar.com/wp-content/uploads/2024/02/32-Young-et-al.pdf"
       }
     ],
     "matchScore": 0.82
@@ -45,26 +45,7 @@
       { "name": "Image Processing", "score": 0.80 },
       { "name": "Pattern Recognition", "score": 0.78 }
     ],
-    "recentPapers": [
-      {
-        "title": "Efficient Convolutional Networks for Edge Devices",
-        "year": 2023,
-        "abstract": "Methods for deploying deep learning models on resource-constrained edge devices with minimal accuracy loss.",
-        "url": "https://arxiv.org/abs/2302.11456"
-      },
-      {
-        "title": "Real-Time Object Detection in Video Streams",
-        "year": 2022,
-        "abstract": "Optimized computer vision pipelines for real-time object detection and tracking in streaming video data.",
-        "url": "https://arxiv.org/abs/2207.09876"
-      },
-      {
-        "title": "Adversarial Robustness in Vision Models",
-        "year": 2021,
-        "abstract": "Techniques for improving the adversarial robustness of deep neural networks for computer vision tasks.",
-        "url": "https://arxiv.org/abs/2109.03245"
-      }
-    ],
+    "recentPapers": [],
     "matchScore": 0.81
   },
   {
@@ -81,22 +62,22 @@
     ],
     "recentPapers": [
       {
-        "title": "Scalable Machine Learning for Big Data",
-        "year": 2023,
-        "abstract": "Distributed machine learning frameworks for processing and analyzing large-scale datasets efficiently.",
-        "url": "https://arxiv.org/abs/2303.07891"
+        "title": "Creating a probabilistic graph for WordNet using markov logic network",
+        "year": 2016,
+        "abstract": "The paper shows how to create a probabilistic graph for WordNet. A node is created for every word and phrase in WordNet. An edge between two nodes is labeled with the probability of co-occurrence.",
+        "url": "https://dl.acm.org/doi/abs/10.1145/2912845.2912850"
       },
       {
-        "title": "Systems Programming for ML Infrastructure",
-        "year": 2022,
-        "abstract": "Low-level systems design patterns for building efficient machine learning infrastructure and runtime systems.",
-        "url": "https://arxiv.org/abs/2206.04532"
+        "title": "Introducing Mixed Tables",
+        "year": 2016,
+        "abstract": "Two approaches for extending relational database tables to allow storing uncertain and incomplete information have been proposed in the past.",
+        "url": "https://www.academia.edu/download/81886350/eknow_2016_full.pdf#page=34"
       },
       {
-        "title": "Data Quality and Machine Learning Performance",
-        "year": 2021,
-        "abstract": "Exploring the impact of data quality metrics on the performance and reliability of machine learning models.",
-        "url": "https://arxiv.org/abs/2110.02876"
+        "title": "Automating deep-sea video annotation using machine learning",
+        "year": 2020,
+        "abstract": "Fourteen students and two faculties at California Polytechnic State University have worked on the project to develop a software tool for automating deep-sea video annotation.",
+        "url": "https://ieeexplore.ieee.org/abstract/document/9031469/"
       }
     ],
     "matchScore": 0.80
