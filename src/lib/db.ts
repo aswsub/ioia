@@ -193,6 +193,7 @@ export type DbUserProfile = {
   short_bio: string;
   resume_text: string | null;        // OCR extracted text
   writing_sample_text: string | null; // OCR extracted text
+  projects_json?: string | null;     // JSON stringified projects array
   tone_voice: string;
   tone_length: string;
   tone_traits: string[];

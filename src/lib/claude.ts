@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod";
 import {
   EXTRACT_TONE_SYSTEM,
   buildToneExtractorUserMessage,
@@ -20,6 +21,7 @@ import {
 } from "../../cold_email_workflow/prompts/extract_keywords";
 import { ExtractedTonePhrasesSchema, EmailDraftSchema } from "../../cold_email_workflow/schemas";
 import type { ToneProfile } from "../../cold_email_workflow/prompts/tone";
+import type { Project } from "../../cold_email_workflow/prompts/context";
 
 const client = new Anthropic({
   apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY as string,
@@ -47,6 +49,51 @@ export async function extractToneFromSample(
   }
   // Fallback if extraction fails
   return { signaturePhrases: [], avoidPhrases: [], confidence: "low" };
+}
+
+// ── Project extraction from resume ────────────────────────────────────────────
+
+const ProjectsSchema = z.array(
+  z.object({
+    name: z.string().min(2).max(100),
+    description: z.string().min(10).max(500),
+    technologies: z.array(z.string()).optional(),
+    link: z.string().url().optional().nullable(),
+  })
+);
+
+export async function extractProjectsFromResume(resumeText: string): Promise<Project[]> {
+  if (!resumeText || resumeText.length < 50) return [];
+
+  try {
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 1000,
+      system: `You are a resume parser. Extract projects from the resume text.
+Return a JSON array of projects. Each project should have:
+- name: project title/name
+- description: 1-2 sentence description of what the project does
+- technologies: array of tech stack used (optional)
+- link: URL to project if mentioned (optional, can be null)
+
+Focus on actual projects, not just job responsibilities. Skip generic descriptions.
+Return ONLY valid JSON array, no markdown or extra text.`,
+      messages: [
+        {
+          role: "user",
+          content: `Extract all projects from this resume:\n\n${resumeText}`,
+        },
+      ],
+    });
+
+    const text = response.content.find((b) => b.type === "text")?.text ?? "[]";
+    const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return ProjectsSchema.parse(parsed);
+  } catch (e) {
+    console.warn("Failed to extract projects:", e);
+    return [];
+  }
 }
 
 // ── Email drafting ────────────────────────────────────────────────────────────

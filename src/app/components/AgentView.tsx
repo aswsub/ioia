@@ -394,6 +394,15 @@ export function AgentView({
 
           return items;
         })(),
+        projects: (() => {
+          if (!dbProfile?.projects_json) return [];
+          try {
+            return JSON.parse(dbProfile.projects_json);
+          } catch (e) {
+            console.warn("Failed to parse projects:", e);
+            return [];
+          }
+        })(),
         tone: toneProfile,
       };
 
